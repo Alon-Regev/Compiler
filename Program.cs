@@ -6,7 +6,12 @@ namespace Compiler
 	{
 		static void Main(string[] args)
 		{
-			Console.WriteLine("Hello World!");
+			Console.Write("Enter program: ");
+			string program = Console.ReadLine();
+
+			Token[] tokens = Scanner.Tokenize(program);
+			Console.WriteLine("\nTokens:\n");
+			Scanner.PrintTokens(tokens);
 		}
 	}
 }
