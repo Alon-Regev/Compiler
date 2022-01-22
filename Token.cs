@@ -48,11 +48,27 @@ namespace Compiler
 			string res = "";
 
 			// add fields
-			res += Code.ToString().PadRight(PRINT_WIDTH);
-			res += Value.ToString().PadRight(PRINT_WIDTH);
-			res += (Line + ":" + Pos).PadRight(PRINT_WIDTH);
+			res += StringFormat(Code.ToString(), PRINT_WIDTH - 1, PRINT_WIDTH);
+			res += StringFormat(Value.ToString(), PRINT_WIDTH - 1, PRINT_WIDTH);
+			res += StringFormat(Line + ":" + Pos, PRINT_WIDTH - 1, PRINT_WIDTH);
 
 			return res;
+		}
+
+		// Method changes a string to a constant width.
+		// baseString: string to change
+		// charLimit: max amount of characters to include
+		// width: constant number of chars in the result. Padding with spaces.
+		// return: formatted string
+		private static string StringFormat(string baseString, int charLimit, int width)
+		{
+			string result = baseString;
+			// limit chars
+			if (baseString.Length > charLimit - 3)
+				result = baseString.Substring(0, charLimit - 3) + "...";
+
+			// return padded string
+			return result.PadRight(width);
 		}
 	}
 }
