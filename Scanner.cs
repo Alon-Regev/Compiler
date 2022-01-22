@@ -39,7 +39,7 @@ namespace Compiler
 			while(programLeft.Length != 0)
 			{
 				// check whitespace to skip
-				if (programLeft[0] == ' ' || programLeft[0] == '\t')
+				if (programLeft[0] == ' ' || programLeft[0] == '\t' || programLeft[0] == '\r')
 				{
 					programLeft = programLeft.Substring(1);
 					pos += 1;
