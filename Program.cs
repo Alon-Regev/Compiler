@@ -97,8 +97,16 @@ namespace Compiler
 		// return: program string
 		private static string ConsoleProgramInput()
 		{
-			Console.WriteLine("Enter program: ");
-			string program = Console.ReadLine();
+			Console.WriteLine("Enter program. Empty line to end.");
+			string program = "";
+			string input = Console.ReadLine();
+			// repeat until empty line
+			while (input != "")
+			{
+				program += input + "\r\n";
+				input = Console.ReadLine();
+			}
+			
 			return program;
 		}
 
