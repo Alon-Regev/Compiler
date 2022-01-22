@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace Compiler
 {
@@ -35,6 +36,9 @@ namespace Compiler
 				switch(option)
 				{
 					case (int)menuOptions.COMPILE_FILE:
+						Console.Write("Enter program's path: ");
+						string path = Console.ReadLine();
+						CompileFile(path);
 						break;
 
 					case (int)menuOptions.COMPILE_INPUT:
@@ -70,6 +74,7 @@ namespace Compiler
 			else
 			{
 				// compile file
+				CompileFile(args[0]);
 			}
 		}
 
@@ -95,6 +100,42 @@ namespace Compiler
 			Console.WriteLine("Enter program: ");
 			string program = Console.ReadLine();
 			return program;
+		}
+
+
+		// Method checks if a file at a certain path exists.
+		// path: file path to check
+		// return: whether or not the path is valid
+		private static bool FileExists(string path)
+		{
+			return File.Exists(path);
+		}
+
+		// Method reads content of file.
+		// path: file's path to read
+		// return: file's content
+		private static string ReadFile(string path)
+		{
+			if (FileExists(path))
+				return File.ReadAllText(path);
+			else
+				return "";
+		}
+
+		// Method compiles a code file.
+		// path: program's path
+		// return: none
+		private static void CompileFile(string path)
+		{
+			// check if file exists
+			if(!FileExists(path))
+			{
+				Console.WriteLine("Error: File not found");
+				return;
+			}
+
+			string program = ReadFile(path);
+			Compile(program);
 		}
 
 		// Method compiles string.
