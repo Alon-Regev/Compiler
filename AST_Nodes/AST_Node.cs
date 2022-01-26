@@ -7,6 +7,14 @@ namespace Compiler
 	class AST_Node
 	{
 		private List<AST_Node> Children = new List<AST_Node>();
+		public int Line { get; private set; }
+
+		// constructor
+		// line: Line number of the node
+		protected AST_Node(int line)
+		{
+			Line = line;
+		}
 
 		// Method adds a child to this node
 		// child: child node to add
