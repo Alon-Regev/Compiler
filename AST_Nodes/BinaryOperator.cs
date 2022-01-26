@@ -19,5 +19,12 @@ namespace Compiler
 			AddChild(operand1);
 			AddChild(operand2);
 		}
+
+		// ToString prints operator and children
+		public override string ToString(int indent)
+		{
+			string baseline = "Bin Op " + Operator;
+			return baseline + base.ToString(indent);
+		}
 	}
 }

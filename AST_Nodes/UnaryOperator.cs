@@ -18,5 +18,12 @@ namespace Compiler
 			// set children
 			AddChild(operand);
 		}
+
+		// ToString prints operator and children
+		public override string ToString(int indent)
+		{
+			string baseline = "Unary Op " + Operator;
+			return baseline + base.ToString(indent);
+		}
 	}
 }

@@ -35,5 +35,25 @@ namespace Compiler
 			else
 				return null;
 		}
+
+		// base node's TpString prints children
+		public override string ToString()
+		{
+			return ToString(1);
+		}
+
+		virtual public string ToString(int indent = 0)
+		{
+			string result = "\n";
+			string indentStr = "";
+			for (int i = 0; i < indent; i++) indentStr += '\t';
+			// add children
+			foreach(AST_Node child in Children)
+			{
+				result += indentStr + child.ToString(indent + 1);
+			}
+			// return all children
+			return result;
+		}
 	}
 }

@@ -11,5 +11,11 @@ namespace Compiler
 		protected Expression(int line) : base(line)
 		{
 		}
+
+		// ToString override specifies this is an expression
+		public override string ToString(int indent)
+		{
+			return " (expr) " + base.ToString(indent);
+		}
 	}
 }

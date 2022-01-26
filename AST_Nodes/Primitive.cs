@@ -15,5 +15,12 @@ namespace Compiler
 		{
 			Value = value;
 		}
+
+		// ToString override prints primitive value
+		public override string ToString(int indent)
+		{
+			string baseline = "Primitive " + Value.GetType().Name + ": " + Value;
+			return baseline + base.ToString(indent);
+		}
 	}
 }
