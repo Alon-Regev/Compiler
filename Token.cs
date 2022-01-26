@@ -18,6 +18,7 @@ namespace Compiler
 
 		// other
 		UNKNOWN,
+		EOF,
 	}
 
 	class Token

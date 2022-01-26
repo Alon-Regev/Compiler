@@ -19,61 +19,101 @@ namespace Compiler
 			// values
 			new KeyValuePair<TokenCode, string>(TokenCode.NUMBER, @"\d+" ),
 
-			// default unknown
+			// default unknown and EOF
 			new KeyValuePair<TokenCode, string>(TokenCode.UNKNOWN, @".+" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.EOF, @""),
 		};
+
+		// fields to check where we are in the program
+		private string _programLeft;
+		private int _line = 1, _pos = 0;
+		//private int increment = 0;
+
+		// Constructor
+		// program: program to tokenize
+		public Scanner(string program)
+		{
+			_programLeft = program;
+		}
 
 		// Method converts a program string to a list of tokens
 		// program: program string to convert
 		// return: array of Token instances
-		static public Token[] Tokenize(string program)
+		public Token[] Tokenize(string program)
 		{
 			List<Token> tokens = new List<Token>();
 
-			// variables to check where we are in the program
-			string programLeft = program;
-			int line = 1, pos = 0;
-			int increment = 0;
-
 			// go over program
-			while(programLeft.Length != 0)
+			while(_programLeft.Length != 0)
 			{
-				// check whitespace to skip
-				if (programLeft[0] == ' ' || programLeft[0] == '\t' || programLeft[0] == '\r')
-				{
-					programLeft = programLeft.Substring(1);
-					pos += 1;
-					continue;
-				}
-				else if(programLeft[0] == '\n')
-				{
-					programLeft = programLeft.Substring(1);
-					line++;
-					pos = 0;
-					continue;
-				}
-
-				increment = 0;
-				// try each token to check if it's fitting
-				foreach(KeyValuePair<TokenCode, string> tokenRegex in TokenRegexExpressions)
-				{
-					// match regex to program
-					Match match = Regex.Match(programLeft, tokenRegex.Value);
-					// check if first match is at the beginning
-					if (match.Index != 0 || !match.Success)
-						continue;
-					// if index is at start, found token
-					tokens.Add(new Token(tokenRegex.Key, line, pos, match.Value));
-					increment = match.Value.Length;
-					break;
-				}
-
-				// increment position
-				programLeft = programLeft.Substring(increment);
-				pos += increment;
+				// add token
+				Token next = Next();
+				tokens.Add(next);
 			}
 
 			return tokens.ToArray();
+		}
+
+		// Method returns the next token in the program and moves to next.
+		// input: none
+		// return: the next token
+		public Token Next()
+		{
+			Token token = Peek();
+			// move to next
+			int increment = token.Value.Length;
+			_programLeft = _programLeft.Substring(increment);
+			_pos += increment;
+
+			return token;
+		}
+
+		// Method returns the next token in the program without moving to next token. only skips whitespace
+		// input: none
+		// return: the next Token
+		public Token Peek()
+		{
+			SkipWhitespace();
+
+			Token result = null;
+			// try each token to check if it fits
+			foreach (KeyValuePair<TokenCode, string> tokenRegex in TokenRegexExpressions)
+			{
+				// match regex to program
+				Match match = Regex.Match(_programLeft, tokenRegex.Value);
+				// check if first match is at the beginning
+				if (match.Index != 0 || !match.Success)
+					continue;
+				// if index is at start, found token
+				result = new Token(tokenRegex.Key, _line, _pos, match.Value);
+				break;
+			}
+
+			return result;
+		}
+
+		// Method skips whitespace in the program.
+		// input: none
+		// return: none
+		private void SkipWhitespace()
+		{
+			// break on non-whitespace
+			while (_programLeft.Length > 0)
+			{
+				if (_programLeft[0] == ' ' || _programLeft[0] == '\t' || _programLeft[0] == '\r')
+				{
+					_programLeft = _programLeft.Substring(1);
+					_pos += 1;
+				}
+				else if (_programLeft[0] == '\n')
+				{
+					_programLeft = _programLeft.Substring(1);
+					_line++;
+					_pos = 0;
+				}
+				else
+					break;
+			}
 		}
 
 		// Method prints a token array
@@ -88,7 +128,7 @@ namespace Compiler
 				"Position".PadRight(Token.PRINT_WIDTH)
 			);
 
-			// print tokens line by line
+			// print tokens _line by _line
 			foreach(Token token in tokens)
 			{
 				Console.WriteLine(token);
