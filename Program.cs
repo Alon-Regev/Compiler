@@ -151,8 +151,15 @@ namespace Compiler
 		// return: none
 		private static void Compile(string program)
 		{
-			Parser parser = new Parser(program);
-			Console.WriteLine(parser.Parse());
+			try
+			{
+				Parser parser = new Parser(program);
+				Console.WriteLine(parser.Parse());
+			}
+			catch(CompilerError e)
+			{
+				Console.WriteLine(e.Message);
+			}
 		}
 	}
 }
