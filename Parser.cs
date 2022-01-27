@@ -73,28 +73,28 @@ namespace Compiler
 		public AST_Node ParseFactor()
 		{
 			// int | (expression)
-			Token t = scanner.Next();
+			Token token = scanner.Next();
 			// check integer
-			if (t.Code == TokenCode.NUMBER)
+			if (token.Code == TokenCode.NUMBER)
 			{
-				return new Primitive<int>(t.Line, int.Parse(t.Value));
+				return new Primitive<int>(token);
 			}
 			// check expression
-			else if(t.Code == TokenCode.LEFT_PARENTHESIS)
+			else if(token.Code == TokenCode.LEFT_PARENTHESIS)
 			{
 				AST_Node node = ParseExpression();
 				// check closing parenthesis
 				Token closingParenthesis = scanner.Next();
 				if(closingParenthesis.Code != TokenCode.RIGHT_PARENTHESIS)
 				{
-					throw new MissingParenthesis(t);
+					throw new MissingParenthesis(token);
 				}
 
 				return node;
 			}
 			else
 			{
-				throw new UnexpectedToken("expression", t);
+				throw new UnexpectedToken("expression", token);
 			}
 		}
 	}
