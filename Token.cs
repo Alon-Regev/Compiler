@@ -16,6 +16,10 @@ namespace Compiler
 		MUL_OP,
 		DIV_OP,
 
+		// for expressions
+		LEFT_PARENTHESIS,
+		RIGHT_PARENTHESIS,
+
 		// other
 		UNKNOWN,
 		EOF,
