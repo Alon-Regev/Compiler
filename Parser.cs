@@ -37,7 +37,7 @@ namespace Compiler
 				Token op = scanner.Next();
 				AST_Node nextTerm = ParseTerm();
 				// add term to node
-				node = new BinaryOperator(node.Line, nextToken, node, nextTerm);
+				node = new BinaryOperator(nextToken, node, nextTerm);
 				// check next code
 				nextToken = scanner.Peek().Code;
 			}
@@ -59,7 +59,7 @@ namespace Compiler
 				Token op = scanner.Next();
 				AST_Node nextFactor = ParseFactor();
 				// add term to node
-				node = new BinaryOperator(node.Line, nextToken, node, nextFactor);
+				node = new BinaryOperator(nextToken, node, nextFactor);
 				// check next code
 				nextToken = scanner.Peek().Code;
 			}
