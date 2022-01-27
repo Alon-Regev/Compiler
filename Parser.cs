@@ -87,14 +87,14 @@ namespace Compiler
 				Token closingParenthesis = scanner.Next();
 				if(closingParenthesis.Code != TokenCode.RIGHT_PARENTHESIS)
 				{
-					throw new Exception("Expecting closing parenthesis");
+					throw new MissingParenthesis(t);
 				}
 
 				return node;
 			}
 			else
 			{
-				throw new Exception("Invalid syntax");
+				throw new UnexpectedToken("expression", t);
 			}
 		}
 	}

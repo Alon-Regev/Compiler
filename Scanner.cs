@@ -92,6 +92,9 @@ namespace Compiler
 				result = new Token(tokenRegex.Key, _line, _pos, match.Value);
 				break;
 			}
+			// check if valid and return
+			if (result.Code == TokenCode.UNKNOWN)
+				throw new UnknownToken(result);
 
 			return result;
 		}
