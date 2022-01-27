@@ -151,13 +151,8 @@ namespace Compiler
 		// return: none
 		private static void Compile(string program)
 		{
-			Scanner scanner = new Scanner(program);
-			// iterate over tokens
-			do
-			{
-				Console.WriteLine(scanner.Next());
-				// end at EOF token
-			} while (scanner.Peek().Code != TokenCode.EOF);
+			Parser parser = new Parser(program);
+			Console.WriteLine(parser.Parse());
 		}
 	}
 }
