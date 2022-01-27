@@ -23,6 +23,9 @@ namespace Compiler
 			return ParseExpression();
 		}
 
+		// Method parses a mathematical expression, defined as a sum of terms.
+		// input: none
+		// return: expression tree
 		public AST_Node ParseExpression()
 		{
 			// Term | Term [+-] Term
@@ -42,6 +45,9 @@ namespace Compiler
 			return node;
 		}
 
+		// Method parses a mathematical expression, defined as a product of factors.
+		// input: none
+		// return: term tree
 		public AST_Node ParseTerm()
 		{
 			// Factor | Factor [*/] Factor
@@ -61,14 +67,35 @@ namespace Compiler
 			return node;
 		}
 
+		// Method parses a mathematical factor, defined as an integer or as an expression in parentheses.
+		// input: none
+		// return: factor tree
 		public AST_Node ParseFactor()
 		{
 			// int | (expression)
 			Token t = scanner.Next();
-			if (t.Code != TokenCode.NUMBER)
-				throw new Exception("Invalid syntax");
-			else
+			// check integer
+			if (t.Code == TokenCode.NUMBER)
+			{
 				return new Primitive<int>(t.Line, int.Parse(t.Value));
+			}
+			// check expression
+			else if(t.Code == TokenCode.LEFT_PARENTHESIS)
+			{
+				AST_Node node = ParseExpression();
+				// check closing parenthesis
+				Token closingParenthesis = scanner.Next();
+				if(closingParenthesis.Code != TokenCode.RIGHT_PARENTHESIS)
+				{
+					throw new Exception("Expecting closing parenthesis");
+				}
+
+				return node;
+			}
+			else
+			{
+				throw new Exception("Invalid syntax");
+			}
 		}
 	}
 }
