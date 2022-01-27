@@ -12,7 +12,7 @@ namespace Compiler
 		// line: line number of the node
 		// op: operator code which this node presents.
 		// operand: Operand to apply the operator on.
-		public UnaryOperator(int line, TokenCode op, AST_Node operand) : base(line)
+		public UnaryOperator(TokenCode op, AST_Node operand) : base(operand.Line)
 		{
 			Operator = op;
 			// set children
