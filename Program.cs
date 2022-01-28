@@ -18,15 +18,16 @@ namespace Compiler
 			public string shortName;
 			public string longName;
 			public string description;
+			public string parameterDescription;
 			public Action<ArgumentParser> toRun;
 		}
 
 		private static readonly List<Option> options = new List<Option>()
 		{
 			new Option{ shortName="h", longName="help", description="prints list of commands.", toRun=PrintHelp },
-			new Option{ shortName="i", longName="input", description="gets input from console or parameter.", toRun=ProgramInput },
-			new Option{ shortName="f", longName="file", description="compiles the specified file.", toRun=CompileFile },
-			new Option{ shortName="o", longName="output", description="specifies output file to save executable at", toRun=null },
+			new Option{ shortName="i", longName="input", description="gets input from console or parameter.", toRun=ProgramInput, parameterDescription="<?code>" },
+			new Option{ shortName="f", longName="file", description="compiles the specified file.", toRun=CompileFile, parameterDescription="<path>" },
+			new Option{ shortName="o", longName="output", description="specifies output file to save executable at", toRun=null, parameterDescription="<path>" },
 		};
 
 
@@ -99,13 +100,23 @@ namespace Compiler
 		// return: none
 		private static void PrintHelp(ArgumentParser ap = null)
 		{
-			Console.WriteLine(
-				"List of commands:\n" +
-				"--help / -h  :	prints this list of commands\n" +
-				"--input / -i :	receives input from the console to compile\n" +
-				"-i <code>    :	compiles code from the command line\n" +
-				"<file path>  :	compiles the input file\n"
-			);
+			// print usage
+			Console.Write("\nUsage: Compiler");
+			foreach(Option option in options)
+			{
+				Console.Write(" [-{0} {1}] ", option.shortName, option.parameterDescription ?? "\b");
+			}
+			// print options
+			Console.WriteLine("\n\nOptions:");
+			foreach(Option option in options)
+			{
+				Console.WriteLine(
+					(("\t-" + option.shortName + " | --" + option.longName).PadRight(16) + option.parameterDescription).PadRight(24)
+					+ ":  " + option.description
+				);
+			}
+			// additional info
+			Console.WriteLine("\nNo parameters: Main Menu");
 		}
 
 		// Method gets program input from console

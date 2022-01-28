@@ -2,7 +2,7 @@
   "profiles": {
     "Compiler": {
       "commandName": "Project",
-      "commandLineArgs": "-i 1 - 2"
+      "commandLineArgs": "--help"
     }
   }
 }
