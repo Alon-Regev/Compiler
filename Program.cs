@@ -14,6 +14,9 @@ namespace Compiler
 
 		static void Main(string[] args)
 		{
+			Console.WriteLine(new ArgumentParser(args));
+			return;
+
 			if(args.Length == 0)
 			{
 				// main menu
