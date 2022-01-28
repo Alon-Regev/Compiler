@@ -11,6 +11,7 @@ namespace Compiler
 			COMPILE_FILE=1,
 			COMPILE_INPUT=2,
 			HELP=3,
+			QUIT=4,
 		};
 
 		struct Option
@@ -19,7 +20,7 @@ namespace Compiler
 			public string longName;
 			public string description;
 			public string parameterDescription;
-			public Action<ArgumentParser> toRun;
+			public Action toRun;
 		}
 
 		private static readonly List<Option> options = new List<Option>()
@@ -27,24 +28,26 @@ namespace Compiler
 			new Option{ shortName="h", longName="help", description="prints list of commands.", toRun=PrintHelp },
 			new Option{ shortName="i", longName="input", description="gets input from console or parameter.", toRun=ProgramInput, parameterDescription="<?code>" },
 			new Option{ shortName="f", longName="file", description="compiles the specified file.", toRun=CompileFile, parameterDescription="<path>" },
-			new Option{ shortName="o", longName="output", description="specifies output file to save executable at", toRun=null, parameterDescription="<path>" },
+			new Option{ shortName="o", longName="output", description="specifies output file to save executable at.", toRun=null, parameterDescription="<path>" },
+			new Option{ shortName="D", longName="detailed", description="detailed compilation output which shows all steps.", toRun=null },
 		};
 
+		private static ArgumentParser ap;
 
 		static void Main(string[] args)
 		{
-			ArgumentParser arguments = new ArgumentParser(args);
+			ap = new ArgumentParser(args);
 			// check arguments
 			foreach(Option option in options)	// merge both versions of options
-				arguments.JoinOptions(option.longName, option.shortName);
+				ap.JoinOptions(option.longName, option.shortName);
 
 			// run specified option
 			foreach (Option option in options)
 			{
 				// run if option is specified and not a flag
-				if (option.toRun != null && arguments.HasOption(option.longName))
+				if (option.toRun != null && ap.HasOption(option.longName))
 				{
-					option.toRun(arguments);
+					option.toRun();
 					return;
 				}
 			}
@@ -61,11 +64,12 @@ namespace Compiler
 				"Options:\n" +
 				"1. Compile File\n" +
 				"2. Compile from Console input\n" +
-				"3. Print help\n\n" +
+				"3. Print help\n" +
+				"4. Quit\n\n" + 
 				"Enter option: "
 			);
 			// get option input
-			int option = 0;
+			int option;
 			bool res = int.TryParse(Console.ReadLine(), out option);
 			Console.WriteLine();
 			if (!res)
@@ -89,6 +93,9 @@ namespace Compiler
 					PrintHelp();
 					break;
 
+				case (int)menuOptions.QUIT:
+					break;
+
 				default:
 					Console.WriteLine("Invalid option");
 					break;
@@ -98,7 +105,7 @@ namespace Compiler
 		// Method prints list of options for help command.
 		// input: none
 		// return: none
-		private static void PrintHelp(ArgumentParser ap = null)
+		private static void PrintHelp()
 		{
 			// print usage
 			Console.Write("\nUsage: Compiler");
@@ -140,7 +147,7 @@ namespace Compiler
 		// Method recevies input for a program and compiles it.
 		// input: argument parser
 		// return: none
-		private static void ProgramInput(ArgumentParser ap = null)
+		private static void ProgramInput()
 		{
 			string program = "";
 			// check parameters
@@ -175,7 +182,7 @@ namespace Compiler
 		// Method compiles a code file.
 		// ap: argument parser
 		// return: none
-		private static void CompileFile(ArgumentParser ap)
+		private static void CompileFile()
 		{
 			// get path
 			List<string> parameters = ap.GetParameters("file");
@@ -210,8 +217,20 @@ namespace Compiler
 		{
 			try
 			{
-				Parser parser = new Parser(program);
-				Console.WriteLine(parser.Parse());
+				if (ap.HasOption("detailed"))
+				{
+					// print each step
+					Console.WriteLine("Lexer Tokens: ");
+					Scanner.PrintTokens(new Scanner(program).Tokenize());
+					Console.WriteLine("\nParser AST: ");
+					Console.WriteLine(new Parser(program).Parse());
+				}
+				else
+				{
+					// compiler regularly
+					Parser parser = new Parser(program);
+					Console.WriteLine(parser.Parse());
+				}
 			}
 			catch(CompilerError e)
 			{

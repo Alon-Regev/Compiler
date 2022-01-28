@@ -41,9 +41,9 @@ namespace Compiler
 		}
 
 		// Method converts a program string to a list of tokens
-		// program: program string to convert
+		// input: none
 		// return: array of Token instances
-		public Token[] Tokenize(string program)
+		public Token[] Tokenize()
 		{
 			List<Token> tokens = new List<Token>();
 

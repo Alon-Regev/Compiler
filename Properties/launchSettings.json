@@ -2,7 +2,7 @@
   "profiles": {
     "Compiler": {
       "commandName": "Project",
-      "commandLineArgs": "--help"
+      "commandLineArgs": "-f Example.txt"
     }
   }
 }
