@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Collections.Generic;
 
 namespace Compiler
 {
@@ -12,79 +13,91 @@ namespace Compiler
 			HELP=3,
 		};
 
+		struct Option
+		{
+			public string shortName;
+			public string longName;
+			public string description;
+			public Action<ArgumentParser> toRun;
+		}
+
+		private static readonly List<Option> options = new List<Option>()
+		{
+			new Option{ shortName="h", longName="help", description="prints list of commands.", toRun=PrintHelp },
+			new Option{ shortName="i", longName="input", description="gets input from console or parameter.", toRun=ProgramInput },
+			new Option{ shortName="f", longName="file", description="compiles the specified file.", toRun=CompileFile },
+			new Option{ shortName="o", longName="output", description="specifies output file to save executable at", toRun=null },
+		};
+
+
 		static void Main(string[] args)
 		{
-			Console.WriteLine(new ArgumentParser(args));
-			return;
+			ArgumentParser arguments = new ArgumentParser(args);
+			// check arguments
+			foreach(Option option in options)	// merge both versions of options
+				arguments.JoinOptions(option.longName, option.shortName);
 
-			if(args.Length == 0)
+			// run specified option
+			foreach (Option option in options)
 			{
-				// main menu
-				Console.Write(
-					"Options:\n" +
-					"1. Compile File\n" +
-					"2. Compile from Console input\n" +
-					"3. Print help\n\n" +
-					"Enter option: "
-				);
-				// get option input
-				int option = 0;
-				bool res = int.TryParse(Console.ReadLine(), out option);
-				Console.WriteLine();
-				if (!res)
+				// run if option is specified and not a flag
+				if (option.toRun != null && arguments.HasOption(option.longName))
 				{
-					Console.WriteLine("Invalid input");
+					option.toRun(arguments);
 					return;
 				}
-				switch(option)
-				{
-					case (int)menuOptions.COMPILE_FILE:
-						Console.Write("Enter program's path: ");
-						string path = Console.ReadLine();
-						CompileFile(path);
-						break;
-
-					case (int)menuOptions.COMPILE_INPUT:
-						Compile(ConsoleProgramInput());
-						break;
-
-					case (int)menuOptions.HELP:
-						PrintHelp();
-						break;
-
-					default:
-						Console.WriteLine("Invalid option");
-						break;
-				}
-				
 			}
-			else if(args.Length == 1 && (args[0] == "--help" || args[0] == "-h"))
-			{
-				// print help message
-				PrintHelp();
-			}
-			else if(args.Length >= 1 && (args[0] == "-i" || args[0] == "--input"))
-			{
-				string program = "";
+			// default run menu
+			Menu();
+		}
 
-				if(args.Length == 1)	// input from console
-					program = ConsoleProgramInput();
-				else	// input from command line
-					program = args[1];
-
-				Compile(program);
-			}
-			else
+		// Method runs menu and receives action to do from user.
+		// input: none
+		// return: none
+		private static void Menu()
+		{
+			Console.Write(
+				"Options:\n" +
+				"1. Compile File\n" +
+				"2. Compile from Console input\n" +
+				"3. Print help\n\n" +
+				"Enter option: "
+			);
+			// get option input
+			int option = 0;
+			bool res = int.TryParse(Console.ReadLine(), out option);
+			Console.WriteLine();
+			if (!res)
 			{
-				// compile file
-				CompileFile(args[0]);
+				Console.WriteLine("Invalid input");
+				return;
+			}
+			switch (option)
+			{
+				case (int)menuOptions.COMPILE_FILE:
+					Console.Write("Enter program's path: ");
+					string path = Console.ReadLine();
+					CompileFile(path);
+					break;
+
+				case (int)menuOptions.COMPILE_INPUT:
+					Compile(ConsoleProgramInput());
+					break;
+
+				case (int)menuOptions.HELP:
+					PrintHelp();
+					break;
+
+				default:
+					Console.WriteLine("Invalid option");
+					break;
 			}
 		}
 
 		// Method prints list of options for help command.
 		// input: none
 		// return: none
-		private static void PrintHelp()
+		private static void PrintHelp(ArgumentParser ap = null)
 		{
 			Console.WriteLine(
 				"List of commands:\n" +
@@ -113,6 +126,21 @@ namespace Compiler
 			return program;
 		}
 
+		// Method recevies input for a program and compiles it.
+		// input: argument parser
+		// return: none
+		private static void ProgramInput(ArgumentParser ap = null)
+		{
+			string program = "";
+			// check parameters
+			List<string> parameters = ap?.GetParameters("input");
+			if (parameters?.Count > 0)	// input from parameters
+				program = string.Join("", parameters);
+			else	// input from console
+				program = ConsoleProgramInput();
+
+			Compile(program);
+		}
 
 		// Method checks if a file at a certain path exists.
 		// path: file path to check
@@ -134,12 +162,27 @@ namespace Compiler
 		}
 
 		// Method compiles a code file.
+		// ap: argument parser
+		// return: none
+		private static void CompileFile(ArgumentParser ap)
+		{
+			// get path
+			List<string> parameters = ap.GetParameters("file");
+			if(parameters.Count == 0)
+			{   // no path specified
+				Console.WriteLine("Error: No file specified");
+				return;
+			}
+			CompileFile(parameters[0]);
+		}
+
+		// Method compiles a code file.
 		// path: program's path
 		// return: none
 		private static void CompileFile(string path)
 		{
 			// check if file exists
-			if(!FileExists(path))
+			if (!FileExists(path))
 			{
 				Console.WriteLine("Error: File not found");
 				return;

@@ -2,7 +2,7 @@
   "profiles": {
     "Compiler": {
       "commandName": "Project",
-      "commandLineArgs": "Example.txt"
+      "commandLineArgs": "-i 1 - 2"
     }
   }
 }
