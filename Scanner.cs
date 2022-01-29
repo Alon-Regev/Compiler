@@ -41,9 +41,9 @@ namespace Compiler
 		}
 
 		// Method converts a program string to a list of tokens
-		// program: program string to convert
+		// input: none
 		// return: array of Token instances
-		public Token[] Tokenize(string program)
+		public Token[] Tokenize()
 		{
 			List<Token> tokens = new List<Token>();
 
@@ -84,7 +84,7 @@ namespace Compiler
 			foreach (KeyValuePair<TokenCode, string> tokenRegex in TokenRegexExpressions)
 			{
 				// match regex to program
-				Match match = Regex.Match(_programLeft, tokenRegex.Value);
+				Match match = Regex.Match(_programLeft, tokenRegex.Value, RegexOptions.Singleline);
 				// check if first match is at the beginning
 				if (match.Index != 0 || !match.Success)
 					continue;
