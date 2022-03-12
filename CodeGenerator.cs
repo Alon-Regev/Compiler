@@ -60,12 +60,35 @@ namespace Compiler
 		private string ToAssembly(BinaryOperator op)
 		{
 			string result = "";
-			// get arg1 in ebx
-			result += ToAssembly(op.GetChild(0));
-			result += "mov ebx, eax\n";
-			// get arg2
+			// get arg2 on stack
 			result += ToAssembly(op.GetChild(1));
-			result += "add eax, ebx\n";
+			result += "push eax\n";
+			// get arg1 in eax
+			result += ToAssembly(op.GetChild(0));
+			// pop arg2 to ebx
+			result += "pop ebx\n";
+			// calculate based on operator
+			switch (op.Operator)
+			{
+				case TokenCode.ADD_OP:
+					result += "add eax, ebx\n";
+					break;
+
+				case TokenCode.SUB_OP:
+					result += "sub eax, ebx\n";
+					break;
+
+				case TokenCode.MUL_OP:
+					result += "mul ebx\n";
+					break;
+
+				case TokenCode.DIV_OP:
+					result += "div ebx\n";
+					break;
+
+				default:
+					break;
+			}
 
 			return result;
 		}
