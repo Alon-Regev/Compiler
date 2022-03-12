@@ -224,6 +224,11 @@ namespace Compiler
 					Scanner.PrintTokens(new Scanner(program).Tokenize());
 					Console.WriteLine("\nParser AST: ");
 					Console.WriteLine(new Parser(program).Parse());
+					Console.WriteLine("\nGenerated Assembly: ");
+					string assembly = new CodeGenerator(program).GenerateAssembly();
+					Console.WriteLine(assembly);
+					Console.WriteLine("\nTurning Assembly to executable...");
+					new ExecutableCreator("temp.exe").FromString(assembly);
 				}
 				else
 				{
