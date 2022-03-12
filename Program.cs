@@ -230,6 +230,8 @@ namespace Compiler
 					Console.WriteLine("\nTurning Assembly to executable...");
 					ExecutableCreator ec = new ExecutableCreator("temp.exe");
 					ec.FromString(assembly);
+					Console.WriteLine("\nRunning Program: ");
+					ec.Run();
 				}
 				else
 				{
