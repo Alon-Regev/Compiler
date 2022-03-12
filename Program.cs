@@ -228,7 +228,8 @@ namespace Compiler
 					string assembly = new CodeGenerator(program).GenerateAssembly();
 					Console.WriteLine(assembly);
 					Console.WriteLine("\nTurning Assembly to executable...");
-					new ExecutableCreator("temp.exe").FromString(assembly);
+					ExecutableCreator ec = new ExecutableCreator("temp.exe");
+					ec.FromString(assembly);
 				}
 				else
 				{
