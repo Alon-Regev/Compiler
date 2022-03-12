@@ -145,7 +145,7 @@ namespace Compiler
 		}
 
 		// Method recevies input for a program and compiles it.
-		// input: argument parser
+		// input: none
 		// return: none
 		private static void ProgramInput()
 		{
@@ -224,6 +224,8 @@ namespace Compiler
 					Scanner.PrintTokens(new Scanner(program).Tokenize());
 					Console.WriteLine("\nParser AST: ");
 					Console.WriteLine(new Parser(program).Parse());
+					Console.WriteLine("\nCode Generator Assembly: ");
+					Console.WriteLine(new CodeGenerator(program).GenerateAssembly());
 				}
 				else
 				{
