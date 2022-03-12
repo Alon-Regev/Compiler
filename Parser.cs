@@ -26,7 +26,7 @@ namespace Compiler
 		// Method parses a mathematical expression, defined as a sum of terms.
 		// input: none
 		// return: expression tree
-		public AST_Node ParseExpression()
+		private AST_Node ParseExpression()
 		{
 			// Term | Term [+-] Term
 			AST_Node node = ParseTerm();
@@ -48,7 +48,7 @@ namespace Compiler
 		// Method parses a mathematical expression, defined as a product of factors.
 		// input: none
 		// return: term tree
-		public AST_Node ParseTerm()
+		private AST_Node ParseTerm()
 		{
 			// Factor | Factor [*/] Factor
 			AST_Node node = ParseFactor();
@@ -70,7 +70,7 @@ namespace Compiler
 		// Method parses a mathematical factor, defined as an integer or as an expression in parentheses.
 		// input: none
 		// return: factor tree
-		public AST_Node ParseFactor()
+		private AST_Node ParseFactor()
 		{
 			// int | (expression)
 			Token token = scanner.Next();

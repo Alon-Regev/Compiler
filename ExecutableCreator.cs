@@ -17,7 +17,7 @@ namespace Compiler
 			_outputPath = outputPath;
 		}
 
-		// functions compile assembly code to executable file
+		// Methods compile assembly code to executable file
 		// input: assembly file path or assembly code string
 		// output: none
 		public void FromString(string assembly)
@@ -28,8 +28,19 @@ namespace Compiler
 
 		public void FromFile(string filePath)
 		{
-			Process.Start("nasm", "-fwin32 -o temp.obj " + filePath);
-			Process.Start("gcc", "temp.obj -o " + _outputPath);
+			Process nasm = Process.Start("nasm", "-fwin32 -o temp.obj " + filePath);
+			nasm.WaitForExit();
+			Process gcc = Process.Start("gcc", "temp.obj -o " + _outputPath);
+			gcc.WaitForExit();
+		}
+
+		// Method runs resulting executable
+		// input: none
+		// return: none
+		public void Run()
+		{
+			Process program = Process.Start(_outputPath);
+			program.WaitForExit();
 		}
 	}
 }
