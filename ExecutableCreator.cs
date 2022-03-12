@@ -28,8 +28,10 @@ namespace Compiler
 
 		public void FromFile(string filePath)
 		{
-			Process.Start("nasm", "-fwin32 -o temp.obj " + filePath);
-			Process.Start("gcc", "temp.obj -o " + _outputPath);
+			Process nasm = Process.Start("nasm", "-fwin32 -o temp.obj " + filePath);
+			nasm.WaitForExit();
+			Process gcc = Process.Start("gcc", "temp.obj -o " + _outputPath);
+			gcc.WaitForExit();
 		}
 
 		// Method runs resulting executable
@@ -37,7 +39,8 @@ namespace Compiler
 		// return: none
 		public void Run()
 		{
-			Process.Start(_outputPath);
+			Process program = Process.Start(_outputPath);
+			program.WaitForExit();
 		}
 	}
 }
