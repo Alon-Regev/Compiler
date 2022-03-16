@@ -222,11 +222,20 @@ namespace Compiler
 					// print each step
 					Console.WriteLine("Lexer Tokens: ");
 					Scanner.PrintTokens(new Scanner(program).Tokenize());
+
 					Console.WriteLine("\nParser AST: ");
-					Console.WriteLine(new Parser(program).Parse());
+					AST_Node AST = new Parser(program).Parse();
+					Console.WriteLine(AST);
+
+					Console.Write("\nSemantic analysis result: ");
+					new SemanticAnalyzer(AST).Analyze();
+					Console.WriteLine("Good!");
+					Console.WriteLine(AST);
+
 					Console.WriteLine("\nGenerated Assembly: ");
 					string assembly = new CodeGenerator(program).GenerateAssembly();
 					Console.WriteLine(assembly);
+
 					Console.WriteLine("\nTurning Assembly to executable...");
 					ExecutableCreator ec = new ExecutableCreator("temp.exe");
 					ec.FromString(assembly);

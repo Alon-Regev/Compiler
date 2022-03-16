@@ -26,16 +26,16 @@ namespace Compiler
 		// Method parses a mathematical expression, defined as a sum of terms.
 		// input: none
 		// return: expression tree
-		private AST_Node ParseExpression()
+		private Expression ParseExpression()
 		{
 			// Term | Term [+-] Term
-			AST_Node node = ParseTerm();
+			Expression node = ParseTerm();
 
 			TokenCode nextToken = scanner.Peek().Code;
 			while(nextToken == TokenCode.ADD_OP || nextToken == TokenCode.SUB_OP)
 			{
 				Token op = scanner.Next();
-				AST_Node nextTerm = ParseTerm();
+				Expression nextTerm = ParseTerm();
 				// add term to node
 				node = new BinaryOperator(nextToken, node, nextTerm);
 				// check next code
@@ -48,16 +48,16 @@ namespace Compiler
 		// Method parses a mathematical expression, defined as a product of factors.
 		// input: none
 		// return: term tree
-		private AST_Node ParseTerm()
+		private Expression ParseTerm()
 		{
 			// Factor | Factor [*/] Factor
-			AST_Node node = ParseFactor();
+			Expression node = ParseFactor();
 
 			TokenCode nextToken = scanner.Peek().Code;
 			while (nextToken == TokenCode.MUL_OP || nextToken == TokenCode.DIV_OP)
 			{
 				Token op = scanner.Next();
-				AST_Node nextFactor = ParseFactor();
+				Expression nextFactor = ParseFactor();
 				// add term to node
 				node = new BinaryOperator(nextToken, node, nextFactor);
 				// check next code
@@ -70,7 +70,7 @@ namespace Compiler
 		// Method parses a mathematical factor, defined as an integer or as an expression in parentheses.
 		// input: none
 		// return: factor tree
-		private AST_Node ParseFactor()
+		private Expression ParseFactor()
 		{
 			// int | (expression)
 			Token token = scanner.Next();
@@ -82,7 +82,7 @@ namespace Compiler
 			// check expression
 			else if(token.Code == TokenCode.LEFT_PARENTHESIS)
 			{
-				AST_Node node = ParseExpression();
+				Expression node = ParseExpression();
 				// check closing parenthesis
 				Token closingParenthesis = scanner.Next();
 				if(closingParenthesis.Code != TokenCode.RIGHT_PARENTHESIS)

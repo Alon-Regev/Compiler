@@ -12,7 +12,7 @@ namespace Compiler
 		// line: line number of the node
 		// op: operator code which this node presents.
 		// operand 1,2: Operands to apply the operator on.
-		public BinaryOperator(TokenCode op, AST_Node operand1, AST_Node operand2) : base(operand1.Line)
+		public BinaryOperator(TokenCode op, Expression operand1, Expression operand2) : base(operand1.Line)
 		{
 			Operator = op;
 			// set children
@@ -25,6 +25,14 @@ namespace Compiler
 		{
 			string baseline = "Bin Op " + Operator;
 			return baseline + base.ToString(indent);
+		}
+
+		// Getter for operand
+		public Expression Operand(int i)
+		{
+			if (i >= 2 || i < 0)
+				throw new ImplementationError("Invalid child index of binary operator");
+			return (Expression)GetChild(i);
 		}
 	}
 }
