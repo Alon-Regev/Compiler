@@ -125,8 +125,8 @@ namespace Compiler
 						"fld dword [__temp]\n" +
 						"mov [__temp], ebx\n" +
 						"fld dword [__temp]\n" +
-						"fadd\n" +
-						"fst dword [__temp]\n" +
+						"faddp\n" +
+						"fstp dword [__temp]\n" +
 						"mov eax, [__temp]\n";
 				default:
 					return "";
