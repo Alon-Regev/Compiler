@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Compiler
 {
-	class Primitive<T> : Expression
+	class Primitive<T> : Expression, IPrimitive
 	{
 		public T Value { get; private set; }
 

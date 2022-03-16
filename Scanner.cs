@@ -21,7 +21,8 @@ namespace Compiler
 			new KeyValuePair<TokenCode, string>(TokenCode.RIGHT_PARENTHESIS, @"\)" ),
 
 			// values
-			new KeyValuePair<TokenCode, string>(TokenCode.NUMBER, @"\d+" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.DECIMAL, @"\d+\.\d+" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.INTEGER, @"\d+" ),
 
 			// default unknown and EOF
 			new KeyValuePair<TokenCode, string>(TokenCode.UNKNOWN, @".+" ),

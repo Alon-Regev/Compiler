@@ -75,9 +75,14 @@ namespace Compiler
 			// int | (expression)
 			Token token = scanner.Next();
 			// check integer
-			if (token.Code == TokenCode.NUMBER)
+			if (token.Code == TokenCode.INTEGER)
 			{
 				return new Primitive<int>(token);
+			}
+			// check float
+			else if(token.Code == TokenCode.DECIMAL)
+			{
+				return new Primitive<double>(token);
 			}
 			// check expression
 			else if(token.Code == TokenCode.LEFT_PARENTHESIS)

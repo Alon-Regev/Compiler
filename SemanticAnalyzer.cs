@@ -7,7 +7,8 @@ namespace Compiler
 	enum TypeCode
 	{
 		UNKNOWN,
-		INT
+		INT,
+		DOUBLE,
 	}
 
 	class SemanticAnalyzer
@@ -39,8 +40,8 @@ namespace Compiler
 				case BinaryOperator op:
 					AnalyzeBinaryOperator(op);
 					break;
-				case Primitive<int> p:
-					AnalyzePrimitive<int>(p);
+				case IPrimitive p:
+					AnalyzePrimitive(p);
 					break;
 				default:
 					break;
@@ -82,12 +83,15 @@ namespace Compiler
 		// Method does a semantic analysis for a primitive
 		// input: primitive
 		// return: none
-		private void AnalyzePrimitive<T>(Primitive<T> p)
+		private void AnalyzePrimitive(IPrimitive primitive)
 		{
-			switch(p)
+			switch(primitive)
 			{
-				case Primitive<int> t:
+				case Primitive<int> p:
 					p.Type = TypeCode.INT;
+					break;
+				case Primitive<double> p:
+					p.Type = TypeCode.DOUBLE;
 					break;
 				default:
 					break;
