@@ -36,6 +36,17 @@ namespace Compiler
 				return null;
 		}
 
+		// Method sets the ith child of this node.
+		// i: child's index
+		// node: node to replace child with
+		// return: none
+		public void SetChild(int i, AST_Node node)
+		{
+			// check range
+			if (i < Children.Count)
+				Children[i] = node;
+		}
+
 		// base node's TpString prints children
 		public override string ToString()
 		{
