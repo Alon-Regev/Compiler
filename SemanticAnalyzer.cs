@@ -8,7 +8,7 @@ namespace Compiler
 	{
 		UNKNOWN,
 		INT,
-		DOUBLE,
+		FLOAT,
 	}
 
 	class SemanticAnalyzer
@@ -90,8 +90,8 @@ namespace Compiler
 				case Primitive<int> p:
 					p.Type = TypeCode.INT;
 					break;
-				case Primitive<double> p:
-					p.Type = TypeCode.DOUBLE;
+				case Primitive<float> p:
+					p.Type = TypeCode.FLOAT;
 					break;
 				default:
 					break;

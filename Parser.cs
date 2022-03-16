@@ -82,7 +82,7 @@ namespace Compiler
 			// check float
 			else if(token.Code == TokenCode.DECIMAL)
 			{
-				return new Primitive<double>(token);
+				return new Primitive<float>(token);
 			}
 			// check expression
 			else if(token.Code == TokenCode.LEFT_PARENTHESIS)

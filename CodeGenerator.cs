@@ -8,11 +8,28 @@ namespace Compiler
 	{
 		AST_Node _tree;
 
+		List<DataSectionVar> _varsToDeclare = new List<DataSectionVar>
+		{
+			new DataSectionVar("__temp", DataSize.DWORD, "0")
+		};
+
 		// Constructor
 		// program: program's source code as string
-		public CodeGenerator(string program)
+		public CodeGenerator(AST_Node tree)
 		{
-			_tree = new Parser(program).Parse();
+			_tree = tree;
+			// set result format
+			switch((_tree as Expression).Type)
+			{
+				case TypeCode.INT:
+					_varsToDeclare.Add(DataSectionVar.StringConstant("format", "Result: %d"));
+					break;
+				case TypeCode.FLOAT:
+					_varsToDeclare.Add(DataSectionVar.StringConstant("format", "Result: %f"));
+					break;
+				default:
+					break;
+			}
 		}
 
 		// Method generates assembly program from input program
@@ -20,21 +37,23 @@ namespace Compiler
 		// return: none
 		public string GenerateAssembly()
 		{
+			string programAssembly = ToAssembly(_tree);
+			string data = DataSectionAssembly();
 			return
 				"global _main\n" +
 				"extern _printf\n" +
 				"\n" +
 
 				"section .data\n" +
-				"\tformat: db \"result: %d\", 0xa, 0\n" +
+				Indent(data) +
 				"\n" +
 
 				"section .text\n" +
 				"_main:\n" +
 				Indent(
-					ToAssembly(_tree) +
+					programAssembly +
 					"\n" +
-					AssemblyPrintResult() + 
+					AssemblyPrintResult((_tree as Expression).Type) + 
 					"\n" +
 					"mov eax, 0\n" +
 					"ret"
@@ -46,12 +65,15 @@ namespace Compiler
 		// return: assembly as string
 		private string ToAssembly(AST_Node tree)
 		{
-			if (tree is BinaryOperator)
-				return ToAssembly((BinaryOperator)tree);
-			else if (tree is Primitive<int>)
-				return ToAssembly((Primitive<int>)tree);
-			else
-				return "";
+			switch(tree)
+			{
+				case BinaryOperator op:
+					return ToAssembly(op);
+				case IPrimitive p:
+					return ToAssembly(p);
+				default:
+					return "";
+			}
 		}
 		// operator assembly rules:
 		// result	ax
@@ -61,18 +83,17 @@ namespace Compiler
 		{
 			string result = "";
 			// get arg2 on stack
-			result += ToAssembly(op.GetChild(1));
+			result += ToAssembly(op.Operand(1));
 			result += "push eax\n";
 			// get arg1 in eax
-			result += ToAssembly(op.GetChild(0));
+			result += ToAssembly(op.Operand(0));
 			// pop arg2 to ebx
 			result += "pop ebx\n";
 			// calculate based on operator
 			switch (op.Operator)
 			{
 				case TokenCode.ADD_OP:
-					result += "add eax, ebx\n";
-					break;
+					return result + AddOpASM(op.Type);
 
 				case TokenCode.SUB_OP:
 					result += "sub eax, ebx\n";
@@ -92,12 +113,54 @@ namespace Compiler
 
 			return result;
 		}
+		private string AddOpASM(TypeCode type)
+		{
+			switch (type)
+			{
+				case TypeCode.INT:
+					return "add eax, ebx\n";
+				case TypeCode.FLOAT:
+					return
+						"mov [__temp], eax\n" +
+						"fld dword [__temp]\n" +
+						"mov [__temp], ebx\n" +
+						"fld dword [__temp]\n" +
+						"fadd\n" +
+						"fst dword [__temp]\n" +
+						"mov eax, [__temp]\n";
+				default:
+					return "";
+		}
+		}
 
 		// primitive int
 		// place at eax
-		private string ToAssembly(Primitive<int> op)
+		private string ToAssembly(IPrimitive primitive)
 		{
-			return "mov eax, " + op.Value + "\n";
+			switch(primitive)
+			{
+				case Primitive<int> p:
+					return "mov eax, " + p.Value + "\n";
+				case Primitive<float> p:
+					DataSectionVar floatConst = DataSectionVar.FloatConstant(p.Value);
+					_varsToDeclare.Add(floatConst);
+					return "mov eax, [" + floatConst.Name + "]\n";
+				default:
+					return "";
+			}
+		}
+
+		// Method adds necessary global variables after turning program to assembly
+		// input: none
+		// return: assembly code for data section
+		private string DataSectionAssembly()
+		{
+			string result = "";
+			foreach(DataSectionVar v in _varsToDeclare)
+			{
+				result += v.ToAssembly();
+			}
+			return result;
 		}
 
 		// Method adds indent before every line
@@ -111,13 +174,28 @@ namespace Compiler
 		// Method returns assembly code for printing final result
 		// input: none
 		// return: assembly code
-		private string AssemblyPrintResult()
+		private string AssemblyPrintResult(TypeCode type)
 		{
-			return
-				"push eax\n" +
-				"push format\n" +
-				"call _printf\n" +
-				"add esp, 8\n";
+			switch (type)
+			{
+				case TypeCode.INT:
+					return
+						"push eax\n" +
+						"push format\n" +
+						"call _printf\n" +
+						"add esp, 8\n";
+				case TypeCode.FLOAT:
+					return
+						"mov [__temp], eax\n" +
+						"fld dword [__temp]\n" +
+						"sub esp, 8\n" +
+						"fst qword [esp]\n" +
+						"push format\n" +
+						"call _printf\n" + 
+						"add esp, 12\n";
+				default:
+					return "";
+			}
 		}
 	}
 }
