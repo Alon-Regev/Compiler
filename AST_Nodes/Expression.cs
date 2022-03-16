@@ -22,7 +22,7 @@ namespace Compiler
 			if (Type != TypeCode.UNKNOWN)
 				res += ", " + Type;
 			res += ") ";
-			return res + base.ToString(indent) + (Type == TypeCode.UNKNOWN ? "" : "(" + Type + ")");
+			return res + base.ToString(indent);
 		}
 	}
 }

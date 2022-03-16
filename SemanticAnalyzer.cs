@@ -39,6 +39,9 @@ namespace Compiler
 				case BinaryOperator op:
 					AnalyzeBinaryOperator(op);
 					break;
+				case Primitive<int> p:
+					AnalyzePrimitive<int>(p);
+					break;
 				default:
 					break;
 			}
@@ -73,6 +76,21 @@ namespace Compiler
 			{
 				Cast cast = new Cast(op.Operand(1), type);
 				op.SetChild(1, cast);
+			}
+		}
+
+		// Method does a semantic analysis for a primitive
+		// input: primitive
+		// return: none
+		private void AnalyzePrimitive<T>(Primitive<T> p)
+		{
+			switch(p)
+			{
+				case Primitive<int> t:
+					p.Type = TypeCode.INT;
+					break;
+				default:
+					break;
 			}
 		}
 	}
