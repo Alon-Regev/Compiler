@@ -16,6 +16,10 @@ namespace Compiler
 			new KeyValuePair<TokenCode, string>(TokenCode.MUL_OP, @"\*" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.DIV_OP, "/" ),
 
+			// castings
+			new KeyValuePair<TokenCode, string>(TokenCode.INT_CAST, @"\(int\)" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.FLOAT_CAST, @"\(float\)" ),
+
 			// expression symbols
 			new KeyValuePair<TokenCode, string>(TokenCode.LEFT_PARENTHESIS, @"\(" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.RIGHT_PARENTHESIS, @"\)" ),

@@ -97,6 +97,17 @@ namespace Compiler
 
 				return node;
 			}
+			// castings
+			else if(token.Code == TokenCode.INT_CAST)
+			{
+				Expression toCast = ParseTerm();
+				return new Cast(toCast, TypeCode.INT);
+			}
+			else if (token.Code == TokenCode.FLOAT_CAST)
+			{
+				Expression toCast = ParseTerm();
+				return new Cast(toCast, TypeCode.FLOAT);
+			}
 			else
 			{
 				throw new UnexpectedToken("expression", token);

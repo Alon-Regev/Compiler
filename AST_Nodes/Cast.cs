@@ -23,7 +23,7 @@ namespace Compiler
 		public override string ToString(int indent)
 		{
 			string baseLine = "Cast " + FromType + " -> " + Type;
-			return baseLine = base.ToString();
+			return baseLine + base.ToString(indent);
 		}
 	}
 }

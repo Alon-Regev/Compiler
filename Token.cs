@@ -11,6 +11,10 @@ namespace Compiler
 		INTEGER,
 		DECIMAL,
 
+		// Castings
+		INT_CAST,
+		FLOAT_CAST,
+
 		// Operators
 		ADD_OP,
 		SUB_OP,
