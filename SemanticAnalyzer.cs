@@ -91,6 +91,7 @@ namespace Compiler
 		private void AnalyzeCast(Cast cast)
 		{
 			AnalyzeSubtree(cast.GetChild(0));
+			cast.FromType = cast.Child().Type;
 		}
 	}
 }

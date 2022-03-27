@@ -71,6 +71,8 @@ namespace Compiler
 					return ToAssembly(op);
 				case IPrimitive p:
 					return ToAssembly(p);
+				case Cast c:
+					return ToAssembly(c);
 				default:
 					return "";
 			}
@@ -78,7 +80,7 @@ namespace Compiler
 		// operator assembly rules:
 		// result	ax
 		// args		ax, bx
-		// temps	cx, dx, di, si
+		// temps	cx, dx, di, si, [__temp]
 		private string ToAssembly(BinaryOperator op)
 		{
 			string result = "";
@@ -133,7 +135,7 @@ namespace Compiler
 		}
 		}
 
-		// primitive int
+		// primitive
 		// place at eax
 		private string ToAssembly(IPrimitive primitive)
 		{
@@ -145,6 +147,32 @@ namespace Compiler
 					DataSectionVar floatConst = DataSectionVar.FloatConstant(p.Value);
 					_varsToDeclare.Add(floatConst);
 					return "mov eax, [" + floatConst.Name + "]\n";
+				default:
+					return "";
+			}
+		}
+
+		// generate assembly for casting
+		// operand at eax
+		// result at eax
+		private string ToAssembly(Cast cast)
+		{
+			switch(cast.FromType, cast.Type)
+			{
+				case (TypeCode.INT, TypeCode.FLOAT):
+					return	// eax -> __temp -(cast)> fpu -> __temp -> eax
+						ToAssembly(cast.Child()) + 
+						"mov [__temp], eax\n" +
+						"fild dword [__temp]\n" +
+						"fstp dword [__temp]\n" +
+						"mov eax, [__temp]\n";
+				case (TypeCode.FLOAT, TypeCode.INT):
+					return  // eax -> __temp -> fpu -(cast)> __temp -> eax
+						ToAssembly(cast.Child()) +
+						"mov [__temp], eax\n" +
+						"fld dword [__temp]\n" +
+						"fistp dword [__temp]\n" +
+						"mov eax, [__temp]\n";
 				default:
 					return "";
 			}
