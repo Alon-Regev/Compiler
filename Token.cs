@@ -8,7 +8,12 @@ namespace Compiler
 	enum TokenCode
 	{
 		// Values
-		NUMBER,
+		INTEGER,
+		DECIMAL,
+
+		// Castings
+		INT_CAST,
+		FLOAT_CAST,
 
 		// Operators
 		ADD_OP,

@@ -7,7 +7,8 @@ namespace Compiler
 	enum TypeCode
 	{
 		UNKNOWN,
-		INT
+		INT,
+		FLOAT,
 	}
 
 	class SemanticAnalyzer
@@ -39,8 +40,11 @@ namespace Compiler
 				case BinaryOperator op:
 					AnalyzeBinaryOperator(op);
 					break;
-				case Primitive<int> p:
-					AnalyzePrimitive<int>(p);
+				case IPrimitive p:
+					AnalyzePrimitive(p);
+					break;
+				case Cast c:
+					AnalyzeCast(c);
 					break;
 				default:
 					break;
@@ -51,47 +55,43 @@ namespace Compiler
 		// input: binary operator to check
 		//		  what type the result needs to be
 		// return: none
-		private void AnalyzeBinaryOperator(BinaryOperator op, TypeCode neededType = TypeCode.UNKNOWN)
+		private void AnalyzeBinaryOperator(BinaryOperator op)
 		{
 			// analyze operands
-			AnalyzeSubtree(op.GetChild(0));
-			AnalyzeSubtree(op.GetChild(1));
-			// final type
-			TypeCode type = neededType;
-			if (type == TypeCode.UNKNOWN)
+			AnalyzeSubtree(op.Operand(0));
+			AnalyzeSubtree(op.Operand(1));
+			// check types
+			if(op.Operand(0).Type != op.Operand(1).Type)
 			{
-				// default to type of first
-				type = op.Operand(0).Type;
+				throw new TypeError(op);
 			}
-			// add type to bin op
-			op.Type = type;
-
-			// add casting as needed
-			if(op.Operand(0).Type != type)
-			{
-				Cast cast = new Cast(op.Operand(0), type);
-				op.SetChild(0, cast);
-			}
-			if(op.Operand(1).Type != type)
-			{
-				Cast cast = new Cast(op.Operand(1), type);
-				op.SetChild(1, cast);
-			}
+			// set type
+			op.Type = op.Operand(0).Type;
 		}
 
 		// Method does a semantic analysis for a primitive
 		// input: primitive
 		// return: none
-		private void AnalyzePrimitive<T>(Primitive<T> p)
+		private void AnalyzePrimitive(IPrimitive primitive)
 		{
-			switch(p)
+			switch(primitive)
 			{
-				case Primitive<int> t:
+				case Primitive<int> p:
 					p.Type = TypeCode.INT;
+					break;
+				case Primitive<float> p:
+					p.Type = TypeCode.FLOAT;
 					break;
 				default:
 					break;
 			}
+		}
+
+		// does an analysis on a cast
+		private void AnalyzeCast(Cast cast)
+		{
+			AnalyzeSubtree(cast.GetChild(0));
+			cast.FromType = cast.Child().Type;
 		}
 	}
 }

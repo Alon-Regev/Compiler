@@ -6,7 +6,7 @@ namespace Compiler
 {
 	class Cast : Expression
 	{
-		public TypeCode FromType { get; private set; }
+		public TypeCode FromType { get; set; }
 
 		// Constructor
 		// from: which Expression to cast
@@ -18,12 +18,18 @@ namespace Compiler
 
 			AddChild(from);
 		}
+		
+		// Getter for single child
+		public Expression Child()
+		{
+			return (Expression)GetChild(0);
+		}
 
 		// ToString override prints cast
 		public override string ToString(int indent)
 		{
 			string baseLine = "Cast " + FromType + " -> " + Type;
-			return baseLine = base.ToString();
+			return baseLine + base.ToString(indent);
 		}
 	}
 }

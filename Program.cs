@@ -233,7 +233,7 @@ namespace Compiler
 					Console.WriteLine(AST);
 
 					Console.WriteLine("\nGenerated Assembly: ");
-					string assembly = new CodeGenerator(program).GenerateAssembly();
+					string assembly = new CodeGenerator(AST).GenerateAssembly();
 					Console.WriteLine(assembly);
 
 					Console.WriteLine("\nTurning Assembly to executable...");
