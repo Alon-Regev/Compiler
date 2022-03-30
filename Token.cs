@@ -7,25 +7,32 @@ namespace Compiler
 	// token code specifies the type of the token
 	enum TokenCode
 	{
-		// Values
+		// --- Values
 		INTEGER,
 		DECIMAL,
 
-		// Castings
+		// --- Castings
 		INT_CAST,
 		FLOAT_CAST,
-
-		// Operators
+		
+		// --- Operators
+		// arithmetic
 		ADD_OP,
 		SUB_OP,
 		MUL_OP,
 		DIV_OP,
+		MOD_OP,
+		POW_OP,
+		// bitwise
+		BIT_AND_OP,
+		BIT_OR_OP,
+		BIT_XOR_OP,
 
-		// for expressions
+		// --- Expressions
 		LEFT_PARENTHESIS,
 		RIGHT_PARENTHESIS,
 
-		// other
+		// --- Other
 		UNKNOWN,
 		EOF,
 	}

@@ -10,25 +10,32 @@ namespace Compiler
 		// defines regexes for different tokens
 		static private readonly KeyValuePair<TokenCode, string>[] TokenRegexExpressions =
 		{
-			// operators
+			// --- Operators
+			// arithmetic
 			new KeyValuePair<TokenCode, string>(TokenCode.ADD_OP, @"\+" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.SUB_OP, "-" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.POW_OP, @"\*\*" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.MUL_OP, @"\*" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.DIV_OP, "/" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.MOD_OP, "%" ),
+			// bitwise
+			new KeyValuePair<TokenCode, string>(TokenCode.BIT_AND_OP, "&" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.BIT_OR_OP, @"\|" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.BIT_XOR_OP, @"\^" ),
 
-			// castings
+			// --- Castings
 			new KeyValuePair<TokenCode, string>(TokenCode.INT_CAST, @"\(int\)" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.FLOAT_CAST, @"\(float\)" ),
 
-			// expression symbols
+			// --- Expression symbols
 			new KeyValuePair<TokenCode, string>(TokenCode.LEFT_PARENTHESIS, @"\(" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.RIGHT_PARENTHESIS, @"\)" ),
 
-			// values
+			// --- Values
 			new KeyValuePair<TokenCode, string>(TokenCode.DECIMAL, @"\d+\.\d+" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.INTEGER, @"\d+" ),
 
-			// default unknown and EOF
+			// --- Other
 			new KeyValuePair<TokenCode, string>(TokenCode.UNKNOWN, @".+" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.EOF, @""),
 		};
