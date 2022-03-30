@@ -42,6 +42,7 @@ namespace Compiler
 			return
 				"global _main\n" +
 				"extern _printf\n" +
+				"extern _pow\n" +
 				"\n" +
 
 				"section .data\n" +
@@ -100,10 +101,17 @@ namespace Compiler
 					return operandsASM +
 						op.Operator switch
 						{
+							// --- Arithmetic
 							TokenCode.ADD_OP => "add eax, ebx\n",
 							TokenCode.SUB_OP => "sub eax, ebx\n",
 							TokenCode.MUL_OP => "mul ebx\n",
 							TokenCode.DIV_OP => "div ebx\n",
+							TokenCode.MOD_OP => "div ebx\n" +
+												"mov eax, edx\n",
+							// --- Bitwise
+							TokenCode.BIT_OR_OP => "or eax, ebx\n",
+							TokenCode.BIT_XOR_OP => "xor eax, ebx\n",
+							TokenCode.BIT_AND_OP => "and eax, ebx\n",
 							_ => throw new ImplementationError(DEFAULT_OPERATOR)
 						};
 
@@ -121,6 +129,16 @@ namespace Compiler
 							TokenCode.SUB_OP => "fsubp\n",
 							TokenCode.MUL_OP => "fmulp\n",
 							TokenCode.DIV_OP => "fdivp\n",
+							TokenCode.POW_OP => "fxch st1\n" +
+												"fyl2x\n" + 
+												"fld1\n" +	
+												"fld st1\n" +
+												"fprem\n" +
+												"f2xm1\n" +
+												"fadd\n" +
+												"fscale\n" +
+												"fxch st1\n" +
+												"fstp st0\n",
 							_ => throw new ImplementationError(DEFAULT_OPERATOR)
 						} +
 						// mov result from fpu to eax

@@ -27,7 +27,7 @@ namespace Compiler
 		// input:   order - expression's max operator order
 		//			default: includes all operators
 		// return:	expression tree
-		private Expression ParseExpression(int order = 2)
+		private Expression ParseExpression(int order = 6)
 		{
 			// subexp(0) is defined as [op(0)]
 			if (order == 0)
@@ -57,12 +57,22 @@ namespace Compiler
 		{
 			switch(t.Code)
 			{
+				// bitwise
+				case TokenCode.BIT_OR_OP:
+					return 6;
+				case TokenCode.BIT_XOR_OP:
+					return 5;
+				case TokenCode.BIT_AND_OP:
+					return 4;
+				// arithmetic
 				case TokenCode.ADD_OP:
 				case TokenCode.SUB_OP:
-					return 2;
+					return 3;
 				case TokenCode.MUL_OP:
 				case TokenCode.DIV_OP:
 				case TokenCode.MOD_OP:
+					return 2;
+				case TokenCode.POW_OP:
 					return 1;
 				case TokenCode.EOF:
 					return -1;
