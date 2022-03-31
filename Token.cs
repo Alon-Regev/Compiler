@@ -27,6 +27,8 @@ namespace Compiler
 		BIT_AND_OP,
 		BIT_OR_OP,
 		BIT_XOR_OP,
+		LEFT_SHIFT,
+		RIGHT_SHIFT,
 
 		// --- Expressions
 		LEFT_PARENTHESIS,

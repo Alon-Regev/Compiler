@@ -28,6 +28,8 @@ namespace Compiler
 			{ TokenCode.BIT_AND_OP, new HashSet<TypeCode>{ TypeCode.INT } },
 			{ TokenCode.BIT_OR_OP, new HashSet<TypeCode>{ TypeCode.INT } },
 			{ TokenCode.BIT_XOR_OP, new HashSet<TypeCode>{ TypeCode.INT } },
+			{ TokenCode.LEFT_SHIFT, new HashSet<TypeCode>{ TypeCode.INT } },
+			{ TokenCode.RIGHT_SHIFT, new HashSet<TypeCode>{ TypeCode.INT } },
 		};
 
 		// Constructor

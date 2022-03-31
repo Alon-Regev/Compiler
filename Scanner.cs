@@ -22,6 +22,8 @@ namespace Compiler
 			new KeyValuePair<TokenCode, string>(TokenCode.BIT_AND_OP, "&" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.BIT_OR_OP, @"\|" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.BIT_XOR_OP, @"\^" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.LEFT_SHIFT, "<<" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.RIGHT_SHIFT, ">>" ),
 
 			// --- Castings
 			new KeyValuePair<TokenCode, string>(TokenCode.INT_CAST, @"\(int\)" ),

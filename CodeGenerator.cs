@@ -109,9 +109,13 @@ namespace Compiler
 							TokenCode.MOD_OP => "div ebx\n" +
 												"mov eax, edx\n",
 							// --- Bitwise
-							TokenCode.BIT_OR_OP => "or eax, ebx\n",
+							TokenCode.BIT_OR_OP =>  "or eax, ebx\n",
 							TokenCode.BIT_XOR_OP => "xor eax, ebx\n",
 							TokenCode.BIT_AND_OP => "and eax, ebx\n",
+							TokenCode.LEFT_SHIFT => "mov cl, bl\n" +
+													"shl eax, cl\n",
+							TokenCode.RIGHT_SHIFT =>"mov cl, bl\n" +
+													"shr eax, cl\n",
 							_ => throw new ImplementationError(DEFAULT_OPERATOR)
 						};
 
