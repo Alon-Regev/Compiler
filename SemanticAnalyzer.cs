@@ -14,6 +14,23 @@ namespace Compiler
 	class SemanticAnalyzer
 	{
 		private AST_Node _tree;
+		private static Dictionary<TokenCode, HashSet<TypeCode>> _binOpAllowedTypes = new Dictionary<TokenCode, HashSet<TypeCode>>
+		{
+			// --- Arithmetic
+			{ TokenCode.ADD_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
+			{ TokenCode.SUB_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
+			{ TokenCode.MUL_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
+			{ TokenCode.DIV_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
+			{ TokenCode.MOD_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
+			{ TokenCode.POW_OP, new HashSet<TypeCode>{ TypeCode.FLOAT} },
+
+			// --- Bitwise
+			{ TokenCode.BIT_AND_OP, new HashSet<TypeCode>{ TypeCode.INT } },
+			{ TokenCode.BIT_OR_OP, new HashSet<TypeCode>{ TypeCode.INT } },
+			{ TokenCode.BIT_XOR_OP, new HashSet<TypeCode>{ TypeCode.INT } },
+			{ TokenCode.LEFT_SHIFT, new HashSet<TypeCode>{ TypeCode.INT } },
+			{ TokenCode.RIGHT_SHIFT, new HashSet<TypeCode>{ TypeCode.INT } },
+		};
 
 		// Constructor
 		// tree: AST to check
@@ -62,11 +79,12 @@ namespace Compiler
 			AnalyzeSubtree(op.Operand(1));
 			// check types
 			if(op.Operand(0).Type != op.Operand(1).Type)
-			{
 				throw new TypeError(op);
-			}
 			// set type
 			op.Type = op.Operand(0).Type;
+			// check if operation is allowed
+			if (!_binOpAllowedTypes[op.Operator].Contains(op.Type))
+				throw new TypeError(op);
 		}
 
 		// Method does a semantic analysis for a primitive

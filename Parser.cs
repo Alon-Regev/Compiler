@@ -24,47 +24,64 @@ namespace Compiler
 		}
 
 		// Method parses a mathematical expression, defined as a sum of terms.
-		// input: none
-		// return: expression tree
-		private Expression ParseExpression()
+		// input:   order - expression's max operator order
+		//			default: includes all operators
+		// return:	expression tree
+		private Expression ParseExpression(int order = 7)
 		{
-			// Term | Term [+-] Term
-			Expression node = ParseTerm();
+			// subexp(0) is defined as [op(0)]
+			if (order == 0)
+				return ParseFactor();
 
-			TokenCode nextToken = scanner.Peek().Code;
-			while(nextToken == TokenCode.ADD_OP || nextToken == TokenCode.SUB_OP)
+			// subexpression(n) is defined as
+			// subexp(n-1) | subexp(n-1) op(n) subexp(n-1)
+
+			Expression node = ParseExpression(order - 1);
+			// while peeked token's order is n
+			while(GetOperatorOrder(scanner.Peek()) == order)
 			{
 				Token op = scanner.Next();
-				Expression nextTerm = ParseTerm();
-				// add term to node
-				node = new BinaryOperator(nextToken, node, nextTerm);
-				// check next code
-				nextToken = scanner.Peek().Code;
+				Expression nextSubexp = ParseExpression(order - 1);
+				// add binary operator node
+				node = new BinaryOperator(op.Code, node, nextSubexp);
 			}
 
 			return node;
 		}
 
-		// Method parses a mathematical expression, defined as a product of factors.
-		// input: none
-		// return: term tree
-		private Expression ParseTerm()
+		// Method returns operator's order (in order of operations)
+		// higher value means it's computed later
+		// input: operator's token
+		// return: operator's order value
+		private int GetOperatorOrder(Token t)
 		{
-			// Factor | Factor [*/] Factor
-			Expression node = ParseFactor();
-
-			TokenCode nextToken = scanner.Peek().Code;
-			while (nextToken == TokenCode.MUL_OP || nextToken == TokenCode.DIV_OP)
+			switch(t.Code)
 			{
-				Token op = scanner.Next();
-				Expression nextFactor = ParseFactor();
-				// add term to node
-				node = new BinaryOperator(nextToken, node, nextFactor);
-				// check next code
-				nextToken = scanner.Peek().Code;
-			}
-
-			return node;
+				// bitwise
+				case TokenCode.BIT_OR_OP:
+					return 7;
+				case TokenCode.BIT_XOR_OP:
+					return 6;
+				case TokenCode.BIT_AND_OP:
+					return 5;
+				case TokenCode.LEFT_SHIFT:
+				case TokenCode.RIGHT_SHIFT:
+					return 4;
+				// arithmetic
+				case TokenCode.ADD_OP:
+				case TokenCode.SUB_OP:
+					return 3;
+				case TokenCode.MUL_OP:
+				case TokenCode.DIV_OP:
+				case TokenCode.MOD_OP:
+					return 2;
+				case TokenCode.POW_OP:
+					return 1;
+				case TokenCode.EOF:
+					return -1;
+				default:
+					throw new UnexpectedToken("Operator", t);
+			}	
 		}
 
 		// Method parses a mathematical factor, defined as an integer or as an expression in parentheses.
@@ -72,45 +89,35 @@ namespace Compiler
 		// return: factor tree
 		private Expression ParseFactor()
 		{
-			// int | (expression)
+			// the most compact part of an expression
+			// Factor := <primitive> | (<expression>) | <cast><factor> | <unary_op><factor> ...
 			Token token = scanner.Next();
-			// check integer
-			if (token.Code == TokenCode.INTEGER)
+			
+			switch(token.Code)
 			{
-				return new Primitive<int>(token);
-			}
-			// check float
-			else if(token.Code == TokenCode.DECIMAL)
-			{
-				return new Primitive<float>(token);
-			}
-			// check expression
-			else if(token.Code == TokenCode.LEFT_PARENTHESIS)
-			{
-				Expression node = ParseExpression();
-				// check closing parenthesis
-				Token closingParenthesis = scanner.Next();
-				if(closingParenthesis.Code != TokenCode.RIGHT_PARENTHESIS)
-				{
-					throw new MissingParenthesis(token);
-				}
+				// --- Primitives
+				case TokenCode.INTEGER:
+					return new Primitive<int>(token);
+				case TokenCode.DECIMAL:
+					return new Primitive<float>(token);
 
-				return node;
-			}
-			// castings
-			else if(token.Code == TokenCode.INT_CAST)
-			{
-				Expression toCast = ParseTerm();
-				return new Cast(toCast, TypeCode.INT);
-			}
-			else if (token.Code == TokenCode.FLOAT_CAST)
-			{
-				Expression toCast = ParseTerm();
-				return new Cast(toCast, TypeCode.FLOAT);
-			}
-			else
-			{
-				throw new UnexpectedToken("expression", token);
+				// --- Parentheses Expression
+				case TokenCode.LEFT_PARENTHESIS:
+					Expression node = ParseExpression();
+					// check closing parenthesis
+					if (scanner.Next().Code != TokenCode.RIGHT_PARENTHESIS)
+						throw new MissingParenthesis(token);
+					return node;
+
+				// --- Castings
+				case TokenCode.INT_CAST:
+					return new Cast(ParseFactor(), TypeCode.INT);
+				case TokenCode.FLOAT_CAST:
+					return new Cast(ParseFactor(), TypeCode.FLOAT);
+
+				// --- Unexpected
+				default:
+					throw new UnexpectedToken("expression", token);
 			}
 		}
 	}

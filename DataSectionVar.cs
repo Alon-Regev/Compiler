@@ -44,7 +44,11 @@ namespace Compiler
 		// return: none
 		public static DataSectionVar FloatConstant(float value)
 		{
-			return new DataSectionVar("__f" + floatConstantIndex++, DataSize.DWORD, value.ToString());
+			string numString = value.ToString();
+			if (value == (int)value)
+				// is int, add decimal so nasm would treat it as float const
+				numString += ".0";
+			return new DataSectionVar("__f" + floatConstantIndex++, DataSize.DWORD, numString);
 		}
 
 		// Method creates a variable for a const string

@@ -79,60 +79,78 @@ namespace Compiler
 		}
 		// operator assembly rules:
 		// result	ax
-		// args		ax, bx
-		// temps	cx, dx, di, si, [__temp]
+		// operands ax, bx
+		public static string DEFAULT_OPERATOR = "Invalid binary operation passed semantic analysis";
+		public static string DEFAULT_TYPE = "Binary operator has no type (or invalid type) after semantic analysis";
 		private string ToAssembly(BinaryOperator op)
 		{
-			string result = "";
-			// get arg2 on stack
-			result += ToAssembly(op.Operand(1));
-			result += "push eax\n";
-			// get arg1 in eax
-			result += ToAssembly(op.Operand(0));
-			// pop arg2 to ebx
-			result += "pop ebx\n";
-			// calculate based on operator
-			switch (op.Operator)
-			{
-				case TokenCode.ADD_OP:
-					return result + AddOpASM(op.Type);
+			string operandsASM = "";
+			// get operand2 on stack
+			operandsASM += ToAssembly(op.Operand(1));
+			operandsASM += "push eax\n";
+			// get operand1 in eax
+			operandsASM += ToAssembly(op.Operand(0));
+			// pop operand2 to ebx
+			operandsASM += "pop ebx\n";
 
-				case TokenCode.SUB_OP:
-					result += "sub eax, ebx\n";
-					break;
-
-				case TokenCode.MUL_OP:
-					result += "mul ebx\n";
-					break;
-
-				case TokenCode.DIV_OP:
-					result += "div ebx\n";
-					break;
-
-				default:
-					break;
-			}
-
-			return result;
-		}
-		private string AddOpASM(TypeCode type)
-		{
-			switch (type)
+			// calculate based on type
+			switch (op.Type)
 			{
 				case TypeCode.INT:
-					return "add eax, ebx\n";
+					return operandsASM +
+						op.Operator switch
+						{
+							// --- Arithmetic
+							TokenCode.ADD_OP => "add eax, ebx\n",
+							TokenCode.SUB_OP => "sub eax, ebx\n",
+							TokenCode.MUL_OP => "mul ebx\n",
+							TokenCode.DIV_OP => "div ebx\n",
+							TokenCode.MOD_OP => "div ebx\n" +
+												"mov eax, edx\n",
+							// --- Bitwise
+							TokenCode.BIT_OR_OP =>  "or eax, ebx\n",
+							TokenCode.BIT_XOR_OP => "xor eax, ebx\n",
+							TokenCode.BIT_AND_OP => "and eax, ebx\n",
+							TokenCode.LEFT_SHIFT => "mov cl, bl\n" +
+													"shl eax, cl\n",
+							TokenCode.RIGHT_SHIFT =>"mov cl, bl\n" +
+													"shr eax, cl\n",
+							_ => throw new ImplementationError(DEFAULT_OPERATOR)
+						};
+
 				case TypeCode.FLOAT:
-					return
+					return operandsASM +
+						// load eax and ebx to fpu
 						"mov [__temp], eax\n" +
 						"fld dword [__temp]\n" +
 						"mov [__temp], ebx\n" +
 						"fld dword [__temp]\n" +
-						"faddp\n" +
+						// calculate operation
+						op.Operator switch
+						{
+							TokenCode.ADD_OP => "faddp\n",
+							TokenCode.SUB_OP => "fsubp\n",
+							TokenCode.MUL_OP => "fmulp\n",
+							TokenCode.DIV_OP => "fdivp\n",
+							TokenCode.POW_OP => "fxch st1\n" +
+												"fyl2x\n" + 
+												"fld1\n" +	
+												"fld st1\n" +
+												"fprem\n" +
+												"f2xm1\n" +
+												"fadd\n" +
+												"fscale\n" +
+												"fxch st1\n" +
+												"fstp st0\n",
+							_ => throw new ImplementationError(DEFAULT_OPERATOR)
+						} +
+						// mov result from fpu to eax
 						"fstp dword [__temp]\n" +
 						"mov eax, [__temp]\n";
+
 				default:
-					return "";
-		}
+					throw new ImplementationError(DEFAULT_TYPE);
+			}
 		}
 
 		// primitive
