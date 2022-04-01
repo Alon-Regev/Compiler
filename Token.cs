@@ -27,8 +27,11 @@ namespace Compiler
 		BIT_AND_OP,
 		BIT_OR_OP,
 		BIT_XOR_OP,
+		BIT_NOT_OP,
 		LEFT_SHIFT,
 		RIGHT_SHIFT,
+		// other
+		EXCLAMATION_MARK,
 
 		// --- Expressions
 		LEFT_PARENTHESIS,

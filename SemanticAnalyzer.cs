@@ -32,6 +32,19 @@ namespace Compiler
 			{ TokenCode.RIGHT_SHIFT, new HashSet<TypeCode>{ TypeCode.INT } },
 		};
 
+		private static Dictionary<TokenCode, HashSet<TypeCode>> _unaryPrefixOpAllowedTypes = new Dictionary<TokenCode, HashSet<TypeCode>>
+		{
+			// --- Arithmetic
+			{ TokenCode.BIT_NOT_OP, new HashSet<TypeCode>{ TypeCode.INT } },
+			{ TokenCode.SUB_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },	// negation
+		};
+
+		private static Dictionary<TokenCode, HashSet<TypeCode>> _unaryPostfixOpAllowedTypes = new Dictionary<TokenCode, HashSet<TypeCode>>
+		{
+			// --- Arithmetic
+			{ TokenCode.EXCLAMATION_MARK, new HashSet<TypeCode>{ TypeCode.INT } },	// factorial
+		};
+
 		// Constructor
 		// tree: AST to check
 		public SemanticAnalyzer(AST_Node tree)
@@ -56,6 +69,9 @@ namespace Compiler
 			{
 				case BinaryOperator op:
 					AnalyzeBinaryOperator(op);
+					break;
+				case UnaryOperator op:
+					AnalyzeUnaryOperator(op);
 					break;
 				case IPrimitive p:
 					AnalyzePrimitive(p);
@@ -84,6 +100,22 @@ namespace Compiler
 			op.Type = op.Operand(0).Type;
 			// check if operation is allowed
 			if (!_binOpAllowedTypes[op.Operator].Contains(op.Type))
+				throw new TypeError(op);
+		}
+
+		// Method does a semantic analysis for a UnaryOperator subtree
+		// input: binary operator to check
+		//		  what type the result needs to be
+		// return: none
+		private void AnalyzeUnaryOperator(UnaryOperator op)
+		{
+			// analyze operands
+			AnalyzeSubtree(op.Operand());
+			// set type
+			op.Type = op.Operand().Type;
+			// check if operation is allowed
+			Dictionary<TokenCode, HashSet<TypeCode>> allowedTypes = op.Prefix ? _unaryPrefixOpAllowedTypes : _unaryPostfixOpAllowedTypes;
+			if (!allowedTypes[op.Operator].Contains(op.Type))
 				throw new TypeError(op);
 		}
 
