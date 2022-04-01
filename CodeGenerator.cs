@@ -42,7 +42,6 @@ namespace Compiler
 			return
 				"global _main\n" +
 				"extern _printf\n" +
-				"extern _pow\n" +
 				"\n" +
 
 				"section .data\n" +
