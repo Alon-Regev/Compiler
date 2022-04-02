@@ -83,8 +83,11 @@ namespace Compiler
 					return 2;
 				case TokenCode.POW_OP:
 					return 1;
+				// end of expression
 				case TokenCode.EOF:
+				case TokenCode.RIGHT_PARENTHESIS:
 					return -1;
+				// invalid
 				default:
 					throw new UnexpectedToken("Operator", t);
 			}	

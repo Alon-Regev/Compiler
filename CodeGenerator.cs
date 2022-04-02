@@ -69,6 +69,8 @@ namespace Compiler
 			{
 				case BinaryOperator op:
 					return ToAssembly(op);
+				case UnaryOperator op:
+					return ToAssembly(op);
 				case IPrimitive p:
 					return ToAssembly(p);
 				case Cast c:
@@ -77,11 +79,12 @@ namespace Compiler
 					return "";
 			}
 		}
-		// operator assembly rules:
+
+		// binary operator assembly rules:
 		// result	ax
 		// operands ax, bx
-		public static string DEFAULT_OPERATOR = "Invalid binary operation passed semantic analysis";
-		public static string DEFAULT_TYPE = "Binary operator has no type (or invalid type) after semantic analysis";
+		public static string DEFAULT_OPERATOR_BINARY = "Invalid binary operation passed semantic analysis";
+		public static string DEFAULT_TYPE_BINARY = "Binary operator has no type (or invalid type) after semantic analysis";
 		private string ToAssembly(BinaryOperator op)
 		{
 			string operandsASM = "";
@@ -115,7 +118,7 @@ namespace Compiler
 													"shl eax, cl\n",
 							TokenCode.RIGHT_SHIFT =>"mov cl, bl\n" +
 													"shr eax, cl\n",
-							_ => throw new ImplementationError(DEFAULT_OPERATOR)
+							_ => throw new ImplementationError(DEFAULT_OPERATOR_BINARY)
 						};
 
 				case TypeCode.FLOAT:
@@ -142,14 +145,53 @@ namespace Compiler
 												"fscale\n" +
 												"fxch st1\n" +
 												"fstp st0\n",
-							_ => throw new ImplementationError(DEFAULT_OPERATOR)
+							_ => throw new ImplementationError(DEFAULT_OPERATOR_BINARY)
 						} +
 						// mov result from fpu to eax
 						"fstp dword [__temp]\n" +
 						"mov eax, [__temp]\n";
 
 				default:
-					throw new ImplementationError(DEFAULT_TYPE);
+					throw new ImplementationError(DEFAULT_TYPE_BINARY);
+			}
+		}
+
+		// unary operator assembly rules:
+		// operand -> result: ax -> ax
+		public static string DEFAULT_OPERATOR_UNARY = "Invalid unary operator passed semantic analysis";
+		public static string DEFAULT_TYPE_UNARY = "Unary operator has no type (or invalid type) after semantic analysis";
+		private string ToAssembly(UnaryOperator op)
+		{
+			string operandASM = ToAssembly(op.Operand());
+			// calculate result of op
+			switch(op.Type)
+			{
+				case TypeCode.INT:
+					return operandASM +
+						(op.Operator, op.Prefix) switch
+						{
+							(TokenCode.BIT_NOT_OP, true) => "not eax\n",
+							(TokenCode.SUB_OP, true) => "neg eax\n",	// negation
+							(TokenCode.EXCLAMATION_MARK, false) => throw new ImplementationError("factorial not implemented yet"),
+							_ => throw new ImplementationError(DEFAULT_OPERATOR_UNARY)
+						};
+
+				case TypeCode.FLOAT:
+					return operandASM +
+						// load operand to fpu
+						"mov [__temp], eax\n" +
+						"fld dword [__temp]\n" +
+						(op.Operator, op.Prefix) switch
+						{
+							(TokenCode.SUB_OP, true) => "fchs\n",    // negation
+							_ => throw new ImplementationError(DEFAULT_OPERATOR_UNARY)
+						} +
+						// move result back into eax
+						"fstp dword [__temp]\n" +
+						"mov eax, [__temp]\n";
+
+				default:
+					throw new ImplementationError(DEFAULT_TYPE_UNARY);
 			}
 		}
 
