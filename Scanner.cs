@@ -18,6 +18,9 @@ namespace Compiler
 			new KeyValuePair<TokenCode, string>(TokenCode.MUL_OP, @"\*" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.DIV_OP, "/" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.MOD_OP, "%" ),
+			// logical
+			new KeyValuePair<TokenCode, string>(TokenCode.LOGIC_AND_OP, "&&" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.LOGIC_OR_OP, @"\|\|" ),
 			// bitwise
 			new KeyValuePair<TokenCode, string>(TokenCode.BIT_AND_OP, "&" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.BIT_OR_OP, @"\|" ),
@@ -25,6 +28,7 @@ namespace Compiler
 			new KeyValuePair<TokenCode, string>(TokenCode.BIT_NOT_OP, @"~" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.LEFT_SHIFT, "<<" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.RIGHT_SHIFT, ">>" ),
+			// relational
 			// other
 			new KeyValuePair<TokenCode, string>(TokenCode.EXCLAMATION_MARK, @"!" ),
 

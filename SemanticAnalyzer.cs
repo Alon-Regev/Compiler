@@ -31,6 +31,10 @@ namespace Compiler
 			{ TokenCode.BIT_XOR_OP, new HashSet<TypeCode>{ TypeCode.INT } },
 			{ TokenCode.LEFT_SHIFT, new HashSet<TypeCode>{ TypeCode.INT } },
 			{ TokenCode.RIGHT_SHIFT, new HashSet<TypeCode>{ TypeCode.INT } },
+
+			// --- Logical
+			{ TokenCode.LOGIC_AND_OP, new HashSet<TypeCode>{ TypeCode.BOOL } },
+			{ TokenCode.LOGIC_OR_OP, new HashSet<TypeCode>{ TypeCode.BOOL } },
 		};
 
 		private static Dictionary<TokenCode, HashSet<TypeCode>> _unaryPrefixOpAllowedTypes = new Dictionary<TokenCode, HashSet<TypeCode>>
@@ -38,6 +42,7 @@ namespace Compiler
 			// --- Arithmetic
 			{ TokenCode.BIT_NOT_OP, new HashSet<TypeCode>{ TypeCode.INT } },
 			{ TokenCode.SUB_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },	// negation
+			{ TokenCode.EXCLAMATION_MARK, new HashSet<TypeCode>{ TypeCode.BOOL } },			// logic not
 		};
 
 		private static Dictionary<TokenCode, HashSet<TypeCode>> _unaryPostfixOpAllowedTypes = new Dictionary<TokenCode, HashSet<TypeCode>>

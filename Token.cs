@@ -32,6 +32,10 @@ namespace Compiler
 		BIT_NOT_OP,
 		LEFT_SHIFT,
 		RIGHT_SHIFT,
+		// logical
+		LOGIC_AND_OP,
+		LOGIC_OR_OP,
+		// relational
 		// other
 		EXCLAMATION_MARK,
 

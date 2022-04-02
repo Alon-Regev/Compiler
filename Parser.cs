@@ -27,7 +27,7 @@ namespace Compiler
 		// input:   order - expression's max operator order
 		//			default: includes all operators
 		// return:	expression tree
-		private Expression ParseExpression(int order = 7)
+		private Expression ParseExpression(int order = 9)
 		{
 			// subexp(0) := factor | factor unary_op
 			if (order == 0)
@@ -63,6 +63,11 @@ namespace Compiler
 		{
 			switch(t.Code)
 			{
+				// logical
+				case TokenCode.LOGIC_OR_OP:
+					return 9;
+				case TokenCode.LOGIC_AND_OP:
+					return 8;
 				// bitwise
 				case TokenCode.BIT_OR_OP:
 					return 7;
@@ -139,8 +144,8 @@ namespace Compiler
 
 				// --- Unary Prefix Operators
 				case TokenCode.BIT_NOT_OP:
-					return new UnaryOperator(token.Code, ParseFactor(), true);
-				case TokenCode.SUB_OP:  // negation
+				case TokenCode.SUB_OP:			// negation
+				case TokenCode.EXCLAMATION_MARK:	// logical not
 					return new UnaryOperator(token.Code, ParseFactor(), true);
 
 				// --- Unexpected

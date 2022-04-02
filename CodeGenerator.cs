@@ -150,6 +150,15 @@ namespace Compiler
 						"fstp dword [__temp]\n" +
 						"mov eax, [__temp]\n";
 
+				case TypeCode.BOOL:
+					return operandsASM +
+						op.Operator switch
+						{
+							TokenCode.LOGIC_AND_OP => "and eax, ebx\n",
+							TokenCode.LOGIC_OR_OP => "or eax, ebx\n",
+							_ => throw new ImplementationError(DEFAULT_OPERATOR_BINARY)
+						};
+
 				default:
 					throw new ImplementationError(DEFAULT_TYPE_BINARY);
 			}
@@ -188,6 +197,16 @@ namespace Compiler
 						// move result back into eax
 						"fstp dword [__temp]\n" +
 						"mov eax, [__temp]\n";
+
+				case TypeCode.BOOL:
+					return operandASM +
+						(op.Operator, op.Prefix) switch
+						{
+							(TokenCode.EXCLAMATION_MARK, true) =>	"cmp eax, 0\n" +
+																	"mov eax, 0\n" +
+																	"sete al\n",    // logical not
+							_ => throw new ImplementationError(DEFAULT_OPERATOR_UNARY)
+						};
 
 				default:
 					throw new ImplementationError(DEFAULT_TYPE_UNARY);
