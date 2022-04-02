@@ -8,6 +8,8 @@ namespace Compiler
 	{
 		AST_Node _tree;
 
+		private int _labelCounter = 0;
+
 		List<DataSectionVar> _varsToDeclare = new List<DataSectionVar>
 		{
 			new DataSectionVar("__temp", DataSize.DWORD, "0")
@@ -96,13 +98,16 @@ namespace Compiler
 		private string ToAssembly(BinaryOperator op)
 		{
 			string operandsASM = "";
-			// get operand2 on stack
-			operandsASM += ToAssembly(op.Operand(1));
-			operandsASM += "push eax\n";
-			// get operand1 in eax
-			operandsASM += ToAssembly(op.Operand(0));
-			// pop operand2 to ebx
-			operandsASM += "pop ebx\n";
+			if (op.Type != TypeCode.BOOL)
+			{
+				// get operand2 on stack
+				operandsASM += ToAssembly(op.Operand(1));
+				operandsASM += "push eax\n";
+				// get operand1 in eax
+				operandsASM += ToAssembly(op.Operand(0));
+				// pop operand2 to ebx
+				operandsASM += "pop ebx\n";
+			}
 
 			// calculate based on type
 			switch (op.Type)
@@ -151,11 +156,22 @@ namespace Compiler
 						"mov eax, [__temp]\n";
 
 				case TypeCode.BOOL:
+					string label = GetLabel();
 					return operandsASM +
 						op.Operator switch
 						{
-							TokenCode.LOGIC_AND_OP => "and eax, ebx\n",
-							TokenCode.LOGIC_OR_OP => "or eax, ebx\n",
+							TokenCode.LOGIC_AND_OP =>	ToAssembly(op.Operand(0)) + 
+														"cmp eax, 0\n" +
+														"je " + label + "\n" +
+														ToAssembly(op.Operand(1)) +
+														label + ":\n",
+
+							TokenCode.LOGIC_OR_OP =>	ToAssembly(op.Operand(0)) +
+														"cmp eax, 1\n" +
+														"je " + label + "\n" +
+														ToAssembly(op.Operand(1)) +
+														label + ":\n",
+
 							_ => throw new ImplementationError(DEFAULT_OPERATOR_BINARY)
 						};
 
@@ -325,6 +341,14 @@ namespace Compiler
 					result += function;
 			}
 			return result;
+		}
+
+		// Method returns a unique label name every call
+		// input: none
+		// return: unique label name as string
+		private string GetLabel()
+		{
+			return "__" + _labelCounter++;
 		}
 	}
 }
