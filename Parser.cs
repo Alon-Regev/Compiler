@@ -27,7 +27,7 @@ namespace Compiler
 		// input:   order - expression's max operator order
 		//			default: includes all operators
 		// return:	expression tree
-		private Expression ParseExpression(int order = 9)
+		private Expression ParseExpression(int order = 11)
 		{
 			// subexp(0) := factor | factor unary_op
 			if (order == 0)
@@ -65,16 +65,26 @@ namespace Compiler
 			{
 				// logical
 				case TokenCode.LOGIC_OR_OP:
-					return 9;
+					return 11;
 				case TokenCode.LOGIC_AND_OP:
-					return 8;
+					return 10;
 				// bitwise
 				case TokenCode.BIT_OR_OP:
-					return 7;
+					return 9;
 				case TokenCode.BIT_XOR_OP:
-					return 6;
+					return 8;
 				case TokenCode.BIT_AND_OP:
+					return 7;
+				// relational
+				case TokenCode.EQUAL_OP:
+				case TokenCode.NOT_EQUAL_OP:
+					return 6;
+				case TokenCode.LESS_OP:
+				case TokenCode.LESS_EQUAL_OP:
+				case TokenCode.GREATER_OP:
+				case TokenCode.GREATER_EQUAL_OP:
 					return 5;
+				// bitwise shift
 				case TokenCode.LEFT_SHIFT:
 				case TokenCode.RIGHT_SHIFT:
 					return 4;

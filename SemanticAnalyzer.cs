@@ -35,6 +35,15 @@ namespace Compiler
 			// --- Logical
 			{ TokenCode.LOGIC_AND_OP, new HashSet<TypeCode>{ TypeCode.BOOL } },
 			{ TokenCode.LOGIC_OR_OP, new HashSet<TypeCode>{ TypeCode.BOOL } },
+
+			// --- Relational
+			{ TokenCode.LESS_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
+			{ TokenCode.LESS_EQUAL_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
+			{ TokenCode.GREATER_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
+			{ TokenCode.GREATER_EQUAL_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
+			{ TokenCode.EQUAL_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
+			{ TokenCode.NOT_EQUAL_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
+
 		};
 
 		private static Dictionary<TokenCode, HashSet<TypeCode>> _unaryPrefixOpAllowedTypes = new Dictionary<TokenCode, HashSet<TypeCode>>

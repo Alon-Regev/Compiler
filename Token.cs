@@ -36,6 +36,12 @@ namespace Compiler
 		LOGIC_AND_OP,
 		LOGIC_OR_OP,
 		// relational
+		LESS_OP,
+		LESS_EQUAL_OP,
+		GREATER_OP,
+		GREATER_EQUAL_OP,
+		EQUAL_OP,
+		NOT_EQUAL_OP,
 		// other
 		EXCLAMATION_MARK,
 

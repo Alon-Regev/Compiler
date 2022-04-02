@@ -29,6 +29,12 @@ namespace Compiler
 			new KeyValuePair<TokenCode, string>(TokenCode.LEFT_SHIFT, "<<" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.RIGHT_SHIFT, ">>" ),
 			// relational
+			new KeyValuePair<TokenCode, string>(TokenCode.LESS_EQUAL_OP, "<=" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.GREATER_EQUAL_OP, ">=" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.LESS_OP, "<" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.GREATER_OP, ">" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.EQUAL_OP, "==" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.NOT_EQUAL_OP, "!=" ),
 			// other
 			new KeyValuePair<TokenCode, string>(TokenCode.EXCLAMATION_MARK, @"!" ),
 

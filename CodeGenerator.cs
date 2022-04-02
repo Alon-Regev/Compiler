@@ -131,6 +131,13 @@ namespace Compiler
 													"shl eax, cl\n",
 							TokenCode.RIGHT_SHIFT =>"mov cl, bl\n" +
 													"shr eax, cl\n",
+							// --- Relational
+							TokenCode.LESS_OP => "cmp eax, ebx\nmov eax, 0\nsetl al\n",
+							TokenCode.LESS_EQUAL_OP => "cmp eax, ebx\nmov eax, 0\nsetle al\n",
+							TokenCode.GREATER_OP => "cmp eax, ebx\nmov eax, 0\nsetg al\n",
+							TokenCode.GREATER_EQUAL_OP => "cmp eax, ebx\nmov eax, 0\nsetge al\n",
+							TokenCode.EQUAL_OP => "cmp eax, ebx\nmov eax, 0\nsete al\n",
+							TokenCode.NOT_EQUAL_OP => "cmp eax, ebx\nmov eax, 0\nsetne al\n",
 							_ => throw new ImplementationError(DEFAULT_OPERATOR_BINARY)
 						};
 
@@ -144,11 +151,19 @@ namespace Compiler
 						// calculate operation
 						op.Operator switch
 						{
+							// --- Arithmetic
 							TokenCode.ADD_OP => "faddp\n",
 							TokenCode.SUB_OP => "fsubp\n",
 							TokenCode.MUL_OP => "fmulp\n",
 							TokenCode.DIV_OP => "fdivp\n",
 							TokenCode.POW_OP => HelperCall("pow"),
+							// --- Relational
+							TokenCode.LESS_OP => "fcom\nmov eax, 0\nsetl al\n",
+							TokenCode.LESS_EQUAL_OP => "fcom\nmov eax, 0\nsetle al\n",
+							TokenCode.GREATER_OP => "fcom\nmov eax, 0\nsetg al\n",
+							TokenCode.GREATER_EQUAL_OP => "fcom\nmov eax, 0\nsetge al\n",
+							TokenCode.EQUAL_OP => "fcom\nmov eax, 0\nsete al\n",
+							TokenCode.NOT_EQUAL_OP => "fcom\nmov eax, 0\nsetne al\n",
 							_ => throw new ImplementationError(DEFAULT_OPERATOR_BINARY)
 						} +
 						// mov result from fpu to eax
