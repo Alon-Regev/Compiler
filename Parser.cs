@@ -134,6 +134,8 @@ namespace Compiler
 					return new Cast(ParseFactor(), TypeCode.INT);
 				case TokenCode.FLOAT_CAST:
 					return new Cast(ParseFactor(), TypeCode.FLOAT);
+				case TokenCode.BOOL_CAST:
+					return new Cast(ParseFactor(), TypeCode.BOOL);
 
 				// --- Unary Prefix Operators
 				case TokenCode.BIT_NOT_OP:

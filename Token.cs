@@ -15,7 +15,8 @@ namespace Compiler
 		// --- Castings
 		INT_CAST,
 		FLOAT_CAST,
-		
+		BOOL_CAST,
+
 		// --- Operators
 		// arithmetic
 		ADD_OP,

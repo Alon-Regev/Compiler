@@ -234,8 +234,11 @@ namespace Compiler
 						"fld dword [__temp]\n" +
 						"fistp dword [__temp]\n" +
 						"mov eax, [__temp]\n";
+				case (TypeCode.INT, TypeCode.BOOL):
+				case (TypeCode.BOOL, TypeCode.INT):
+					return ToAssembly(cast.Child());	// no need to change data
 				default:
-					return "";
+					throw new TypeError(cast);
 			}
 		}
 
