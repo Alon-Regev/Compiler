@@ -13,6 +13,8 @@ namespace Compiler
 			new DataSectionVar("__temp", DataSize.DWORD, "0")
 		};
 
+		private HashSet<string> _helperFunctionsUsed = new HashSet<string>();
+
 		// Constructor
 		// program: program's source code as string
 		public CodeGenerator(AST_Node tree)
@@ -58,7 +60,7 @@ namespace Compiler
 					"mov eax, 0\n" +
 					"ret"
 				) + "\n\n" +
-				Properties.Resources.Functions;
+				HelperFunctionsAssembly();
 		}
 
 		// Methods generate assembly code from subtrees
@@ -136,16 +138,7 @@ namespace Compiler
 							TokenCode.SUB_OP => "fsubp\n",
 							TokenCode.MUL_OP => "fmulp\n",
 							TokenCode.DIV_OP => "fdivp\n",
-							TokenCode.POW_OP => "fxch st1\n" +
-												"fyl2x\n" + 
-												"fld1\n" +	
-												"fld st1\n" +
-												"fprem\n" +
-												"f2xm1\n" +
-												"fadd\n" +
-												"fscale\n" +
-												"fxch st1\n" +
-												"fstp st0\n",
+							TokenCode.POW_OP => HelperCall("pow"),
 							_ => throw new ImplementationError(DEFAULT_OPERATOR_BINARY)
 						} +
 						// mov result from fpu to eax
@@ -173,7 +166,7 @@ namespace Compiler
 						{
 							(TokenCode.BIT_NOT_OP, true) => "not eax\n",
 							(TokenCode.SUB_OP, true) => "neg eax\n",	// negation
-							(TokenCode.EXCLAMATION_MARK, false) => "call factorial\n",
+							(TokenCode.EXCLAMATION_MARK, false) => HelperCall("factorial"),
 							_ => throw new ImplementationError(DEFAULT_OPERATOR_UNARY)
 						};
 
@@ -268,23 +261,39 @@ namespace Compiler
 			switch (type)
 			{
 				case TypeCode.INT:
-					return
-						"push eax\n" +
-						"push format\n" +
-						"call _printf\n" +
-						"add esp, 8\n";
+					return HelperCall("print_int");
 				case TypeCode.FLOAT:
-					return
-						"mov [__temp], eax\n" +
-						"fld dword [__temp]\n" +
-						"sub esp, 8\n" +
-						"fst qword [esp]\n" +
-						"push format\n" +
-						"call _printf\n" + 
-						"add esp, 12\n";
+					return HelperCall("print_float");
 				default:
 					return "";
 			}
+		}
+
+		// Method returns an assembly call to a helper function and makes sure it's added to the final assembly.
+		// input: name of helper function
+		// return: function call assembly as string
+		private string HelperCall(string functionName)
+		{
+			_helperFunctionsUsed.Add(functionName);
+			return "call " + functionName + "\n";
+		}
+
+		// Method returns assembly code for used helper functions
+		// input: none
+		// return: assembly code for definitions of used functions
+		private string HelperFunctionsAssembly()
+		{
+			string[] functions = Properties.Resources.Functions.Split(";FUNCTION;\r\n", StringSplitOptions.RemoveEmptyEntries);
+			string result = "";
+			// add used functions to result
+			foreach(string function in functions)
+			{
+				string name = function.Split(":")[0];
+				// if this function was used, add its definition
+				if (_helperFunctionsUsed.Contains(name))
+					result += function;
+			}
+			return result;
 		}
 	}
 }
