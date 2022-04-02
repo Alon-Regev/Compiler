@@ -29,9 +29,15 @@ namespace Compiler
 		// return:	expression tree
 		private Expression ParseExpression(int order = 7)
 		{
-			// subexp(0) is defined as [op(0)]
+			// subexp(0) := factor | factor unary_op
 			if (order == 0)
-				return ParseFactor();
+			{
+				Expression factor = ParseFactor();
+				if (IsUnaryPostfixOperator(scanner.Peek()))
+					return new UnaryOperator(scanner.Next().Code, factor, false);
+				else
+					return factor;
+			}
 
 			// subexpression(n) is defined as
 			// subexp(n-1) | subexp(n-1) op(n) subexp(n-1)
@@ -77,11 +83,22 @@ namespace Compiler
 					return 2;
 				case TokenCode.POW_OP:
 					return 1;
+				// end of expression
 				case TokenCode.EOF:
+				case TokenCode.RIGHT_PARENTHESIS:
 					return -1;
+				// invalid
 				default:
 					throw new UnexpectedToken("Operator", t);
 			}	
+		}
+
+		// Method checks if a token is of an unary postfix operator
+		// input: token to check
+		// return: true if unary postfix operator, else false
+		private bool IsUnaryPostfixOperator(Token t)
+		{
+			return t.Code == TokenCode.EXCLAMATION_MARK;
 		}
 
 		// Method parses a mathematical factor, defined as an integer or as an expression in parentheses.
@@ -90,8 +107,9 @@ namespace Compiler
 		private Expression ParseFactor()
 		{
 			// the most compact part of an expression
-			// Factor := <primitive> | (<expression>) | <cast><factor> | <unary_op><factor> ...
+			// Factor := <primitive> | (<expression>) | <cast><factor> | <unary_op><factor> | <factor><unary_op>
 			Token token = scanner.Next();
+			AST_Node result;
 			
 			switch(token.Code)
 			{
@@ -114,6 +132,12 @@ namespace Compiler
 					return new Cast(ParseFactor(), TypeCode.INT);
 				case TokenCode.FLOAT_CAST:
 					return new Cast(ParseFactor(), TypeCode.FLOAT);
+
+				// --- Unary Prefix Operators
+				case TokenCode.BIT_NOT_OP:
+					return new UnaryOperator(token.Code, ParseFactor(), true);
+				case TokenCode.SUB_OP:  // negation
+					return new UnaryOperator(token.Code, ParseFactor(), true);
 
 				// --- Unexpected
 				default:

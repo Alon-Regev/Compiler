@@ -10,5 +10,10 @@ namespace Compiler
 			: base("TypeError", op.Line, "Operator " + op.Operator + " on types " + op.Operand(0).Type + " and " + op.Operand(1).Type)
 		{
 		}
+
+		public TypeError(UnaryOperator op)
+			: base("TypeError", op.Line, "Operator " + op.Operator + " on type " + op.Operand().Type)
+		{
+		}
 	}
 }

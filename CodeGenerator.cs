@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.IO;
 
 namespace Compiler
 {
@@ -12,6 +12,8 @@ namespace Compiler
 		{
 			new DataSectionVar("__temp", DataSize.DWORD, "0")
 		};
+
+		private HashSet<string> _helperFunctionsUsed = new HashSet<string>();
 
 		// Constructor
 		// program: program's source code as string
@@ -57,7 +59,8 @@ namespace Compiler
 					"\n" +
 					"mov eax, 0\n" +
 					"ret"
-				);
+				) + "\n\n" +
+				HelperFunctionsAssembly();
 		}
 
 		// Methods generate assembly code from subtrees
@@ -69,6 +72,8 @@ namespace Compiler
 			{
 				case BinaryOperator op:
 					return ToAssembly(op);
+				case UnaryOperator op:
+					return ToAssembly(op);
 				case IPrimitive p:
 					return ToAssembly(p);
 				case Cast c:
@@ -77,11 +82,12 @@ namespace Compiler
 					return "";
 			}
 		}
-		// operator assembly rules:
+
+		// binary operator assembly rules:
 		// result	ax
 		// operands ax, bx
-		public static string DEFAULT_OPERATOR = "Invalid binary operation passed semantic analysis";
-		public static string DEFAULT_TYPE = "Binary operator has no type (or invalid type) after semantic analysis";
+		public static string DEFAULT_OPERATOR_BINARY = "Invalid binary operation passed semantic analysis";
+		public static string DEFAULT_TYPE_BINARY = "Binary operator has no type (or invalid type) after semantic analysis";
 		private string ToAssembly(BinaryOperator op)
 		{
 			string operandsASM = "";
@@ -115,7 +121,7 @@ namespace Compiler
 													"shl eax, cl\n",
 							TokenCode.RIGHT_SHIFT =>"mov cl, bl\n" +
 													"shr eax, cl\n",
-							_ => throw new ImplementationError(DEFAULT_OPERATOR)
+							_ => throw new ImplementationError(DEFAULT_OPERATOR_BINARY)
 						};
 
 				case TypeCode.FLOAT:
@@ -132,24 +138,54 @@ namespace Compiler
 							TokenCode.SUB_OP => "fsubp\n",
 							TokenCode.MUL_OP => "fmulp\n",
 							TokenCode.DIV_OP => "fdivp\n",
-							TokenCode.POW_OP => "fxch st1\n" +
-												"fyl2x\n" + 
-												"fld1\n" +	
-												"fld st1\n" +
-												"fprem\n" +
-												"f2xm1\n" +
-												"fadd\n" +
-												"fscale\n" +
-												"fxch st1\n" +
-												"fstp st0\n",
-							_ => throw new ImplementationError(DEFAULT_OPERATOR)
+							TokenCode.POW_OP => HelperCall("pow"),
+							_ => throw new ImplementationError(DEFAULT_OPERATOR_BINARY)
 						} +
 						// mov result from fpu to eax
 						"fstp dword [__temp]\n" +
 						"mov eax, [__temp]\n";
 
 				default:
-					throw new ImplementationError(DEFAULT_TYPE);
+					throw new ImplementationError(DEFAULT_TYPE_BINARY);
+			}
+		}
+
+		// unary operator assembly rules:
+		// operand -> result: ax -> ax
+		public static string DEFAULT_OPERATOR_UNARY = "Invalid unary operator passed semantic analysis";
+		public static string DEFAULT_TYPE_UNARY = "Unary operator has no type (or invalid type) after semantic analysis";
+		private string ToAssembly(UnaryOperator op)
+		{
+			string operandASM = ToAssembly(op.Operand());
+			// calculate result of op
+			switch(op.Type)
+			{
+				case TypeCode.INT:
+					return operandASM +
+						(op.Operator, op.Prefix) switch
+						{
+							(TokenCode.BIT_NOT_OP, true) => "not eax\n",
+							(TokenCode.SUB_OP, true) => "neg eax\n",	// negation
+							(TokenCode.EXCLAMATION_MARK, false) => HelperCall("factorial"),
+							_ => throw new ImplementationError(DEFAULT_OPERATOR_UNARY)
+						};
+
+				case TypeCode.FLOAT:
+					return operandASM +
+						// load operand to fpu
+						"mov [__temp], eax\n" +
+						"fld dword [__temp]\n" +
+						(op.Operator, op.Prefix) switch
+						{
+							(TokenCode.SUB_OP, true) => "fchs\n",    // negation
+							_ => throw new ImplementationError(DEFAULT_OPERATOR_UNARY)
+						} +
+						// move result back into eax
+						"fstp dword [__temp]\n" +
+						"mov eax, [__temp]\n";
+
+				default:
+					throw new ImplementationError(DEFAULT_TYPE_UNARY);
 			}
 		}
 
@@ -225,23 +261,39 @@ namespace Compiler
 			switch (type)
 			{
 				case TypeCode.INT:
-					return
-						"push eax\n" +
-						"push format\n" +
-						"call _printf\n" +
-						"add esp, 8\n";
+					return HelperCall("print_int");
 				case TypeCode.FLOAT:
-					return
-						"mov [__temp], eax\n" +
-						"fld dword [__temp]\n" +
-						"sub esp, 8\n" +
-						"fst qword [esp]\n" +
-						"push format\n" +
-						"call _printf\n" + 
-						"add esp, 12\n";
+					return HelperCall("print_float");
 				default:
 					return "";
 			}
+		}
+
+		// Method returns an assembly call to a helper function and makes sure it's added to the final assembly.
+		// input: name of helper function
+		// return: function call assembly as string
+		private string HelperCall(string functionName)
+		{
+			_helperFunctionsUsed.Add(functionName);
+			return "call " + functionName + "\n";
+		}
+
+		// Method returns assembly code for used helper functions
+		// input: none
+		// return: assembly code for definitions of used functions
+		private string HelperFunctionsAssembly()
+		{
+			string[] functions = Properties.Resources.Functions.Split(";FUNCTION;\r\n", StringSplitOptions.RemoveEmptyEntries);
+			string result = "";
+			// add used functions to result
+			foreach(string function in functions)
+			{
+				string name = function.Split(":")[0];
+				// if this function was used, add its definition
+				if (_helperFunctionsUsed.Contains(name))
+					result += function;
+			}
+			return result;
 		}
 	}
 }
