@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.IO;
 
 namespace Compiler
 {
@@ -57,7 +57,8 @@ namespace Compiler
 					"\n" +
 					"mov eax, 0\n" +
 					"ret"
-				);
+				) + "\n\n" +
+				Properties.Resources.Functions;
 		}
 
 		// Methods generate assembly code from subtrees
@@ -172,7 +173,7 @@ namespace Compiler
 						{
 							(TokenCode.BIT_NOT_OP, true) => "not eax\n",
 							(TokenCode.SUB_OP, true) => "neg eax\n",	// negation
-							(TokenCode.EXCLAMATION_MARK, false) => throw new ImplementationError("factorial not implemented yet"),
+							(TokenCode.EXCLAMATION_MARK, false) => "call factorial\n",
 							_ => throw new ImplementationError(DEFAULT_OPERATOR_UNARY)
 						};
 
