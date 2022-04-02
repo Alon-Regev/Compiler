@@ -39,6 +39,7 @@ namespace Compiler
 			// --- Values
 			new KeyValuePair<TokenCode, string>(TokenCode.DECIMAL, @"\d+\.\d+" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.INTEGER, @"\d+" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.BOOLEAN, @"true|false" ),
 
 			// --- Other
 			new KeyValuePair<TokenCode, string>(TokenCode.UNKNOWN, @".+" ),

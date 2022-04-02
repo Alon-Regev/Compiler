@@ -118,6 +118,8 @@ namespace Compiler
 					return new Primitive<int>(token);
 				case TokenCode.DECIMAL:
 					return new Primitive<float>(token);
+				case TokenCode.BOOLEAN:
+					return new Primitive<bool>(token);
 
 				// --- Parentheses Expression
 				case TokenCode.LEFT_PARENTHESIS:

@@ -29,6 +29,11 @@ namespace Compiler
 				case TypeCode.FLOAT:
 					_varsToDeclare.Add(DataSectionVar.StringConstant("format", "Result: %f"));
 					break;
+				case TypeCode.BOOL:
+					_varsToDeclare.Add(DataSectionVar.StringConstant("format", "Result: %s"));
+					_varsToDeclare.Add(DataSectionVar.StringConstant("true_string", "true"));
+					_varsToDeclare.Add(DataSectionVar.StringConstant("false_string", "false"));
+					break;
 				default:
 					break;
 			}
@@ -201,6 +206,8 @@ namespace Compiler
 					DataSectionVar floatConst = DataSectionVar.FloatConstant(p.Value);
 					_varsToDeclare.Add(floatConst);
 					return "mov eax, [" + floatConst.Name + "]\n";
+				case Primitive<bool> p:
+					return "mov eax, " + (p.Value ? 1 : 0) + "\n";
 				default:
 					return "";
 			}
@@ -264,6 +271,8 @@ namespace Compiler
 					return HelperCall("print_int");
 				case TypeCode.FLOAT:
 					return HelperCall("print_float");
+				case TypeCode.BOOL:
+					return HelperCall("print_bool");
 				default:
 					return "";
 			}

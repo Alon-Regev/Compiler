@@ -10,6 +10,7 @@ namespace Compiler
 		// --- Values
 		INTEGER,
 		DECIMAL,
+		BOOLEAN,
 
 		// --- Castings
 		INT_CAST,

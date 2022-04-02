@@ -24,6 +24,7 @@ print_int:
 	push format
 	call _printf
 	add esp, 8
+	ret
 	
 ;FUNCTION;
 print_float:
@@ -35,6 +36,23 @@ print_float:
 	push format
 	call _printf
 	add esp, 12
+	ret
+	
+;FUNCTION;
+print_bool:
+; prints bool from eax
+	push true_string	; default true
+	; check if false
+	cmp eax, 0
+	jne skip_false
+	; is false
+	mov [esp], dword false_string
+	
+skip_false:
+	push format
+	call _printf
+	add esp, 8
+	ret
 
 ;FUNCTION;
 pow:
