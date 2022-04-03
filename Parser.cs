@@ -8,6 +8,8 @@ namespace Compiler
 	{
 		Scanner scanner;
 
+		private const int TERNARY_ORDER = 12;
+
 		// constructor
 		// program: program string to parse
 		public Parser(string program)
@@ -27,7 +29,7 @@ namespace Compiler
 		// input:   order - expression's max operator order
 		//			default: includes all operators
 		// return:	expression tree
-		private Expression ParseExpression(int order = 11)
+		private Expression ParseExpression(int order = 12)
 		{
 			// subexp(0) := factor | factor unary_op
 			if (order == 0)
@@ -43,8 +45,11 @@ namespace Compiler
 			// subexp(n-1) | subexp(n-1) op(n) subexp(n-1)
 
 			Expression node = ParseExpression(order - 1);
+			// check ternary
+			if (order == TERNARY_ORDER)
+				return ParseTernary(node);
 			// while peeked token's order is n
-			while(GetOperatorOrder(scanner.Peek()) == order)
+			while (GetOperatorOrder(scanner.Peek()) == order)
 			{
 				Token op = scanner.Next();
 				Expression nextSubexp = ParseExpression(order - 1);
@@ -55,6 +60,24 @@ namespace Compiler
 			return node;
 		}
 
+		// Method parses a ternary operator
+		// input: possible first operand (Expression)
+		// return: Ternary Expression (or input if there isn't one)
+		private Expression ParseTernary(Expression node)
+		{
+			if (scanner.Next().Code != TokenCode.QUESTION_MARK)
+				return node;
+			// parse second operand
+			Expression operand2 = ParseExpression(TERNARY_ORDER - 1);
+			// check colon
+			Token colon = scanner.Next();
+			if (colon.Code != TokenCode.COLON)
+				throw new UnexpectedToken("Ternary colon token (:)", colon);
+			Expression operand3 = ParseExpression(TERNARY_ORDER - 1);
+			// return operator
+			return new TernaryOperator(node, operand2, operand3);
+		}
+
 		// Method returns operator's order (in order of operations)
 		// higher value means it's computed later
 		// input: operator's token
@@ -63,6 +86,9 @@ namespace Compiler
 		{
 			switch(t.Code)
 			{
+				// ternary
+				case TokenCode.QUESTION_MARK:
+					return TERNARY_ORDER;
 				// logical
 				case TokenCode.LOGIC_OR_OP:
 					return 11;
@@ -101,6 +127,7 @@ namespace Compiler
 				// end of expression
 				case TokenCode.EOF:
 				case TokenCode.RIGHT_PARENTHESIS:
+				case TokenCode.COLON:
 					return -1;
 				// invalid
 				default:
