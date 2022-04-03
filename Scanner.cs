@@ -18,6 +18,9 @@ namespace Compiler
 			new KeyValuePair<TokenCode, string>(TokenCode.MUL_OP, @"\*" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.DIV_OP, "/" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.MOD_OP, "%" ),
+			// logical
+			new KeyValuePair<TokenCode, string>(TokenCode.LOGIC_AND_OP, "&&" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.LOGIC_OR_OP, @"\|\|" ),
 			// bitwise
 			new KeyValuePair<TokenCode, string>(TokenCode.BIT_AND_OP, "&" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.BIT_OR_OP, @"\|" ),
@@ -25,12 +28,20 @@ namespace Compiler
 			new KeyValuePair<TokenCode, string>(TokenCode.BIT_NOT_OP, @"~" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.LEFT_SHIFT, "<<" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.RIGHT_SHIFT, ">>" ),
+			// relational
+			new KeyValuePair<TokenCode, string>(TokenCode.LESS_EQUAL_OP, "<=" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.GREATER_EQUAL_OP, ">=" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.LESS_OP, "<" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.GREATER_OP, ">" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.EQUAL_OP, "==" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.NOT_EQUAL_OP, "!=" ),
 			// other
 			new KeyValuePair<TokenCode, string>(TokenCode.EXCLAMATION_MARK, @"!" ),
 
 			// --- Castings
 			new KeyValuePair<TokenCode, string>(TokenCode.INT_CAST, @"\(int\)" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.FLOAT_CAST, @"\(float\)" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.BOOL_CAST, @"\(bool\)" ),
 
 			// --- Expression symbols
 			new KeyValuePair<TokenCode, string>(TokenCode.LEFT_PARENTHESIS, @"\(" ),
@@ -39,6 +50,7 @@ namespace Compiler
 			// --- Values
 			new KeyValuePair<TokenCode, string>(TokenCode.DECIMAL, @"\d+\.\d+" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.INTEGER, @"\d+" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.BOOLEAN, @"true|false" ),
 
 			// --- Other
 			new KeyValuePair<TokenCode, string>(TokenCode.UNKNOWN, @".+" ),

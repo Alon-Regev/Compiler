@@ -15,5 +15,10 @@ namespace Compiler
 			: base("TypeError", op.Line, "Operator " + op.Operator + " on type " + op.Operand().Type)
 		{
 		}
+
+		public TypeError(Cast cast)
+			: base("TypeError", cast.Line, "Casting " + cast.FromType + " to " + cast.Type)
+		{
+		}
 	}
 }

@@ -61,21 +61,67 @@ namespace Compiler.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to ; calculates factorial of an input
-        ///; input: n (int at eax)
-        ///; output: n! (int at eax)
+        ///   Looks up a localized string similar to ;FUNCTION;
         ///factorial:
+        ///; calculates factorial of an input, eax -&gt; eax
+        ///	cmp eax, 2
+        ///	jge calculate_factorial
+        ///	; default return 1
+        ///	mov eax, 1
+        ///	ret
+        ///
+        ///calculate_factorial:
         ///	mov ecx, eax
+        ///	dec ecx
         ///	; for(ecx = n; ecx &gt; 0; ecx--)
         ///factorial_loop:
         ///	mul ecx
         ///	loop factorial_loop
         ///
-        ///	ret.
+        ///	ret
+        ///	
+        ///;FUNCTION;
+        ///print_int:
+        ///; prints integer from eax
+        ///	push eax
+        ///	push format
+        ///	call _printf
+        ///	add esp, 8
+        ///	ret
+        ///	
+        ///;FUNCTION;
+        ///print_float:
+        ///; prints float from eax
+        ///	mov [__temp], eax
+        ///	fld dword [__temp]
+        ///	sub esp, 8
+        ///	 [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string Functions {
             get {
                 return ResourceManager.GetString("Functions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to %macro float_comparison 1
+        ///; compares two floats from the top of the fpu stack
+        ///; input: the status Word Register bits to look at
+        ///; important bits: 8-CF, 14-ZF
+        ///	xor eax, eax
+        ///	; set status register at ax
+        ///	fcom   st0, st1
+        ///    fstsw  ax	; store status register
+        ///	
+        ///	; check bits
+        ///	and ax, %1
+        ///	sete al	; res result
+        ///	mov ah, 0
+        ///%endmacro.
+        /// </summary>
+        internal static string Macros {
+            get {
+                return ResourceManager.GetString("Macros", resourceCulture);
             }
         }
     }

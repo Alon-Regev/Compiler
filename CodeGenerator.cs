@@ -8,12 +8,15 @@ namespace Compiler
 	{
 		AST_Node _tree;
 
+		private int _labelCounter = 0;
+
 		List<DataSectionVar> _varsToDeclare = new List<DataSectionVar>
 		{
 			new DataSectionVar("__temp", DataSize.DWORD, "0")
 		};
 
 		private HashSet<string> _helperFunctionsUsed = new HashSet<string>();
+		private HashSet<string> _macrosUsed = new HashSet<string>();
 
 		// Constructor
 		// program: program's source code as string
@@ -29,6 +32,11 @@ namespace Compiler
 				case TypeCode.FLOAT:
 					_varsToDeclare.Add(DataSectionVar.StringConstant("format", "Result: %f"));
 					break;
+				case TypeCode.BOOL:
+					_varsToDeclare.Add(DataSectionVar.StringConstant("format", "Result: %s"));
+					_varsToDeclare.Add(DataSectionVar.StringConstant("true_string", "true"));
+					_varsToDeclare.Add(DataSectionVar.StringConstant("false_string", "false"));
+					break;
 				default:
 					break;
 			}
@@ -41,7 +49,7 @@ namespace Compiler
 		{
 			string programAssembly = ToAssembly(_tree);
 			string data = DataSectionAssembly();
-			return
+			string result =
 				"global _main\n" +
 				"extern _printf\n" +
 				"\n" +
@@ -61,6 +69,8 @@ namespace Compiler
 					"ret"
 				) + "\n\n" +
 				HelperFunctionsAssembly();
+
+			return MacrosAssembly() + result;
 		}
 
 		// Methods generate assembly code from subtrees
@@ -91,16 +101,19 @@ namespace Compiler
 		private string ToAssembly(BinaryOperator op)
 		{
 			string operandsASM = "";
-			// get operand2 on stack
-			operandsASM += ToAssembly(op.Operand(1));
-			operandsASM += "push eax\n";
-			// get operand1 in eax
-			operandsASM += ToAssembly(op.Operand(0));
-			// pop operand2 to ebx
-			operandsASM += "pop ebx\n";
+			if (op.Operand(0).Type != TypeCode.BOOL)	// bool logical operators use operands differently (short-circuit)
+			{
+				// get operand2 on stack
+				operandsASM += ToAssembly(op.Operand(1));
+				operandsASM += "push eax\n";
+				// get operand1 in eax
+				operandsASM += ToAssembly(op.Operand(0));
+				// pop operand2 to ebx
+				operandsASM += "pop ebx\n";
+			}
 
-			// calculate based on type
-			switch (op.Type)
+			// calculate based on input type
+			switch (op.Operand(0).Type)
 			{
 				case TypeCode.INT:
 					return operandsASM +
@@ -121,6 +134,13 @@ namespace Compiler
 													"shl eax, cl\n",
 							TokenCode.RIGHT_SHIFT =>"mov cl, bl\n" +
 													"shr eax, cl\n",
+							// --- Relational
+							TokenCode.LESS_OP => "cmp eax, ebx\nmov eax, 0\nsetl al\n",
+							TokenCode.LESS_EQUAL_OP => "cmp eax, ebx\nmov eax, 0\nsetle al\n",
+							TokenCode.GREATER_OP => "cmp eax, ebx\nmov eax, 0\nsetg al\n",
+							TokenCode.GREATER_EQUAL_OP => "cmp eax, ebx\nmov eax, 0\nsetge al\n",
+							TokenCode.EQUAL_OP => "cmp eax, ebx\nmov eax, 0\nsete al\n",
+							TokenCode.NOT_EQUAL_OP => "cmp eax, ebx\nmov eax, 0\nsetne al\n",
 							_ => throw new ImplementationError(DEFAULT_OPERATOR_BINARY)
 						};
 
@@ -134,16 +154,45 @@ namespace Compiler
 						// calculate operation
 						op.Operator switch
 						{
+							// --- Arithmetic
 							TokenCode.ADD_OP => "faddp\n",
 							TokenCode.SUB_OP => "fsubp\n",
 							TokenCode.MUL_OP => "fmulp\n",
 							TokenCode.DIV_OP => "fdivp\n",
 							TokenCode.POW_OP => HelperCall("pow"),
+							// --- Relational
+							TokenCode.LESS_OP => Macro("float_comparison", "0000000000000000b"),	// not condition flags
+							TokenCode.LESS_EQUAL_OP => Macro("float_comparison_inverse", "0000000100000000b"),  // not greater,
+							TokenCode.GREATER_OP => Macro("float_comparison", "0000000100000000b"),	// carry flag
+							TokenCode.GREATER_EQUAL_OP => Macro("float_comparison_inverse", "0000000000000000b"),	// not less
+							TokenCode.EQUAL_OP => Macro("float_comparison", "0100000000000000b"),	// zero flag
+							TokenCode.NOT_EQUAL_OP => Macro("float_comparison_inverse", "0100000000000000b"),	// not equal
 							_ => throw new ImplementationError(DEFAULT_OPERATOR_BINARY)
 						} +
-						// mov result from fpu to eax
+						// mov result from fpu to eax if type is float
+						(op.Type == TypeCode.FLOAT ?
 						"fstp dword [__temp]\n" +
-						"mov eax, [__temp]\n";
+						"mov eax, [__temp]\n" : "");
+
+				case TypeCode.BOOL:
+					string label = GetLabel();
+					return operandsASM +
+						op.Operator switch
+						{
+							TokenCode.LOGIC_AND_OP =>	ToAssembly(op.Operand(0)) + 
+														"cmp eax, 0\n" +
+														"je " + label + "\n" +
+														ToAssembly(op.Operand(1)) +
+														label + ":\n",
+
+							TokenCode.LOGIC_OR_OP =>	ToAssembly(op.Operand(0)) +
+														"cmp eax, 1\n" +
+														"je " + label + "\n" +
+														ToAssembly(op.Operand(1)) +
+														label + ":\n",
+
+							_ => throw new ImplementationError(DEFAULT_OPERATOR_BINARY)
+						};
 
 				default:
 					throw new ImplementationError(DEFAULT_TYPE_BINARY);
@@ -184,6 +233,16 @@ namespace Compiler
 						"fstp dword [__temp]\n" +
 						"mov eax, [__temp]\n";
 
+				case TypeCode.BOOL:
+					return operandASM +
+						(op.Operator, op.Prefix) switch
+						{
+							(TokenCode.EXCLAMATION_MARK, true) =>	"cmp eax, 0\n" +
+																	"mov eax, 0\n" +
+																	"sete al\n",    // logical not
+							_ => throw new ImplementationError(DEFAULT_OPERATOR_UNARY)
+						};
+
 				default:
 					throw new ImplementationError(DEFAULT_TYPE_UNARY);
 			}
@@ -201,6 +260,8 @@ namespace Compiler
 					DataSectionVar floatConst = DataSectionVar.FloatConstant(p.Value);
 					_varsToDeclare.Add(floatConst);
 					return "mov eax, [" + floatConst.Name + "]\n";
+				case Primitive<bool> p:
+					return "mov eax, " + (p.Value ? 1 : 0) + "\n";
 				default:
 					return "";
 			}
@@ -227,8 +288,11 @@ namespace Compiler
 						"fld dword [__temp]\n" +
 						"fistp dword [__temp]\n" +
 						"mov eax, [__temp]\n";
+				case (TypeCode.INT, TypeCode.BOOL):
+				case (TypeCode.BOOL, TypeCode.INT):
+					return ToAssembly(cast.Child());	// no need to change data
 				default:
-					return "";
+					throw new TypeError(cast);
 			}
 		}
 
@@ -264,6 +328,8 @@ namespace Compiler
 					return HelperCall("print_int");
 				case TypeCode.FLOAT:
 					return HelperCall("print_float");
+				case TypeCode.BOOL:
+					return HelperCall("print_bool");
 				default:
 					return "";
 			}
@@ -278,7 +344,16 @@ namespace Compiler
 			return "call " + functionName + "\n";
 		}
 
-		// Method returns assembly code for used helper functions
+		// Method returns an assembly macro use and makes sure it's added to the final assembly
+		// input: name of macro, parameters
+		// return: macro call
+		private string Macro(string macroName, string parameters)
+		{
+			_macrosUsed.Add(macroName);
+			return macroName + " " + parameters + "\n";
+		}
+
+		// Method returns assembly code for used helper functions and macros
 		// input: none
 		// return: assembly code for definitions of used functions
 		private string HelperFunctionsAssembly()
@@ -294,6 +369,28 @@ namespace Compiler
 					result += function;
 			}
 			return result;
+		}
+		private string MacrosAssembly()
+		{
+			string result = "";
+			string[] macros = Properties.Resources.Macros.Split("%macro ", StringSplitOptions.RemoveEmptyEntries);
+			// add used macros to result
+			foreach (string macro in macros)
+			{
+				string name = macro.Split()[0];
+				// if this function was used, add its definition
+				if (_macrosUsed.Contains(name))
+					result += "%macro " + macro + "\n";
+			}
+			return result;
+		}
+
+		// Method returns a unique label name every call
+		// input: none
+		// return: unique label name as string
+		private string GetLabel()
+		{
+			return "__" + _labelCounter++;
 		}
 	}
 }

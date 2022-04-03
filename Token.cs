@@ -10,11 +10,13 @@ namespace Compiler
 		// --- Values
 		INTEGER,
 		DECIMAL,
+		BOOLEAN,
 
 		// --- Castings
 		INT_CAST,
 		FLOAT_CAST,
-		
+		BOOL_CAST,
+
 		// --- Operators
 		// arithmetic
 		ADD_OP,
@@ -30,6 +32,16 @@ namespace Compiler
 		BIT_NOT_OP,
 		LEFT_SHIFT,
 		RIGHT_SHIFT,
+		// logical
+		LOGIC_AND_OP,
+		LOGIC_OR_OP,
+		// relational
+		LESS_OP,
+		LESS_EQUAL_OP,
+		GREATER_OP,
+		GREATER_EQUAL_OP,
+		EQUAL_OP,
+		NOT_EQUAL_OP,
 		// other
 		EXCLAMATION_MARK,
 

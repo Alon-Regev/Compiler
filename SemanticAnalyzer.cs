@@ -9,6 +9,7 @@ namespace Compiler
 		UNKNOWN,
 		INT,
 		FLOAT,
+		BOOL,
 	}
 
 	class SemanticAnalyzer
@@ -30,6 +31,19 @@ namespace Compiler
 			{ TokenCode.BIT_XOR_OP, new HashSet<TypeCode>{ TypeCode.INT } },
 			{ TokenCode.LEFT_SHIFT, new HashSet<TypeCode>{ TypeCode.INT } },
 			{ TokenCode.RIGHT_SHIFT, new HashSet<TypeCode>{ TypeCode.INT } },
+
+			// --- Logical
+			{ TokenCode.LOGIC_AND_OP, new HashSet<TypeCode>{ TypeCode.BOOL } },
+			{ TokenCode.LOGIC_OR_OP, new HashSet<TypeCode>{ TypeCode.BOOL } },
+
+			// --- Relational
+			{ TokenCode.LESS_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
+			{ TokenCode.LESS_EQUAL_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
+			{ TokenCode.GREATER_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
+			{ TokenCode.GREATER_EQUAL_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
+			{ TokenCode.EQUAL_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
+			{ TokenCode.NOT_EQUAL_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
+
 		};
 
 		private static Dictionary<TokenCode, HashSet<TypeCode>> _unaryPrefixOpAllowedTypes = new Dictionary<TokenCode, HashSet<TypeCode>>
@@ -37,6 +51,7 @@ namespace Compiler
 			// --- Arithmetic
 			{ TokenCode.BIT_NOT_OP, new HashSet<TypeCode>{ TypeCode.INT } },
 			{ TokenCode.SUB_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },	// negation
+			{ TokenCode.EXCLAMATION_MARK, new HashSet<TypeCode>{ TypeCode.BOOL } },			// logic not
 		};
 
 		private static Dictionary<TokenCode, HashSet<TypeCode>> _unaryPostfixOpAllowedTypes = new Dictionary<TokenCode, HashSet<TypeCode>>
@@ -97,10 +112,23 @@ namespace Compiler
 			if(op.Operand(0).Type != op.Operand(1).Type)
 				throw new TypeError(op);
 			// set type
-			op.Type = op.Operand(0).Type;
+			if (IsRelationalOp(op))
+				op.Type = TypeCode.BOOL;
+			else
+				op.Type = op.Operand(0).Type;
 			// check if operation is allowed
-			if (!_binOpAllowedTypes[op.Operator].Contains(op.Type))
+			if (!_binOpAllowedTypes[op.Operator].Contains(op.Operand(0).Type))
 				throw new TypeError(op);
+		}
+
+		// Method checks if a binary operator is a relational operator
+		// input: BinaryOperator to check
+		// return: true if it's relational operator (<, <=, >, >=, ==, !=)
+		private bool IsRelationalOp(BinaryOperator op)
+		{
+			return op.Operator == TokenCode.LESS_OP || op.Operator == TokenCode.LESS_EQUAL_OP ||
+				op.Operator == TokenCode.GREATER_OP || op.Operator == TokenCode.GREATER_EQUAL_OP ||
+				op.Operator == TokenCode.EQUAL_OP || op.Operator == TokenCode.NOT_EQUAL_OP;
 		}
 
 		// Method does a semantic analysis for a UnaryOperator subtree
@@ -131,6 +159,9 @@ namespace Compiler
 					break;
 				case Primitive<float> p:
 					p.Type = TypeCode.FLOAT;
+					break;
+				case Primitive<bool> p:
+					p.Type = TypeCode.BOOL;
 					break;
 				default:
 					break;

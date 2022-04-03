@@ -27,7 +27,7 @@ namespace Compiler
 		// input:   order - expression's max operator order
 		//			default: includes all operators
 		// return:	expression tree
-		private Expression ParseExpression(int order = 7)
+		private Expression ParseExpression(int order = 11)
 		{
 			// subexp(0) := factor | factor unary_op
 			if (order == 0)
@@ -63,13 +63,28 @@ namespace Compiler
 		{
 			switch(t.Code)
 			{
+				// logical
+				case TokenCode.LOGIC_OR_OP:
+					return 11;
+				case TokenCode.LOGIC_AND_OP:
+					return 10;
 				// bitwise
 				case TokenCode.BIT_OR_OP:
-					return 7;
+					return 9;
 				case TokenCode.BIT_XOR_OP:
-					return 6;
+					return 8;
 				case TokenCode.BIT_AND_OP:
+					return 7;
+				// relational
+				case TokenCode.EQUAL_OP:
+				case TokenCode.NOT_EQUAL_OP:
+					return 6;
+				case TokenCode.LESS_OP:
+				case TokenCode.LESS_EQUAL_OP:
+				case TokenCode.GREATER_OP:
+				case TokenCode.GREATER_EQUAL_OP:
 					return 5;
+				// bitwise shift
 				case TokenCode.LEFT_SHIFT:
 				case TokenCode.RIGHT_SHIFT:
 					return 4;
@@ -118,6 +133,8 @@ namespace Compiler
 					return new Primitive<int>(token);
 				case TokenCode.DECIMAL:
 					return new Primitive<float>(token);
+				case TokenCode.BOOLEAN:
+					return new Primitive<bool>(token);
 
 				// --- Parentheses Expression
 				case TokenCode.LEFT_PARENTHESIS:
@@ -132,11 +149,13 @@ namespace Compiler
 					return new Cast(ParseFactor(), TypeCode.INT);
 				case TokenCode.FLOAT_CAST:
 					return new Cast(ParseFactor(), TypeCode.FLOAT);
+				case TokenCode.BOOL_CAST:
+					return new Cast(ParseFactor(), TypeCode.BOOL);
 
 				// --- Unary Prefix Operators
 				case TokenCode.BIT_NOT_OP:
-					return new UnaryOperator(token.Code, ParseFactor(), true);
-				case TokenCode.SUB_OP:  // negation
+				case TokenCode.SUB_OP:			// negation
+				case TokenCode.EXCLAMATION_MARK:	// logical not
 					return new UnaryOperator(token.Code, ParseFactor(), true);
 
 				// --- Unexpected
