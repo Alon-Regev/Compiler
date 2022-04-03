@@ -16,6 +16,7 @@ namespace Compiler
 		};
 
 		private HashSet<string> _helperFunctionsUsed = new HashSet<string>();
+		private HashSet<string> _macrosUsed = new HashSet<string>();
 
 		// Constructor
 		// program: program's source code as string
@@ -48,7 +49,7 @@ namespace Compiler
 		{
 			string programAssembly = ToAssembly(_tree);
 			string data = DataSectionAssembly();
-			return
+			string result =
 				"global _main\n" +
 				"extern _printf\n" +
 				"\n" +
@@ -68,6 +69,8 @@ namespace Compiler
 					"ret"
 				) + "\n\n" +
 				HelperFunctionsAssembly();
+
+			return MacrosAssembly() + result;
 		}
 
 		// Methods generate assembly code from subtrees
@@ -98,7 +101,7 @@ namespace Compiler
 		private string ToAssembly(BinaryOperator op)
 		{
 			string operandsASM = "";
-			if (op.Type != TypeCode.BOOL)
+			if (op.Operand(0).Type != TypeCode.BOOL)	// bool logical operators use operands differently (short-circuit)
 			{
 				// get operand2 on stack
 				operandsASM += ToAssembly(op.Operand(1));
@@ -109,8 +112,8 @@ namespace Compiler
 				operandsASM += "pop ebx\n";
 			}
 
-			// calculate based on type
-			switch (op.Type)
+			// calculate based on input type
+			switch (op.Operand(0).Type)
 			{
 				case TypeCode.INT:
 					return operandsASM +
@@ -158,17 +161,18 @@ namespace Compiler
 							TokenCode.DIV_OP => "fdivp\n",
 							TokenCode.POW_OP => HelperCall("pow"),
 							// --- Relational
-							TokenCode.LESS_OP => "fcom\nmov eax, 0\nsetl al\n",
-							TokenCode.LESS_EQUAL_OP => "fcom\nmov eax, 0\nsetle al\n",
-							TokenCode.GREATER_OP => "fcom\nmov eax, 0\nsetg al\n",
-							TokenCode.GREATER_EQUAL_OP => "fcom\nmov eax, 0\nsetge al\n",
-							TokenCode.EQUAL_OP => "fcom\nmov eax, 0\nsete al\n",
-							TokenCode.NOT_EQUAL_OP => "fcom\nmov eax, 0\nsetne al\n",
+							TokenCode.LESS_OP => Macro("float_comparison", "0000000000000000b"),	// not condition flags
+							TokenCode.LESS_EQUAL_OP => Macro("float_comparison_inverse", "0000000100000000b"),  // not greater,
+							TokenCode.GREATER_OP => Macro("float_comparison", "0000000100000000b"),	// carry flag
+							TokenCode.GREATER_EQUAL_OP => Macro("float_comparison_inverse", "0000000000000000b"),	// not less
+							TokenCode.EQUAL_OP => Macro("float_comparison", "0100000000000000b"),	// zero flag
+							TokenCode.NOT_EQUAL_OP => Macro("float_comparison_inverse", "0100000000000000b"),	// not equal
 							_ => throw new ImplementationError(DEFAULT_OPERATOR_BINARY)
 						} +
-						// mov result from fpu to eax
+						// mov result from fpu to eax if type is float
+						(op.Type == TypeCode.FLOAT ?
 						"fstp dword [__temp]\n" +
-						"mov eax, [__temp]\n";
+						"mov eax, [__temp]\n" : "");
 
 				case TypeCode.BOOL:
 					string label = GetLabel();
@@ -340,7 +344,16 @@ namespace Compiler
 			return "call " + functionName + "\n";
 		}
 
-		// Method returns assembly code for used helper functions
+		// Method returns an assembly macro use and makes sure it's added to the final assembly
+		// input: name of macro, parameters
+		// return: macro call
+		private string Macro(string macroName, string parameters)
+		{
+			_macrosUsed.Add(macroName);
+			return macroName + " " + parameters + "\n";
+		}
+
+		// Method returns assembly code for used helper functions and macros
 		// input: none
 		// return: assembly code for definitions of used functions
 		private string HelperFunctionsAssembly()
@@ -354,6 +367,20 @@ namespace Compiler
 				// if this function was used, add its definition
 				if (_helperFunctionsUsed.Contains(name))
 					result += function;
+			}
+			return result;
+		}
+		private string MacrosAssembly()
+		{
+			string result = "";
+			string[] macros = Properties.Resources.Macros.Split("%macro ", StringSplitOptions.RemoveEmptyEntries);
+			// add used macros to result
+			foreach (string macro in macros)
+			{
+				string name = macro.Split()[0];
+				// if this function was used, add its definition
+				if (_macrosUsed.Contains(name))
+					result += "%macro " + macro + "\n";
 			}
 			return result;
 		}

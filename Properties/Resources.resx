@@ -121,4 +121,7 @@
   <data name="Functions" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Functions.asm;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;windows-1255</value>
   </data>
+  <data name="Macros" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\macros.asm;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;windows-1255</value>
+  </data>
 </root>
