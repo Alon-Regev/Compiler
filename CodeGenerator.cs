@@ -84,6 +84,8 @@ namespace Compiler
 					return ToAssembly(op);
 				case UnaryOperator op:
 					return ToAssembly(op);
+				case TernaryOperator op:
+					return ToAssembly(op);
 				case IPrimitive p:
 					return ToAssembly(p);
 				case Cast c:
@@ -246,6 +248,30 @@ namespace Compiler
 				default:
 					throw new ImplementationError(DEFAULT_TYPE_UNARY);
 			}
+		}
+
+		// ternary operator assembly:
+		// condition operand: eax
+		// operands: ebx, ecx
+		// result: eax
+		private string ToAssembly(TernaryOperator op)
+		{
+			string operandsASM = "";
+			// get operand3 on stack
+			operandsASM += ToAssembly(op.Operand(2));
+			operandsASM += "push eax\n";
+			// get operand2 on the stack
+			operandsASM += ToAssembly(op.Operand(1));
+			operandsASM += "push eax\n";
+			// put all operands in place
+			operandsASM += ToAssembly(op.Operand(0));
+			operandsASM += "pop ebx\npop ecx\n";
+
+			// add code for ternary op
+			return operandsASM +
+				"cmp eax, 0\n" +
+				"cmove eax, ecx\n" +
+				"cmovne eax, ebx\n";
 		}
 
 		// primitive
