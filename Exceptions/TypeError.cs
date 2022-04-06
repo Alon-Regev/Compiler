@@ -20,5 +20,10 @@ namespace Compiler
 			: base("TypeError", cast.Line, "Casting " + cast.FromType + " to " + cast.Type)
 		{
 		}
+
+		public TypeError(TernaryOperator op, string msg)
+			: base("TypeError", op.Line, msg)
+		{
+		}
 	}
 }

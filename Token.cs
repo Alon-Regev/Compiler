@@ -42,6 +42,9 @@ namespace Compiler
 		GREATER_EQUAL_OP,
 		EQUAL_OP,
 		NOT_EQUAL_OP,
+		// ternary
+		QUESTION_MARK,
+		COLON,
 		// other
 		EXCLAMATION_MARK,
 

@@ -35,6 +35,9 @@ namespace Compiler
 			new KeyValuePair<TokenCode, string>(TokenCode.GREATER_OP, ">" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.EQUAL_OP, "==" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.NOT_EQUAL_OP, "!=" ),
+			// ternary
+			new KeyValuePair<TokenCode, string>(TokenCode.QUESTION_MARK, @"\?" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.COLON, ":" ),
 			// other
 			new KeyValuePair<TokenCode, string>(TokenCode.EXCLAMATION_MARK, @"!" ),
 

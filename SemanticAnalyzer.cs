@@ -82,6 +82,9 @@ namespace Compiler
 		{
 			switch(tree)
 			{
+				case TernaryOperator op:
+					AnalyzeTernaryOperator(op);
+					break;
 				case BinaryOperator op:
 					AnalyzeBinaryOperator(op);
 					break;
@@ -145,6 +148,22 @@ namespace Compiler
 			Dictionary<TokenCode, HashSet<TypeCode>> allowedTypes = op.Prefix ? _unaryPrefixOpAllowedTypes : _unaryPostfixOpAllowedTypes;
 			if (!allowedTypes[op.Operator].Contains(op.Type))
 				throw new TypeError(op);
+		}
+
+		// Method does a semantic analysis on a ternary operator
+		// input: ternary operator
+		// return: none
+		private void AnalyzeTernaryOperator(TernaryOperator op)
+		{
+			// analyze all operands
+			for(int i = 0; i < 3; i++)
+				AnalyzeSubtree(op.Operand(i));
+			// check types
+			if (op.Operand(0).Type != TypeCode.BOOL)
+				throw new TypeError(op, "Expected BOOL for first operand, instead got " + op.Operand(0).Type);
+			if (op.Operand(1).Type != op.Operand(2).Type)
+				throw new TypeError(op, "Inconsistent return types (" + op.Operand(1).Type + ", " + op.Operand(2).Type + ")");
+			op.Type = op.Operand(1).Type;
 		}
 
 		// Method does a semantic analysis for a primitive
