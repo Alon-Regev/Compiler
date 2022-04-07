@@ -33,13 +33,7 @@ namespace Compiler
 		{
 			// subexp(0) := factor | factor unary_op
 			if (order == 0)
-			{
-				Expression factor = ParseFactor();
-				if (IsUnaryPostfixOperator(scanner.Peek()))
-					return new UnaryOperator(scanner.Next().Code, factor, false);
-				else
-					return factor;
-			}
+				return ParseFactor();
 
 			// subexpression(n) is defined as
 			// subexp(n-1) | subexp(n-1) op(n) subexp(n-1)
@@ -151,17 +145,20 @@ namespace Compiler
 			// the most compact part of an expression
 			// Factor := <primitive> | (<expression>) | <cast><factor> | <unary_op><factor> | <factor><unary_op>
 			Token token = scanner.Next();
-			AST_Node result;
-			
-			switch(token.Code)
+			Expression result;
+
+			switch (token.Code)
 			{
 				// --- Primitives
 				case TokenCode.INTEGER:
-					return new Primitive<int>(token);
+					result = new Primitive<int>(token);
+					break;
 				case TokenCode.DECIMAL:
-					return new Primitive<float>(token);
+					result = new Primitive<float>(token);
+					break;
 				case TokenCode.BOOLEAN:
-					return new Primitive<bool>(token);
+					result = new Primitive<bool>(token);
+					break;
 
 				// --- Parentheses Expression
 				case TokenCode.LEFT_PARENTHESIS:
@@ -169,26 +166,37 @@ namespace Compiler
 					// check closing parenthesis
 					if (scanner.Next().Code != TokenCode.RIGHT_PARENTHESIS)
 						throw new MissingParenthesis(token);
-					return node;
+					result = node;
+					break;
 
 				// --- Castings
 				case TokenCode.INT_CAST:
-					return new Cast(ParseFactor(), TypeCode.INT);
+					result = new Cast(ParseFactor(), TypeCode.INT);
+					break;
 				case TokenCode.FLOAT_CAST:
-					return new Cast(ParseFactor(), TypeCode.FLOAT);
+					result = new Cast(ParseFactor(), TypeCode.FLOAT);
+					break;
 				case TokenCode.BOOL_CAST:
-					return new Cast(ParseFactor(), TypeCode.BOOL);
+					result = new Cast(ParseFactor(), TypeCode.BOOL);
+					break;
 
 				// --- Unary Prefix Operators
 				case TokenCode.BIT_NOT_OP:
-				case TokenCode.SUB_OP:			// negation
-				case TokenCode.EXCLAMATION_MARK:	// logical not
-					return new UnaryOperator(token.Code, ParseFactor(), true);
+				case TokenCode.SUB_OP:          // negation
+				case TokenCode.EXCLAMATION_MARK:    // logical not
+					result = new UnaryOperator(token.Code, ParseFactor(), true);
+					break;
 
 				// --- Unexpected
 				default:
 					throw new UnexpectedToken("expression", token);
 			}
+
+			// check postfix unary operator
+			if (IsUnaryPostfixOperator(scanner.Peek()))
+				return new UnaryOperator(scanner.Next().Code, result, false);
+			else
+				return result;
 		}
 	}
 }
