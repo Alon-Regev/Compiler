@@ -52,6 +52,9 @@ namespace Compiler
 		LEFT_PARENTHESIS,
 		RIGHT_PARENTHESIS,
 
+		// --- Statements
+		SEMI_COLON,
+
 		// --- Other
 		UNKNOWN,
 		EOF,

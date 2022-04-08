@@ -82,6 +82,7 @@ namespace Compiler
 		{
 			switch(tree)
 			{
+				// --- Expressions
 				case TernaryOperator op:
 					AnalyzeTernaryOperator(op);
 					break;
@@ -96,6 +97,10 @@ namespace Compiler
 					break;
 				case Cast c:
 					AnalyzeCast(c);
+					break;
+				// --- Statements
+				case ExpressionStatement stmt:
+					AnalyzeSubtree(stmt.GetExpression());
 					break;
 				default:
 					break;

@@ -20,7 +20,7 @@ namespace Compiler
 		// ToString override specifies this is an expression
 		public override string ToString(int indent)
 		{
-			return " Expr Stmt" + base.ToString(indent);
+			return "Expr Statement" + base.ToString(indent);
 		}
 	}
 }
