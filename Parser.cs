@@ -31,14 +31,23 @@ namespace Compiler
 		// return: statement tree
 		public Statement ParseStatement()
 		{
-			// parse expr statement
-			Expression expr = ParseExpression();
-			Statement stmt = new ExpressionStatement(expr);
+			Statement statement;
+			// check statement type
+			switch (scanner.Peek().Code)
+			{
+				case TokenCode.INT_KEYWORD:
+					statement = new VariableDeclaration(scanner.Next(), scanner.Next());
+					break;
+				default:	// expression
+					statement = new ExpressionStatement(ParseExpression());
+					break;
+					
+			}
 			// check semicolon
 			Token stmtEnd = scanner.Next();
 			if (stmtEnd.Code != TokenCode.SEMI_COLON)
 				throw new UnexpectedToken("Semicolon", stmtEnd);
-			return stmt;
+			return statement;
 		}
 
 		// Method parses a mathematical expression, defined as a sum of terms.
