@@ -38,6 +38,8 @@ namespace Compiler
 			// ternary
 			new KeyValuePair<TokenCode, string>(TokenCode.QUESTION_MARK, @"\?" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.COLON, ":" ),
+			// assignment
+			new KeyValuePair<TokenCode, string>(TokenCode.ASSIGN_OP, "=" ),
 			// other
 			new KeyValuePair<TokenCode, string>(TokenCode.EXCLAMATION_MARK, @"!" ),
 
@@ -57,8 +59,11 @@ namespace Compiler
 
 			// --- Statements
 			new KeyValuePair<TokenCode, string>(TokenCode.SEMI_COLON, ";" ),
+			// variable declaration
+			new KeyValuePair<TokenCode, string>(TokenCode.INT_KEYWORD, "int" ),
 
 			// --- Other
+			new KeyValuePair<TokenCode, string>(TokenCode.IDENTIFIER, @"[_a-zA-Z][_a-zA-Z0-9]*" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.UNKNOWN, @".+" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.EOF, @""),
 		};
