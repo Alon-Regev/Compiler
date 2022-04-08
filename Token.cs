@@ -60,6 +60,9 @@ namespace Compiler
 		INT_KEYWORD,
 		FLOAT_KEYWORD,
 		BOOL_KEYWORD,
+		// blocks
+		OPEN_BRACE,
+		CLOSE_BRACE,
 
 		// --- Other
 		IDENTIFIER,
