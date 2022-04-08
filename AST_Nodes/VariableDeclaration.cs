@@ -20,7 +20,7 @@ namespace Compiler
 		// ToString override specifies the variable declaration
 		public override string ToString(int indent)
 		{
-			return "Variable Declartion (" + Type + " " + Identifier + ")" + base.ToString(indent);
+			return "Variable Declaration (" + Type + " " + Identifier + ")" + base.ToString(indent);
 		}
 	}
 }

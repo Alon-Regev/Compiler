@@ -25,5 +25,11 @@ namespace Compiler
 		{
 			return (Statement)GetChild(i);
 		}
+
+		// ToString override shows block and it's content
+		public override string ToString(int indent)
+		{
+			return "Block" + base.ToString(indent);
+		}
 	}
 }

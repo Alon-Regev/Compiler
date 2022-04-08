@@ -63,6 +63,9 @@ namespace Compiler
 			new KeyValuePair<TokenCode, string>(TokenCode.INT_KEYWORD, "int" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.FLOAT_KEYWORD, "float" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.BOOL_KEYWORD, "bool" ),
+			// blocks
+			new KeyValuePair<TokenCode, string>(TokenCode.OPEN_BRACE, "{" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.CLOSE_BRACE, "}" ),
 
 			// --- Other
 			new KeyValuePair<TokenCode, string>(TokenCode.IDENTIFIER, @"[_a-zA-Z][_a-zA-Z0-9]*" ),
@@ -73,7 +76,8 @@ namespace Compiler
 		// fields to check where we are in the program
 		private string _programLeft;
 		private int _line = 1, _pos = 0;
-		//private int increment = 0;
+		
+		public Token Last { private set; get; }
 
 		// Constructor
 		// program: program to tokenize
@@ -110,6 +114,8 @@ namespace Compiler
 			int increment = token.Value.Length;
 			_programLeft = _programLeft.Substring(increment);
 			_pos += increment;
+
+			Last = token;
 
 			return token;
 		}

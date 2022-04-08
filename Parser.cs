@@ -22,8 +22,8 @@ namespace Compiler
 		// return: AST as AST_Node
 		public AST_Node Parse()
 		{
-			// return a block of statements (TODO)
-			return ParseStatement();
+			// return a block of statements
+			return ParseBlock();
 		}
 
 		// Method parses a statement
@@ -50,6 +50,32 @@ namespace Compiler
 			if (stmtEnd.Code != TokenCode.SEMI_COLON)
 				throw new UnexpectedToken("Semicolon", stmtEnd);
 			return statement;
+		}
+
+		// Method parses a block of statements
+		// input: none
+		// return: Block node
+		private Block ParseBlock()
+		{
+			// block: {<statements>}
+			// check open brace
+			if (scanner.Next().Code != TokenCode.OPEN_BRACE)
+				throw new UnexpectedToken("block open brace {", scanner.Last);
+
+			Block block = new Block(scanner.Last.Line);
+			// gather statements
+			while(scanner.Peek().Code != TokenCode.CLOSE_BRACE && scanner.Peek().Code != TokenCode.EOF)
+			{
+				// add statement
+				Statement newStatement = ParseStatement();
+				block.AddStatement(newStatement);
+			}
+
+			// check close brace
+			if (scanner.Next().Code != TokenCode.CLOSE_BRACE)
+				throw new UnexpectedToken("block open brace }", scanner.Last);
+
+			return block;
 		}
 
 		// Method parses a mathematical expression, defined as a sum of terms.
