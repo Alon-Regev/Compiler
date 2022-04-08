@@ -61,6 +61,8 @@ namespace Compiler
 			new KeyValuePair<TokenCode, string>(TokenCode.SEMI_COLON, ";" ),
 			// variable declaration
 			new KeyValuePair<TokenCode, string>(TokenCode.INT_KEYWORD, "int" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.FLOAT_KEYWORD, "float" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.BOOL_KEYWORD, "bool" ),
 
 			// --- Other
 			new KeyValuePair<TokenCode, string>(TokenCode.IDENTIFIER, @"[_a-zA-Z][_a-zA-Z0-9]*" ),

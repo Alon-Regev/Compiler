@@ -36,6 +36,8 @@ namespace Compiler
 			switch (scanner.Peek().Code)
 			{
 				case TokenCode.INT_KEYWORD:
+				case TokenCode.FLOAT_KEYWORD:
+				case TokenCode.BOOL_KEYWORD: 
 					statement = new VariableDeclaration(scanner.Next(), scanner.Next());
 					break;
 				default:	// expression

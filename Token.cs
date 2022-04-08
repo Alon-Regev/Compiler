@@ -58,6 +58,8 @@ namespace Compiler
 		SEMI_COLON,
 		// variable declaration
 		INT_KEYWORD,
+		FLOAT_KEYWORD,
+		BOOL_KEYWORD,
 
 		// --- Other
 		IDENTIFIER,
