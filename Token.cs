@@ -45,6 +45,8 @@ namespace Compiler
 		// ternary
 		QUESTION_MARK,
 		COLON,
+		// assignment
+		ASSIGN_OP,
 		// other
 		EXCLAMATION_MARK,
 
@@ -54,8 +56,13 @@ namespace Compiler
 
 		// --- Statements
 		SEMI_COLON,
+		// variable declaration
+		INT_KEYWORD,
+		FLOAT_KEYWORD,
+		BOOL_KEYWORD,
 
 		// --- Other
+		IDENTIFIER,
 		UNKNOWN,
 		EOF,
 	}
