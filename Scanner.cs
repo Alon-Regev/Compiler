@@ -10,16 +10,52 @@ namespace Compiler
 		// defines regexes for different tokens
 		static private readonly KeyValuePair<TokenCode, string>[] TokenRegexExpressions =
 		{
-			// operators
+			// --- Operators
+			// arithmetic
 			new KeyValuePair<TokenCode, string>(TokenCode.ADD_OP, @"\+" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.SUB_OP, "-" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.POW_OP, @"\*\*" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.MUL_OP, @"\*" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.DIV_OP, "/" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.MOD_OP, "%" ),
+			// logical
+			new KeyValuePair<TokenCode, string>(TokenCode.LOGIC_AND_OP, "&&" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.LOGIC_OR_OP, @"\|\|" ),
+			// bitwise
+			new KeyValuePair<TokenCode, string>(TokenCode.BIT_AND_OP, "&" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.BIT_OR_OP, @"\|" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.BIT_XOR_OP, @"\^" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.BIT_NOT_OP, @"~" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.LEFT_SHIFT, "<<" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.RIGHT_SHIFT, ">>" ),
+			// relational
+			new KeyValuePair<TokenCode, string>(TokenCode.LESS_EQUAL_OP, "<=" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.GREATER_EQUAL_OP, ">=" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.LESS_OP, "<" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.GREATER_OP, ">" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.EQUAL_OP, "==" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.NOT_EQUAL_OP, "!=" ),
+			// ternary
+			new KeyValuePair<TokenCode, string>(TokenCode.QUESTION_MARK, @"\?" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.COLON, ":" ),
+			// other
+			new KeyValuePair<TokenCode, string>(TokenCode.EXCLAMATION_MARK, @"!" ),
 
-			// values
-			new KeyValuePair<TokenCode, string>(TokenCode.NUMBER, @"\d+" ),
+			// --- Castings
+			new KeyValuePair<TokenCode, string>(TokenCode.INT_CAST, @"\(int\)" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.FLOAT_CAST, @"\(float\)" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.BOOL_CAST, @"\(bool\)" ),
 
-			// default unknown and EOF
+			// --- Expression symbols
+			new KeyValuePair<TokenCode, string>(TokenCode.LEFT_PARENTHESIS, @"\(" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.RIGHT_PARENTHESIS, @"\)" ),
+
+			// --- Values
+			new KeyValuePair<TokenCode, string>(TokenCode.DECIMAL, @"\d+\.\d+" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.INTEGER, @"\d+" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.BOOLEAN, @"true|false" ),
+
+			// --- Other
 			new KeyValuePair<TokenCode, string>(TokenCode.UNKNOWN, @".+" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.EOF, @""),
 		};
@@ -37,9 +73,9 @@ namespace Compiler
 		}
 
 		// Method converts a program string to a list of tokens
-		// program: program string to convert
+		// input: none
 		// return: array of Token instances
-		public Token[] Tokenize(string program)
+		public Token[] Tokenize()
 		{
 			List<Token> tokens = new List<Token>();
 
@@ -80,7 +116,7 @@ namespace Compiler
 			foreach (KeyValuePair<TokenCode, string> tokenRegex in TokenRegexExpressions)
 			{
 				// match regex to program
-				Match match = Regex.Match(_programLeft, tokenRegex.Value);
+				Match match = Regex.Match(_programLeft, tokenRegex.Value, RegexOptions.Singleline);
 				// check if first match is at the beginning
 				if (match.Index != 0 || !match.Success)
 					continue;
@@ -88,6 +124,9 @@ namespace Compiler
 				result = new Token(tokenRegex.Key, _line, _pos, match.Value);
 				break;
 			}
+			// check if valid and return
+			if (result.Code == TokenCode.UNKNOWN)
+				throw new UnknownToken(result);
 
 			return result;
 		}
