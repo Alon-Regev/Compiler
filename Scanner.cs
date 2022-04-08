@@ -55,6 +55,9 @@ namespace Compiler
 			new KeyValuePair<TokenCode, string>(TokenCode.INTEGER, @"\d+" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.BOOLEAN, @"true|false" ),
 
+			// --- Statements
+			new KeyValuePair<TokenCode, string>(TokenCode.SEMI_COLON, ";" ),
+
 			// --- Other
 			new KeyValuePair<TokenCode, string>(TokenCode.UNKNOWN, @".+" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.EOF, @""),

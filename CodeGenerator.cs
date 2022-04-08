@@ -23,23 +23,6 @@ namespace Compiler
 		public CodeGenerator(AST_Node tree)
 		{
 			_tree = tree;
-			// set result format
-			switch((_tree as Expression).Type)
-			{
-				case TypeCode.INT:
-					_varsToDeclare.Add(DataSectionVar.StringConstant("format", "Result: %d"));
-					break;
-				case TypeCode.FLOAT:
-					_varsToDeclare.Add(DataSectionVar.StringConstant("format", "Result: %f"));
-					break;
-				case TypeCode.BOOL:
-					_varsToDeclare.Add(DataSectionVar.StringConstant("format", "Result: %s"));
-					_varsToDeclare.Add(DataSectionVar.StringConstant("true_string", "true"));
-					_varsToDeclare.Add(DataSectionVar.StringConstant("false_string", "false"));
-					break;
-				default:
-					break;
-			}
 		}
 
 		// Method generates assembly program from input program
@@ -63,8 +46,6 @@ namespace Compiler
 				Indent(
 					programAssembly +
 					"\n" +
-					AssemblyPrintResult((_tree as Expression).Type) + 
-					"\n" +
 					"mov eax, 0\n" +
 					"ret"
 				) + "\n\n" +
@@ -80,6 +61,7 @@ namespace Compiler
 		{
 			switch(tree)
 			{
+				// --- Expressions
 				case BinaryOperator op:
 					return ToAssembly(op);
 				case UnaryOperator op:
@@ -90,6 +72,9 @@ namespace Compiler
 					return ToAssembly(p);
 				case Cast c:
 					return ToAssembly(c);
+				// --- Statements
+				case ExpressionStatement stmt:
+					return ToAssembly(stmt.GetExpression());
 				default:
 					return "";
 			}
@@ -341,24 +326,6 @@ namespace Compiler
 		private string Indent(string str)
 		{
 			return "\t" + str.Replace("\n", "\n\t");
-		}
-
-		// Method returns assembly code for printing final result
-		// input: none
-		// return: assembly code
-		private string AssemblyPrintResult(TypeCode type)
-		{
-			switch (type)
-			{
-				case TypeCode.INT:
-					return HelperCall("print_int");
-				case TypeCode.FLOAT:
-					return HelperCall("print_float");
-				case TypeCode.BOOL:
-					return HelperCall("print_bool");
-				default:
-					return "";
-			}
 		}
 
 		// Method returns an assembly call to a helper function and makes sure it's added to the final assembly.

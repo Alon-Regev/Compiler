@@ -22,7 +22,23 @@ namespace Compiler
 		// return: AST as AST_Node
 		public AST_Node Parse()
 		{
-			return ParseExpression();
+			// return a block of statements (TODO)
+			return ParseStatement();
+		}
+
+		// Method parses a statement
+		// input: none
+		// return: statement tree
+		public Statement ParseStatement()
+		{
+			// parse expr statement
+			Expression expr = ParseExpression();
+			Statement stmt = new ExpressionStatement(expr);
+			// check semicolon
+			Token stmtEnd = scanner.Next();
+			if (stmtEnd.Code != TokenCode.SEMI_COLON)
+				throw new UnexpectedToken("Semicolon", stmtEnd);
+			return stmt;
 		}
 
 		// Method parses a mathematical expression, defined as a sum of terms.
@@ -122,6 +138,7 @@ namespace Compiler
 				case TokenCode.EOF:
 				case TokenCode.RIGHT_PARENTHESIS:
 				case TokenCode.COLON:
+				case TokenCode.SEMI_COLON:
 					return -1;
 				// invalid
 				default:
