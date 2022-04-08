@@ -75,8 +75,9 @@ namespace Compiler
 		// return: Ternary Expression (or input if there isn't one)
 		private Expression ParseTernary(Expression node)
 		{
-			if (scanner.Next().Code != TokenCode.QUESTION_MARK)
+			if (scanner.Peek().Code != TokenCode.QUESTION_MARK)
 				return node;
+			scanner.Next();
 			// parse second operand
 			Expression operand2 = ParseExpression(TERNARY_ORDER - 1);
 			// check colon
