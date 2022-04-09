@@ -77,7 +77,7 @@ namespace Compiler
 					VariableDeclaration declaration = newStatement as VariableDeclaration;
 					block.SymbolTable.AddEntry(
 						declaration,
-						new SymbolTableEntry(SymbolType.LOCAL_VAR)
+						new SymbolTableEntry(SymbolType.LOCAL_VAR, declaration.GetTypeCode())
 					);
 				}
 			}
@@ -87,9 +87,15 @@ namespace Compiler
 				throw new UnexpectedToken("block open brace }", scanner.Last);
 
 			// offset addresses of sub-blocks
-			foreach(Statement stmt in block.Children)
-				if(stmt is Block)
+			foreach (Statement stmt in block.Children)
+			{
+				if (stmt is Block)
+				{
+					// set parent and address offset
+					(stmt as Block).SymbolTable.ParentTable = block.SymbolTable;
 					(stmt as Block).OffsetAddresses(block.SymbolTable.VariableBytes());
+				}
+			}
 
 			return block;
 		}
@@ -214,7 +220,7 @@ namespace Compiler
 		private Expression ParseFactor()
 		{
 			// the most compact part of an expression
-			// Factor := <primitive> | (<expression>) | <cast><factor> | <unary_op><factor> | <factor><unary_op>
+			// Factor := <primitive> | (<expression>) | <cast><factor> | <unary_op><factor> | <factor><unary_op> | <variable>
 			Token token = scanner.Next();
 			Expression result;
 
@@ -256,6 +262,11 @@ namespace Compiler
 				case TokenCode.SUB_OP:          // negation
 				case TokenCode.EXCLAMATION_MARK:    // logical not
 					result = new UnaryOperator(token.Code, ParseFactor(), true);
+					break;
+
+				// --- Identifier
+				case TokenCode.IDENTIFIER:
+					result = new Variable(token);
 					break;
 
 				// --- Unexpected

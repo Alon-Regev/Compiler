@@ -6,7 +6,8 @@ namespace Compiler
 {
 	class CodeGenerator
 	{
-		AST_Node _tree;
+		private AST_Node _tree;
+		private Block _currentBlock;
 
 		private int _labelCounter = 0;
 
@@ -44,8 +45,12 @@ namespace Compiler
 				"section .text\n" +
 				"_main:\n" +
 				Indent(
+					"push ebp\n" +
+					"mov ebp, esp\n\n" +
 					programAssembly +
 					"\n" +
+					"mov esp, ebp\n" +
+					"pop ebp\n" +
 					"mov eax, 0\n" +
 					"ret"
 				) + "\n\n" +
@@ -70,6 +75,8 @@ namespace Compiler
 					return ToAssembly(op);
 				case IPrimitive p:
 					return ToAssembly(p);
+				case Variable v:
+					return ToAssembly(v);
 				case Cast c:
 					return ToAssembly(c);
 				// --- Statements
@@ -87,6 +94,10 @@ namespace Compiler
 		// return: assembly as string
 		private string ToAssembly(Block block)
 		{
+			// change current block
+			Block prevBlock = _currentBlock;
+			_currentBlock = block;
+
 			string result = "";
 			// allocate memory for local variables
 			result += "sub esp, " + block.SymbolTable.VariableBytes() + "\n";
@@ -97,6 +108,9 @@ namespace Compiler
 			}
 			// deallocate memory from the stack
 			result += "add esp, " + block.SymbolTable.VariableBytes() + "\n";
+
+			// return to previous block and return
+			_currentBlock = prevBlock;
 
 			return result;
 		}
@@ -326,6 +340,14 @@ namespace Compiler
 				default:
 					throw new TypeError(cast);
 			}
+		}
+
+		// generate assembly for variable reference
+		// load local var from memory to eax
+		private string ToAssembly(Variable variable)
+		{
+			int address = _currentBlock.SymbolTable.GetEntry(variable).Address;
+			return "mov eax, [ebp - " + address + "]\n";
 		}
 
 		// Method adds necessary global variables after turning program to assembly

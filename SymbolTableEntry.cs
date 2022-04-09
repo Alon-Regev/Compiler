@@ -6,13 +6,15 @@ namespace Compiler
 {
 	class SymbolTableEntry
 	{
-		public SymbolType Type { get; private set; }
+		public SymbolType SymbolType { get; private set; }
+		public TypeCode ValueType { get; set; }
 		public int Address { get; set; }
 
 		// Constructor
-		public SymbolTableEntry(SymbolType type)
+		public SymbolTableEntry(SymbolType type, TypeCode valueType)
 		{
-			Type = type;
+			SymbolType = type;
+			ValueType = valueType;
 		}
 	}
 }

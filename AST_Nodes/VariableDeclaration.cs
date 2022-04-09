@@ -6,7 +6,7 @@ namespace Compiler
 {
 	class VariableDeclaration : Statement
 	{
-		public TokenCode Type {private set; get;}
+		public TokenCode Type { private set; get; }
 		public string Identifier { private set; get; }
 		
 		// Constructor
@@ -15,6 +15,19 @@ namespace Compiler
 		{
 			Type = type.Code;
 			Identifier = identifier.Value;
+		}
+
+		// Method returns variable type code
+		// input: none
+		// return: type code of the declared variable
+		public TypeCode GetTypeCode()
+		{
+			return Type switch 
+			{ 
+				TokenCode.INT_KEYWORD => TypeCode.INT,
+				TokenCode.FLOAT_KEYWORD => TypeCode.FLOAT,
+				TokenCode.BOOL_KEYWORD => TypeCode.BOOL,
+			};
 		}
 
 		// ToString override specifies the variable declaration

@@ -15,6 +15,10 @@ namespace Compiler
 	class SemanticAnalyzer
 	{
 		private AST_Node _tree;
+		private Block _currentBlock;
+
+		private HashSet<string> _declaredSymbols = new HashSet<string>();
+
 		private static Dictionary<TokenCode, HashSet<TypeCode>> _binOpAllowedTypes = new Dictionary<TokenCode, HashSet<TypeCode>>
 		{
 			// --- Arithmetic
@@ -98,12 +102,18 @@ namespace Compiler
 				case Cast c:
 					AnalyzeCast(c);
 					break;
+				case Variable v:
+					AnalyzeVariable(v);
+					break;
 				// --- Statements
 				case Block block:
 					AnalyzeBlock(block);
 					break;
 				case ExpressionStatement stmt:
 					AnalyzeSubtree(stmt.GetExpression());
+					break;
+				case VariableDeclaration decl:
+					_declaredSymbols.Add(decl.Identifier);
 					break;
 				default:
 					break;
@@ -115,11 +125,18 @@ namespace Compiler
 		// return: none
 		private void AnalyzeBlock(Block block)
 		{
+			// set current block
+			Block prevBlock = _currentBlock;
+			_currentBlock = block;
+
 			// analyze all statements in block
 			foreach(Statement stmt in block.Children)
 			{
 				AnalyzeSubtree(stmt);
 			}
+
+			// return to previous block
+			_currentBlock = prevBlock;
 		}
 
 		// Method does a semantic analysis for a BinaryOperator subtree
@@ -211,6 +228,17 @@ namespace Compiler
 		{
 			AnalyzeSubtree(cast.GetChild(0));
 			cast.FromType = cast.Child().Type;
+		}
+
+		// does a semantic analysis on a variable
+		private void AnalyzeVariable(Variable variable)
+		{
+			// get type from current block's symbol table
+			variable.Type = _currentBlock.SymbolTable.GetEntry(variable).ValueType;
+
+			// check if already passed declaration
+			if (!_declaredSymbols.Contains(variable.Identifier))
+				throw new ReferenceBeforeDeclarationError(variable);
 		}
 	}
 }
