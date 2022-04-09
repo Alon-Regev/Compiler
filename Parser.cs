@@ -37,8 +37,8 @@ namespace Compiler
 			{
 				case TokenCode.INT_KEYWORD:
 				case TokenCode.FLOAT_KEYWORD:
-				case TokenCode.BOOL_KEYWORD: 
-					statement = new VariableDeclaration(scanner.Next(), scanner.Next());
+				case TokenCode.BOOL_KEYWORD:
+					statement = ParseVariableDeclaration();
 					break;
 				case TokenCode.OPEN_BRACE:
 					return ParseBlock();
@@ -52,6 +52,35 @@ namespace Compiler
 			if (stmtEnd.Code != TokenCode.SEMI_COLON)
 				throw new UnexpectedToken("Semicolon", stmtEnd);
 			return statement;
+		}
+
+		// Method parses a local variable declaration
+		// input: none
+		// return: VariableDeclaration Node
+		public VariableDeclaration ParseVariableDeclaration()
+		{
+			// varDecl := <type> { <identifier> [ = <value>], }
+
+			Token type = scanner.Next();
+			Token identifier = scanner.Next();
+			if (identifier.Code != TokenCode.IDENTIFIER)
+				throw new UnexpectedToken("identifier", identifier);
+			// create node
+			VariableDeclaration declaration = new VariableDeclaration(type, identifier);
+
+			// check optional assignment
+			if (scanner.Peek().Code == TokenCode.ASSIGN_OP)
+			{
+				scanner.Next();
+				declaration.AddChild(
+					new BinaryOperator(TokenCode.ASSIGN_OP,
+						new Variable(identifier),
+						ParseExpression()
+					)
+				);
+			}
+
+			return declaration;
 		}
 
 		// Method parses a block of statements
