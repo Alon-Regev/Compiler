@@ -214,7 +214,7 @@ namespace Compiler
 		private Expression ParseFactor()
 		{
 			// the most compact part of an expression
-			// Factor := <primitive> | (<expression>) | <cast><factor> | <unary_op><factor> | <factor><unary_op>
+			// Factor := <primitive> | (<expression>) | <cast><factor> | <unary_op><factor> | <factor><unary_op> | <variable>
 			Token token = scanner.Next();
 			Expression result;
 
@@ -256,6 +256,11 @@ namespace Compiler
 				case TokenCode.SUB_OP:          // negation
 				case TokenCode.EXCLAMATION_MARK:    // logical not
 					result = new UnaryOperator(token.Code, ParseFactor(), true);
+					break;
+
+				// --- Identifier
+				case TokenCode.IDENTIFIER:
+					result = new Variable(token);
 					break;
 
 				// --- Unexpected
