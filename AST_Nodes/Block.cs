@@ -6,8 +6,11 @@ namespace Compiler
 {
 	class Block : Statement
 	{
+		public SymbolTable SymbolTable { get; private set; }
+
 		public Block(int line) : base(line)
 		{
+			SymbolTable = new SymbolTable();
 		}
 
 		// Method adds a statement to the block

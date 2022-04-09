@@ -69,6 +69,15 @@ namespace Compiler
 				// add statement
 				Statement newStatement = ParseStatement();
 				block.AddStatement(newStatement);
+				// add symbols to symbol table
+				if (newStatement is VariableDeclaration)
+				{
+					VariableDeclaration declaration = newStatement as VariableDeclaration;
+					block.SymbolTable.AddEntry(
+						declaration,
+						new SymbolTableEntry { Type = SymbolType.LOCAL_VAR, Address = 0 }
+					);
+				}
 			}
 
 			// check close brace

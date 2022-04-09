@@ -6,13 +6,13 @@ namespace Compiler
 {
 	enum SymbolType
 	{
-
+		LOCAL_VAR
 	}
 
 	struct SymbolTableEntry
 	{
-		readonly SymbolType type;
-		readonly int address;
+		public SymbolType Type;
+		public int Address;
 	}
 
 	class SymbolTable
@@ -27,26 +27,26 @@ namespace Compiler
 		}
 
 		// Method adds an entry to the symbol table
-		// input: symbol name, data (entry)
+		// input: declaration object, data (entry)
 		// return: none
-		public void AddEntry(Token symbolToken, SymbolTableEntry entry)
+		public void AddEntry(VariableDeclaration decl, SymbolTableEntry entry)
 		{
 			// check if insertion is possible
-			if (EntryExists(symbolToken.Value))
-				throw new MultipleDefinedNamesError(symbolToken);
+			if (EntryExists(decl.Identifier))
+				throw new MultipleDefinedNamesError(decl);
 			// insert new entry
-			_table.Add(symbolToken.Value, entry);
+			_table.Add(decl.Identifier, entry);
 		}
 
 		// Method return the entry of a specific symbol from the table
 		// input: symbol name
 		// return: symbol's entry
-		public SymbolTableEntry GetEntry(Token symbolToken)
+		public SymbolTableEntry GetEntry(VariableDeclaration decl)
 		{
 			// check if entry exists
-			if (!EntryExists(symbolToken.Value))
-				throw new UnknownNameError(symbolToken);
-			return _table[symbolToken.Value];
+			if (!EntryExists(decl.Identifier))
+				throw new UnknownNameError(decl);
+			return _table[decl.Identifier];
 		}
 
 		// Method checks if a symbol is already defined
