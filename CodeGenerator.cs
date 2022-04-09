@@ -13,7 +13,10 @@ namespace Compiler
 
 		List<DataSectionVar> _varsToDeclare = new List<DataSectionVar>
 		{
-			new DataSectionVar("__temp", DataSize.DWORD, "0")
+			new DataSectionVar("__temp", DataSize.DWORD, "0"),
+			DataSectionVar.StringConstant("format", "%?", true),
+			DataSectionVar.StringConstant("true_string", "true", false),
+			DataSectionVar.StringConstant("false_string", "false", false),
 		};
 
 		private HashSet<string> _helperFunctionsUsed = new HashSet<string>();
@@ -33,11 +36,12 @@ namespace Compiler
 		{
 			string programAssembly = ToAssembly(_tree);
 			string data = DataSectionAssembly();
-			string result =
+			return
 				"global _main\n" +
 				"extern _printf\n" +
 				"\n" +
-
+				MacrosAssembly() +
+				"\n" +
 				"section .data\n" +
 				Indent(data) +
 				"\n" +
@@ -55,8 +59,6 @@ namespace Compiler
 					"ret"
 				) + "\n\n" +
 				HelperFunctionsAssembly();
-
-			return MacrosAssembly() + result;
 		}
 
 		// Methods generate assembly code from subtrees
@@ -84,6 +86,8 @@ namespace Compiler
 					return ToAssembly(block);
 				case ExpressionStatement stmt:
 					return ToAssembly(stmt.GetExpression());
+				case PrintStatement stmt:
+					return ToAssembly(stmt);
 				default:
 					return "";
 			}
@@ -349,6 +353,19 @@ namespace Compiler
 			int address = _currentBlock.SymbolTable.GetEntry(variable).Address;
 			return "mov eax, [ebp - " + address + "]\n";
 		}
+
+		// Method generates assembly for a print statement
+		private string ToAssembly(PrintStatement statement)
+		{
+			return ToAssembly(statement.GetExpression()) +
+				statement.GetExpression().Type switch
+				{
+					TypeCode.INT => HelperCall("print_int"),
+					TypeCode.FLOAT => HelperCall("print_float"),
+					TypeCode.BOOL => HelperCall("print_bool"),
+					_ => ""
+				};
+			}
 
 		// Method adds necessary global variables after turning program to assembly
 		// input: none
