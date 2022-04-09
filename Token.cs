@@ -49,6 +49,7 @@ namespace Compiler
 		ASSIGN_OP,
 		// other
 		EXCLAMATION_MARK,
+		COMMA,
 
 		// --- Expressions
 		LEFT_PARENTHESIS,

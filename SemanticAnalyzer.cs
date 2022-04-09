@@ -113,7 +113,7 @@ namespace Compiler
 					AnalyzeSubtree(stmt.GetExpression());
 					break;
 				case VariableDeclaration decl:
-					_declaredSymbols.Add(decl.Identifier);
+					_declaredSymbols.UnionWith(decl.Identifiers);
 					break;
 				default:
 					break;

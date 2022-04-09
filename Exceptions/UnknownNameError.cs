@@ -6,8 +6,8 @@ namespace Compiler
 {
 	class UnknownNameError : CompilerError
 	{
-		public UnknownNameError(VariableDeclaration decl)
-			: base("UnkownName", decl.Line, "Use of undefined symbol \"" + decl.Identifier + "\"")
+		public UnknownNameError(string identifier, int line)
+			: base("UnkownName", line, "Use of undefined symbol \"" + identifier + "\"")
 		{
 		}
 

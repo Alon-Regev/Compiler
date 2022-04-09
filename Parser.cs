@@ -62,23 +62,30 @@ namespace Compiler
 			// varDecl := <type> { <identifier> [ = <value>], }
 
 			Token type = scanner.Next();
-			Token identifier = scanner.Next();
-			if (identifier.Code != TokenCode.IDENTIFIER)
-				throw new UnexpectedToken("identifier", identifier);
-			// create node
-			VariableDeclaration declaration = new VariableDeclaration(type, identifier);
+			VariableDeclaration declaration = new VariableDeclaration(type);
 
-			// check optional assignment
-			if (scanner.Peek().Code == TokenCode.ASSIGN_OP)
+			// add identifiers
+			do
 			{
-				scanner.Next();
-				declaration.AddChild(
-					new BinaryOperator(TokenCode.ASSIGN_OP,
-						new Variable(identifier),
-						ParseExpression()
-					)
-				);
-			}
+				Token identifier = scanner.Next();
+				if (identifier.Code != TokenCode.IDENTIFIER)
+					throw new UnexpectedToken("identifier", identifier);
+				// add to declaration
+				declaration.Identifiers.Add(identifier.Value);
+
+				// check optional assignment
+				if (scanner.Peek().Code == TokenCode.ASSIGN_OP)
+				{
+					scanner.Next();
+					declaration.AddChild(
+						new BinaryOperator(TokenCode.ASSIGN_OP,
+							new Variable(identifier),
+							ParseExpression()
+						)
+					);
+				}
+				// check if comma (and eat it)
+			} while (scanner.Peek().Code == TokenCode.COMMA && scanner.Next().Code == TokenCode.COMMA);
 
 			return declaration;
 		}
@@ -104,10 +111,14 @@ namespace Compiler
 				if (newStatement is VariableDeclaration)
 				{
 					VariableDeclaration declaration = newStatement as VariableDeclaration;
-					block.SymbolTable.AddEntry(
-						declaration,
-						new SymbolTableEntry(SymbolType.LOCAL_VAR, declaration.GetTypeCode())
-					);
+					foreach (string identifier in declaration.Identifiers)
+					{
+						block.SymbolTable.AddEntry(
+							identifier,
+							declaration.Line,
+							new SymbolTableEntry(SymbolType.LOCAL_VAR, declaration.GetTypeCode())
+						);
+					}
 				}
 			}
 
@@ -228,6 +239,7 @@ namespace Compiler
 				case TokenCode.RIGHT_PARENTHESIS:
 				case TokenCode.COLON:
 				case TokenCode.SEMI_COLON:
+				case TokenCode.COMMA:
 					return -1;
 				// invalid
 				default:
