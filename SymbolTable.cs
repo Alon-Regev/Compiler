@@ -37,7 +37,7 @@ namespace Compiler
 		}
 
 		// Method return the entry of a specific symbol from the table
-		// input: symbol name
+		// input: declaration node
 		// return: symbol's entry
 		public SymbolTableEntry GetEntry(VariableDeclaration decl)
 		{
@@ -45,6 +45,17 @@ namespace Compiler
 			if (!EntryExists(decl.Identifier))
 				throw new UnknownNameError(decl);
 			return _table[decl.Identifier];
+		}
+
+		// Method return the entry of a specific symbol from the table
+		// input: variable reference node
+		// return: symbol's entry
+		public SymbolTableEntry GetEntry(Variable variable)
+		{
+			// check if entry exists
+			if (!EntryExists(variable.Identifier))
+				throw new UnknownNameError(variable);
+			return _table[variable.Identifier];
 		}
 
 		// Method checks if a symbol is already defined
@@ -71,7 +82,7 @@ namespace Compiler
 			foreach(string key in _table.Keys)
 			{
 				// if local var
-				if (_table[key].Type == SymbolType.LOCAL_VAR)
+				if (_table[key].SymbolType == SymbolType.LOCAL_VAR)
 				{
 					// offset address
 					_table[key].Address += offset;

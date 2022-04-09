@@ -15,6 +15,7 @@ namespace Compiler
 	class SemanticAnalyzer
 	{
 		private AST_Node _tree;
+		private Block _currentBlock;
 		private static Dictionary<TokenCode, HashSet<TypeCode>> _binOpAllowedTypes = new Dictionary<TokenCode, HashSet<TypeCode>>
 		{
 			// --- Arithmetic
@@ -98,8 +99,12 @@ namespace Compiler
 				case Cast c:
 					AnalyzeCast(c);
 					break;
+				case Variable v:
+					AnalyzeVariable(v);
+					break;
 				// --- Statements
 				case Block block:
+					_currentBlock = block;
 					AnalyzeBlock(block);
 					break;
 				case ExpressionStatement stmt:
@@ -211,6 +216,13 @@ namespace Compiler
 		{
 			AnalyzeSubtree(cast.GetChild(0));
 			cast.FromType = cast.Child().Type;
+		}
+
+		// does a semantic analysis on a variable
+		private void AnalyzeVariable(Variable variable)
+		{
+			// get type from current block's symbol table
+			variable.Type = _currentBlock.SymbolTable.GetEntry(variable).ValueType;
 		}
 	}
 }

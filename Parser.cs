@@ -77,7 +77,7 @@ namespace Compiler
 					VariableDeclaration declaration = newStatement as VariableDeclaration;
 					block.SymbolTable.AddEntry(
 						declaration,
-						new SymbolTableEntry(SymbolType.LOCAL_VAR)
+						new SymbolTableEntry(SymbolType.LOCAL_VAR, declaration.GetTypeCode())
 					);
 				}
 			}
