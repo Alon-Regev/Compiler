@@ -18,7 +18,7 @@ namespace Compiler
 	class SymbolTable
 	{
 		private Dictionary<string, SymbolTableEntry> _table;
-		private int _addressCounter = 4;
+		private int _addressCounter = 0;
 
 		// Constructor
 		// input: none
@@ -35,8 +35,8 @@ namespace Compiler
 			// check if insertion is possible
 			if (EntryExists(decl.Identifier))
 				throw new MultipleDefinedNamesError(decl);
-			entry.Address = _addressCounter;
 			_addressCounter += 4;
+			entry.Address = _addressCounter;
 			// set address
 			// insert new entry
 			_table.Add(decl.Identifier, entry);
@@ -59,6 +59,14 @@ namespace Compiler
 		public bool EntryExists(string symbol)
 		{
 			return _table.ContainsKey(symbol);
+		}
+
+		// Method returns the amount of bytes needed for the local variables of this block
+		// input: none
+		// return: number of bytes needed to be allocated on the stack
+		public int VariableBytes()
+		{
+			return _addressCounter;
 		}
 	}
 }

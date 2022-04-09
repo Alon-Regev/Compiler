@@ -73,11 +73,32 @@ namespace Compiler
 				case Cast c:
 					return ToAssembly(c);
 				// --- Statements
+				case Block block:
+					return ToAssembly(block);
 				case ExpressionStatement stmt:
 					return ToAssembly(stmt.GetExpression());
 				default:
 					return "";
 			}
+		}
+
+		// Methods generate assembly code for a block of statements
+		// tree: Block to turn into ASM
+		// return: assembly as string
+		private string ToAssembly(Block block)
+		{
+			string result = "";
+			// allocate memory for local variables
+			result += "sub esp, " + block.SymbolTable.VariableBytes() + "\n";
+			// add assembly code for all statements
+			foreach (Statement stmt in block.Children)
+			{
+				result += ToAssembly(stmt);
+			}
+			// deallocate memory from the stack
+			result += "add esp, " + block.SymbolTable.VariableBytes() + "\n";
+
+			return result;
 		}
 
 		// binary operator assembly rules:
