@@ -9,12 +9,6 @@ namespace Compiler
 		LOCAL_VAR
 	}
 
-	struct SymbolTableEntry
-	{
-		public SymbolType Type;
-		public int Address;
-	}
-
 	class SymbolTable
 	{
 		private Dictionary<string, SymbolTableEntry> _table;
@@ -67,6 +61,22 @@ namespace Compiler
 		public int VariableBytes()
 		{
 			return _addressCounter;
+		}
+
+		// Method offsets addresses of all local variables
+		// input: amount of bytes to offset by
+		// return: none
+		public void OffsetAddresses(int offset)
+		{
+			foreach(string key in _table.Keys)
+			{
+				// if local var
+				if (_table[key].Type == SymbolType.LOCAL_VAR)
+				{
+					// offset address
+					_table[key].Address += offset;
+				}
+			}
 		}
 	}
 }

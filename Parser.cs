@@ -77,7 +77,7 @@ namespace Compiler
 					VariableDeclaration declaration = newStatement as VariableDeclaration;
 					block.SymbolTable.AddEntry(
 						declaration,
-						new SymbolTableEntry { Type = SymbolType.LOCAL_VAR }
+						new SymbolTableEntry(SymbolType.LOCAL_VAR)
 					);
 				}
 			}
@@ -85,6 +85,11 @@ namespace Compiler
 			// check close brace
 			if (scanner.Next().Code != TokenCode.CLOSE_BRACE)
 				throw new UnexpectedToken("block open brace }", scanner.Last);
+
+			// offset addresses of sub-blocks
+			foreach(Statement stmt in block.Children)
+				if(stmt is Block)
+					(stmt as Block).OffsetAddresses(block.SymbolTable.VariableBytes());
 
 			return block;
 		}
