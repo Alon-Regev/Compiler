@@ -49,7 +49,6 @@ namespace Compiler
 				default:	// expression
 					statement = new ExpressionStatement(ParseExpression());
 					break;
-					
 			}
 			// check semicolon
 			Token stmtEnd = scanner.Next();

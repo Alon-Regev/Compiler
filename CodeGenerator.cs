@@ -69,6 +69,8 @@ namespace Compiler
 			switch(tree)
 			{
 				// --- Expressions
+				case BinaryOperator op when op.Operator == TokenCode.ASSIGN_OP:
+					return AssignmentAssembly(op);
 				case BinaryOperator op:
 					return ToAssembly(op);
 				case UnaryOperator op:
@@ -88,6 +90,8 @@ namespace Compiler
 					return ToAssembly(stmt.GetExpression());
 				case PrintStatement stmt:
 					return ToAssembly(stmt);
+				case VariableDeclaration decl:
+					return ToAssembly(decl);
 				default:
 					return "";
 			}
@@ -225,6 +229,17 @@ namespace Compiler
 			}
 		}
 
+		// generates assembly for assignment
+		// rules: value to assign at eax, moves into memory
+		private string AssignmentAssembly(BinaryOperator op)
+		{
+			Variable variable = op.Operand(0) as Variable;
+			SymbolTableEntry entry = _currentBlock.SymbolTable.GetEntry(variable);
+
+			return ToAssembly(op.Operand(1)) +
+				"mov [ebp - " + entry.Address + "], eax\n";
+		}
+
 		// unary operator assembly rules:
 		// operand -> result: ax -> ax
 		public static string DEFAULT_OPERATOR_UNARY = "Invalid unary operator passed semantic analysis";
@@ -352,6 +367,19 @@ namespace Compiler
 		{
 			int address = _currentBlock.SymbolTable.GetEntry(variable).Address;
 			return "mov eax, [ebp - " + address + "]\n";
+		}
+
+		// generate assembly for variable declaration
+		// load local var from memory to eax
+		private string ToAssembly(VariableDeclaration variableDeclaration)
+		{
+			string result = "";
+			// add assignments ASM
+			foreach(AST_Node child in variableDeclaration.Children)
+			{
+				result += ToAssembly(child);
+			}
+			return result;
 		}
 
 		// Method generates assembly for a print statement
