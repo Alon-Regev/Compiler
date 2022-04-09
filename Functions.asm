@@ -21,6 +21,10 @@ factorial_loop:
 print_int:
 ; prints integer from eax
 	push eax
+	
+	mov ebx, format
+	mov byte [ebx + 1], 'd'
+
 	push format
 	call _printf
 	add esp, 8
@@ -33,6 +37,10 @@ print_float:
 	fld dword [__temp]
 	sub esp, 8
 	fst qword [esp]
+	
+	mov ebx, format
+	mov byte [ebx + 1], 'f'
+
 	push format
 	call _printf
 	add esp, 12
@@ -49,6 +57,10 @@ print_bool:
 	mov [esp], dword false_string
 	
 skip_false:
+	
+	mov ebx, format
+	mov byte [ebx + 1], 's'
+
 	push format
 	call _printf
 	add esp, 8

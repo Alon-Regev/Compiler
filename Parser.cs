@@ -42,6 +42,10 @@ namespace Compiler
 					break;
 				case TokenCode.OPEN_BRACE:
 					return ParseBlock();
+				case TokenCode.PRINT_KEYWORD:
+					scanner.Next();
+					statement = new PrintStatement(ParseExpression());
+					break;
 				default:	// expression
 					statement = new ExpressionStatement(ParseExpression());
 					break;

@@ -112,6 +112,9 @@ namespace Compiler
 				case ExpressionStatement stmt:
 					AnalyzeSubtree(stmt.GetExpression());
 					break;
+				case PrintStatement stmt:
+					AnalyzeSubtree(stmt.GetExpression());
+					break;
 				case VariableDeclaration decl:
 					_declaredSymbols.UnionWith(decl.Identifiers);
 					break;
