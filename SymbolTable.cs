@@ -25,31 +25,31 @@ namespace Compiler
 		// Method adds an entry to the symbol table
 		// input: declaration object, data (entry)
 		// return: none
-		public void AddEntry(VariableDeclaration decl, SymbolTableEntry entry)
+		public void AddEntry(string identifier, int line, SymbolTableEntry entry)
 		{
 			// check if insertion is possible
-			if (EntryExists(decl.Identifier))
-				throw new MultipleDefinedNamesError(decl);
+			if (EntryExists(identifier))
+				throw new MultipleDefinedNamesError(identifier, line);
 			_addressCounter += 4;
 			entry.Address = _addressCounter;
 			// set address
 			// insert new entry
-			_table.Add(decl.Identifier, entry);
+			_table.Add(identifier, entry);
 		}
 
 		// Method return the entry of a specific symbol from the table
 		// input: declaration node
 		// return: symbol's entry
-		public SymbolTableEntry GetEntry(VariableDeclaration decl)
+		public SymbolTableEntry GetEntry(string identifier, int line)
 		{
 			// check if entry exists
-			if (EntryExists(decl.Identifier))
-				return _table[decl.Identifier];
+			if (EntryExists(identifier))
+				return _table[identifier];
 			// try to find entry in parent
 			if(ParentTable == null)
-				throw new UnknownNameError(decl);
+				throw new UnknownNameError(identifier, line);
 
-			return ParentTable.GetEntry(decl);
+			return ParentTable.GetEntry(identifier, line);
 		}
 
 		// Method return the entry of a specific symbol from the table

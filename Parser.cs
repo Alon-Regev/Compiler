@@ -37,8 +37,8 @@ namespace Compiler
 			{
 				case TokenCode.INT_KEYWORD:
 				case TokenCode.FLOAT_KEYWORD:
-				case TokenCode.BOOL_KEYWORD: 
-					statement = new VariableDeclaration(scanner.Next(), scanner.Next());
+				case TokenCode.BOOL_KEYWORD:
+					statement = ParseVariableDeclaration();
 					break;
 				case TokenCode.OPEN_BRACE:
 					return ParseBlock();
@@ -52,6 +52,42 @@ namespace Compiler
 			if (stmtEnd.Code != TokenCode.SEMI_COLON)
 				throw new UnexpectedToken("Semicolon", stmtEnd);
 			return statement;
+		}
+
+		// Method parses a local variable declaration
+		// input: none
+		// return: VariableDeclaration Node
+		public VariableDeclaration ParseVariableDeclaration()
+		{
+			// varDecl := <type> { <identifier> [ = <value>], }
+
+			Token type = scanner.Next();
+			VariableDeclaration declaration = new VariableDeclaration(type);
+
+			// add identifiers
+			do
+			{
+				Token identifier = scanner.Next();
+				if (identifier.Code != TokenCode.IDENTIFIER)
+					throw new UnexpectedToken("identifier", identifier);
+				// add to declaration
+				declaration.Identifiers.Add(identifier.Value);
+
+				// check optional assignment
+				if (scanner.Peek().Code == TokenCode.ASSIGN_OP)
+				{
+					scanner.Next();
+					declaration.AddChild(
+						new BinaryOperator(TokenCode.ASSIGN_OP,
+							new Variable(identifier),
+							ParseExpression()
+						)
+					);
+				}
+				// check if comma (and eat it)
+			} while (scanner.Peek().Code == TokenCode.COMMA && scanner.Next().Code == TokenCode.COMMA);
+
+			return declaration;
 		}
 
 		// Method parses a block of statements
@@ -75,10 +111,14 @@ namespace Compiler
 				if (newStatement is VariableDeclaration)
 				{
 					VariableDeclaration declaration = newStatement as VariableDeclaration;
-					block.SymbolTable.AddEntry(
-						declaration,
-						new SymbolTableEntry(SymbolType.LOCAL_VAR, declaration.GetTypeCode())
-					);
+					foreach (string identifier in declaration.Identifiers)
+					{
+						block.SymbolTable.AddEntry(
+							identifier,
+							declaration.Line,
+							new SymbolTableEntry(SymbolType.LOCAL_VAR, declaration.GetTypeCode())
+						);
+					}
 				}
 			}
 
@@ -199,6 +239,7 @@ namespace Compiler
 				case TokenCode.RIGHT_PARENTHESIS:
 				case TokenCode.COLON:
 				case TokenCode.SEMI_COLON:
+				case TokenCode.COMMA:
 					return -1;
 				// invalid
 				default:

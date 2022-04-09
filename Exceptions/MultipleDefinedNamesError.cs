@@ -6,8 +6,8 @@ namespace Compiler
 {
 	class MultipleDefinedNamesError : CompilerError
 	{
-		public MultipleDefinedNamesError(VariableDeclaration decl)
-			: base("MultipleDefinedNamesError", decl.Line, "Symbol \"" + decl.Identifier + "\" was defined more than once")
+		public MultipleDefinedNamesError(string identifier, int line)
+			: base("MultipleDefinedNamesError", line, "Symbol \"" + identifier + "\" was defined more than once")
 		{
 		}
 	}

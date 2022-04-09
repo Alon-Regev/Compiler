@@ -41,7 +41,8 @@ namespace Compiler
 			// assignment
 			new KeyValuePair<TokenCode, string>(TokenCode.ASSIGN_OP, "=" ),
 			// other
-			new KeyValuePair<TokenCode, string>(TokenCode.EXCLAMATION_MARK, @"!" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.EXCLAMATION_MARK, "!" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.COMMA, "," ),
 
 			// --- Castings
 			new KeyValuePair<TokenCode, string>(TokenCode.INT_CAST, @"\(int\)" ),
