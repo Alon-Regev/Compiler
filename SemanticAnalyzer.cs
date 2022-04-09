@@ -16,6 +16,9 @@ namespace Compiler
 	{
 		private AST_Node _tree;
 		private Block _currentBlock;
+
+		private HashSet<string> _declaredSymbols = new HashSet<string>();
+
 		private static Dictionary<TokenCode, HashSet<TypeCode>> _binOpAllowedTypes = new Dictionary<TokenCode, HashSet<TypeCode>>
 		{
 			// --- Arithmetic
@@ -108,6 +111,9 @@ namespace Compiler
 					break;
 				case ExpressionStatement stmt:
 					AnalyzeSubtree(stmt.GetExpression());
+					break;
+				case VariableDeclaration decl:
+					_declaredSymbols.Add(decl.Identifier);
 					break;
 				default:
 					break;
@@ -229,6 +235,10 @@ namespace Compiler
 		{
 			// get type from current block's symbol table
 			variable.Type = _currentBlock.SymbolTable.GetEntry(variable).ValueType;
+
+			// check if already passed declaration
+			if (!_declaredSymbols.Contains(variable.Identifier))
+				throw new ReferenceBeforeDeclarationError(variable);
 		}
 	}
 }
