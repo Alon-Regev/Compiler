@@ -166,10 +166,29 @@ namespace Compiler
 				Token op = scanner.Next();
 				Expression nextSubexp = ParseExpression(order - 1);
 				// add binary operator node
-				node = new BinaryOperator(op.Code, node, nextSubexp);
+				if (RTL_Evaluated(op.Code) &&
+					node is BinaryOperator && RTL_Evaluated((node as BinaryOperator).Operator))
+				{
+					// evaluate right expression under operand 1
+					node.SetChild(1, new BinaryOperator(op.Code, (node as BinaryOperator).Operand(1), nextSubexp));
+				}
+				else
+					node = new BinaryOperator(op.Code, node, nextSubexp);
 			}
 
 			return node;
+		}
+
+		// Method checks if an operator is evaluated Right To Left or not
+		// input: operator token
+		// return: true if RTL, false otherwise
+		private bool RTL_Evaluated(TokenCode op)
+		{
+			return op switch
+			{
+				TokenCode.ASSIGN_OP => true,
+				_ => false
+			};
 		}
 
 		// Method parses a ternary operator

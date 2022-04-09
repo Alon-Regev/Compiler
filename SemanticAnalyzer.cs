@@ -163,6 +163,14 @@ namespace Compiler
 			// check if operation is allowed
 			if (!_binOpAllowedTypes[op.Operator].Contains(op.Operand(0).Type))
 				throw new TypeError(op);
+			
+			// additional checks
+			if(op.Operator == TokenCode.ASSIGN_OP)
+			{
+				// check if assigning to a variable
+				if (!(op.Operand(0) is Variable))
+					throw new AssignmentError(op.Line);
+			}
 		}
 
 		// Method checks if a binary operator is a relational operator
