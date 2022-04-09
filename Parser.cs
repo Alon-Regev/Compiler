@@ -147,7 +147,7 @@ namespace Compiler
 		// input:   order - expression's max operator order
 		//			default: includes all operators
 		// return:	expression tree
-		private Expression ParseExpression(int order = 12)
+		private Expression ParseExpression(int order = 13)
 		{
 			// subexp(0) := factor | factor unary_op
 			if (order == 0)
@@ -199,6 +199,9 @@ namespace Compiler
 		{
 			switch(t.Code)
 			{
+				// assignment
+				case TokenCode.ASSIGN_OP:
+					return 13;
 				// ternary
 				case TokenCode.QUESTION_MARK:
 					return TERNARY_ORDER;

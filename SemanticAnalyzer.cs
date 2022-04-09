@@ -48,6 +48,8 @@ namespace Compiler
 			{ TokenCode.EQUAL_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
 			{ TokenCode.NOT_EQUAL_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
 
+			// --- Assignment
+			{ TokenCode.ASSIGN_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT, TypeCode.BOOL } },
 		};
 
 		private static Dictionary<TokenCode, HashSet<TypeCode>> _unaryPrefixOpAllowedTypes = new Dictionary<TokenCode, HashSet<TypeCode>>
