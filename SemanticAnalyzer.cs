@@ -99,6 +99,9 @@ namespace Compiler
 					AnalyzeCast(c);
 					break;
 				// --- Statements
+				case Block block:
+					AnalyzeBlock(block);
+					break;
 				case ExpressionStatement stmt:
 					AnalyzeSubtree(stmt.GetExpression());
 					break;
@@ -107,9 +110,20 @@ namespace Compiler
 			}
 		}
 
+		// Method does a semantic analysis for a block
+		// input: block to check
+		// return: none
+		private void AnalyzeBlock(Block block)
+		{
+			// analyze all statements in block
+			foreach(Statement stmt in block.Children)
+			{
+				AnalyzeSubtree(stmt);
+			}
+		}
+
 		// Method does a semantic analysis for a BinaryOperator subtree
 		// input: binary operator to check
-		//		  what type the result needs to be
 		// return: none
 		private void AnalyzeBinaryOperator(BinaryOperator op)
 		{
