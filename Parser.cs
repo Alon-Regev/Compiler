@@ -40,6 +40,8 @@ namespace Compiler
 				case TokenCode.BOOL_KEYWORD: 
 					statement = new VariableDeclaration(scanner.Next(), scanner.Next());
 					break;
+				case TokenCode.OPEN_BRACE:
+					return ParseBlock();
 				default:	// expression
 					statement = new ExpressionStatement(ParseExpression());
 					break;
