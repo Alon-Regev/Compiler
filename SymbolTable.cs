@@ -6,18 +6,13 @@ namespace Compiler
 {
 	enum SymbolType
 	{
-
-	}
-
-	struct SymbolTableEntry
-	{
-		readonly SymbolType type;
-		readonly int address;
+		LOCAL_VAR
 	}
 
 	class SymbolTable
 	{
 		private Dictionary<string, SymbolTableEntry> _table;
+		private int _addressCounter = 0;
 
 		// Constructor
 		// input: none
@@ -27,26 +22,29 @@ namespace Compiler
 		}
 
 		// Method adds an entry to the symbol table
-		// input: symbol name, data (entry)
+		// input: declaration object, data (entry)
 		// return: none
-		public void AddEntry(Token symbolToken, SymbolTableEntry entry)
+		public void AddEntry(VariableDeclaration decl, SymbolTableEntry entry)
 		{
 			// check if insertion is possible
-			if (EntryExists(symbolToken.Value))
-				throw new MultipleDefinedNamesError(symbolToken);
+			if (EntryExists(decl.Identifier))
+				throw new MultipleDefinedNamesError(decl);
+			_addressCounter += 4;
+			entry.Address = _addressCounter;
+			// set address
 			// insert new entry
-			_table.Add(symbolToken.Value, entry);
+			_table.Add(decl.Identifier, entry);
 		}
 
 		// Method return the entry of a specific symbol from the table
 		// input: symbol name
 		// return: symbol's entry
-		public SymbolTableEntry GetEntry(Token symbolToken)
+		public SymbolTableEntry GetEntry(VariableDeclaration decl)
 		{
 			// check if entry exists
-			if (!EntryExists(symbolToken.Value))
-				throw new UnknownNameError(symbolToken);
-			return _table[symbolToken.Value];
+			if (!EntryExists(decl.Identifier))
+				throw new UnknownNameError(decl);
+			return _table[decl.Identifier];
 		}
 
 		// Method checks if a symbol is already defined
@@ -55,6 +53,30 @@ namespace Compiler
 		public bool EntryExists(string symbol)
 		{
 			return _table.ContainsKey(symbol);
+		}
+
+		// Method returns the amount of bytes needed for the local variables of this block
+		// input: none
+		// return: number of bytes needed to be allocated on the stack
+		public int VariableBytes()
+		{
+			return _addressCounter;
+		}
+
+		// Method offsets addresses of all local variables
+		// input: amount of bytes to offset by
+		// return: none
+		public void OffsetAddresses(int offset)
+		{
+			foreach(string key in _table.Keys)
+			{
+				// if local var
+				if (_table[key].Type == SymbolType.LOCAL_VAR)
+				{
+					// offset address
+					_table[key].Address += offset;
+				}
+			}
 		}
 	}
 }

@@ -40,6 +40,8 @@ namespace Compiler
 				case TokenCode.BOOL_KEYWORD: 
 					statement = new VariableDeclaration(scanner.Next(), scanner.Next());
 					break;
+				case TokenCode.OPEN_BRACE:
+					return ParseBlock();
 				default:	// expression
 					statement = new ExpressionStatement(ParseExpression());
 					break;
@@ -69,11 +71,25 @@ namespace Compiler
 				// add statement
 				Statement newStatement = ParseStatement();
 				block.AddStatement(newStatement);
+				// add symbols to symbol table
+				if (newStatement is VariableDeclaration)
+				{
+					VariableDeclaration declaration = newStatement as VariableDeclaration;
+					block.SymbolTable.AddEntry(
+						declaration,
+						new SymbolTableEntry(SymbolType.LOCAL_VAR)
+					);
+				}
 			}
 
 			// check close brace
 			if (scanner.Next().Code != TokenCode.CLOSE_BRACE)
 				throw new UnexpectedToken("block open brace }", scanner.Last);
+
+			// offset addresses of sub-blocks
+			foreach(Statement stmt in block.Children)
+				if(stmt is Block)
+					(stmt as Block).OffsetAddresses(block.SymbolTable.VariableBytes());
 
 			return block;
 		}

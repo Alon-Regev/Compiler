@@ -6,8 +6,11 @@ namespace Compiler
 {
 	class Block : Statement
 	{
+		public SymbolTable SymbolTable { get; private set; }
+
 		public Block(int line) : base(line)
 		{
+			SymbolTable = new SymbolTable();
 		}
 
 		// Method adds a statement to the block
@@ -24,6 +27,17 @@ namespace Compiler
 		public Statement GetStatement(int i)
 		{
 			return (Statement)GetChild(i);
+		}
+
+		// Method offsets addresses of variables in this block and in nested blocks
+		// input: number of bytes to offset
+		// return: none
+		public void OffsetAddresses(int offset)
+		{
+			SymbolTable.OffsetAddresses(offset);
+			foreach (Statement stmt in Children)
+				if (stmt is Block)
+					(stmt as Block).OffsetAddresses(offset);
 		}
 
 		// ToString override shows block and it's content
