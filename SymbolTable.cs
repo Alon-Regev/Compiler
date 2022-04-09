@@ -18,6 +18,7 @@ namespace Compiler
 	class SymbolTable
 	{
 		private Dictionary<string, SymbolTableEntry> _table;
+		private int _addressCounter = 4;
 
 		// Constructor
 		// input: none
@@ -34,6 +35,9 @@ namespace Compiler
 			// check if insertion is possible
 			if (EntryExists(decl.Identifier))
 				throw new MultipleDefinedNamesError(decl);
+			entry.Address = _addressCounter;
+			_addressCounter += 4;
+			// set address
 			// insert new entry
 			_table.Add(decl.Identifier, entry);
 		}
