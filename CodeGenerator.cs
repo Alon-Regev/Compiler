@@ -94,6 +94,8 @@ namespace Compiler
 		// return: assembly as string
 		private string ToAssembly(Block block)
 		{
+			// change current block
+			Block prevBlock = _currentBlock;
 			_currentBlock = block;
 
 			string result = "";
@@ -106,6 +108,9 @@ namespace Compiler
 			}
 			// deallocate memory from the stack
 			result += "add esp, " + block.SymbolTable.VariableBytes() + "\n";
+
+			// return to previous block and return
+			_currentBlock = prevBlock;
 
 			return result;
 		}

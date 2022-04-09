@@ -11,6 +11,7 @@ namespace Compiler
 
 	class SymbolTable
 	{
+		public SymbolTable ParentTable { get; set; }
 		private Dictionary<string, SymbolTableEntry> _table;
 		private int _addressCounter = 0;
 
@@ -42,9 +43,13 @@ namespace Compiler
 		public SymbolTableEntry GetEntry(VariableDeclaration decl)
 		{
 			// check if entry exists
-			if (!EntryExists(decl.Identifier))
+			if (EntryExists(decl.Identifier))
+				return _table[decl.Identifier];
+			// try to find entry in parent
+			if(ParentTable == null)
 				throw new UnknownNameError(decl);
-			return _table[decl.Identifier];
+
+			return ParentTable.GetEntry(decl);
 		}
 
 		// Method return the entry of a specific symbol from the table
@@ -53,9 +58,13 @@ namespace Compiler
 		public SymbolTableEntry GetEntry(Variable variable)
 		{
 			// check if entry exists
-			if (!EntryExists(variable.Identifier))
+			if (EntryExists(variable.Identifier))
+				return _table[variable.Identifier];
+			// try to find entry in parent
+			if (ParentTable == null)
 				throw new UnknownNameError(variable);
-			return _table[variable.Identifier];
+
+			return ParentTable.GetEntry(variable);
 		}
 
 		// Method checks if a symbol is already defined

@@ -104,7 +104,6 @@ namespace Compiler
 					break;
 				// --- Statements
 				case Block block:
-					_currentBlock = block;
 					AnalyzeBlock(block);
 					break;
 				case ExpressionStatement stmt:
@@ -120,11 +119,18 @@ namespace Compiler
 		// return: none
 		private void AnalyzeBlock(Block block)
 		{
+			// set current block
+			Block prevBlock = _currentBlock;
+			_currentBlock = block;
+
 			// analyze all statements in block
 			foreach(Statement stmt in block.Children)
 			{
 				AnalyzeSubtree(stmt);
 			}
+
+			// return to previous block
+			_currentBlock = prevBlock;
 		}
 
 		// Method does a semantic analysis for a BinaryOperator subtree

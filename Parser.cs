@@ -87,9 +87,15 @@ namespace Compiler
 				throw new UnexpectedToken("block open brace }", scanner.Last);
 
 			// offset addresses of sub-blocks
-			foreach(Statement stmt in block.Children)
-				if(stmt is Block)
+			foreach (Statement stmt in block.Children)
+			{
+				if (stmt is Block)
+				{
+					// set parent and address offset
+					(stmt as Block).SymbolTable.ParentTable = block.SymbolTable;
 					(stmt as Block).OffsetAddresses(block.SymbolTable.VariableBytes());
+				}
+			}
 
 			return block;
 		}
