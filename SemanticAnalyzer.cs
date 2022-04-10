@@ -48,6 +48,8 @@ namespace Compiler
 			{ TokenCode.EQUAL_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
 			{ TokenCode.NOT_EQUAL_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
 
+			// --- Assignment
+			{ TokenCode.ASSIGN_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT, TypeCode.BOOL } },
 		};
 
 		private static Dictionary<TokenCode, HashSet<TypeCode>> _unaryPrefixOpAllowedTypes = new Dictionary<TokenCode, HashSet<TypeCode>>
@@ -161,6 +163,14 @@ namespace Compiler
 			// check if operation is allowed
 			if (!_binOpAllowedTypes[op.Operator].Contains(op.Operand(0).Type))
 				throw new TypeError(op);
+			
+			// additional checks
+			if(op.Operator == TokenCode.ASSIGN_OP)
+			{
+				// check if assigning to a variable
+				if (!(op.Operand(0) is Variable))
+					throw new AssignmentError(op.Line);
+			}
 		}
 
 		// Method checks if a binary operator is a relational operator

@@ -49,7 +49,6 @@ namespace Compiler
 				default:	// expression
 					statement = new ExpressionStatement(ParseExpression());
 					break;
-					
 			}
 			// check semicolon
 			Token stmtEnd = scanner.Next();
@@ -148,7 +147,7 @@ namespace Compiler
 		// input:   order - expression's max operator order
 		//			default: includes all operators
 		// return:	expression tree
-		private Expression ParseExpression(int order = 12)
+		private Expression ParseExpression(int order = 13)
 		{
 			// subexp(0) := factor | factor unary_op
 			if (order == 0)
@@ -167,10 +166,29 @@ namespace Compiler
 				Token op = scanner.Next();
 				Expression nextSubexp = ParseExpression(order - 1);
 				// add binary operator node
-				node = new BinaryOperator(op.Code, node, nextSubexp);
+				if (RTL_Evaluated(op.Code) &&
+					node is BinaryOperator && RTL_Evaluated((node as BinaryOperator).Operator))
+				{
+					// evaluate right expression under operand 1
+					node.SetChild(1, new BinaryOperator(op.Code, (node as BinaryOperator).Operand(1), nextSubexp));
+				}
+				else
+					node = new BinaryOperator(op.Code, node, nextSubexp);
 			}
 
 			return node;
+		}
+
+		// Method checks if an operator is evaluated Right To Left or not
+		// input: operator token
+		// return: true if RTL, false otherwise
+		private bool RTL_Evaluated(TokenCode op)
+		{
+			return op switch
+			{
+				TokenCode.ASSIGN_OP => true,
+				_ => false
+			};
 		}
 
 		// Method parses a ternary operator
@@ -200,6 +218,9 @@ namespace Compiler
 		{
 			switch(t.Code)
 			{
+				// assignment
+				case TokenCode.ASSIGN_OP:
+					return 13;
 				// ternary
 				case TokenCode.QUESTION_MARK:
 					return TERNARY_ORDER;
