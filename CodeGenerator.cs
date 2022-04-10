@@ -108,14 +108,17 @@ namespace Compiler
 
 			string result = "";
 			// allocate memory for local variables
-			result += "sub esp, " + block.SymbolTable.VariableBytes() + "\n";
+			int stackOffset = block.SymbolTable.VariableBytes();
+			if(stackOffset != 0)
+				result += "sub esp, " + stackOffset + "\n";
 			// add assembly code for all statements
 			foreach (Statement stmt in block.Children)
 			{
 				result += ToAssembly(stmt);
 			}
 			// deallocate memory from the stack
-			result += "add esp, " + block.SymbolTable.VariableBytes() + "\n";
+			if (stackOffset != 0)
+				result += "add esp, " + stackOffset + "\n";
 
 			// return to previous block and return
 			_currentBlock = prevBlock;
