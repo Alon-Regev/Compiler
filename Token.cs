@@ -66,6 +66,7 @@ namespace Compiler
 		CLOSE_BRACE,
 		// if else
 		IF,
+		ELSE,
 		// other
 		PRINT_KEYWORD,
 

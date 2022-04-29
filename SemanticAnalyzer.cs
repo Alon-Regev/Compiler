@@ -266,6 +266,8 @@ namespace Compiler
 				throw new TypeError(stmt, "Expected BOOL for condition, instead got " + stmt.GetCondition().Type);
 			// analyze substatements
 			AnalyzeSubtree(stmt.GetTrueBlock());
+			if(stmt.HasElse())
+				AnalyzeSubtree(stmt.GetFalseBlock());
 		}
 	}
 }

@@ -47,8 +47,7 @@ namespace Compiler
 					statement = new PrintStatement(ParseExpression());
 					break;
 				case TokenCode.IF:  // return (don't check semicolon)
-					scanner.Next();
-					return new IfStatement(ParseExpression(), ParseStatement());
+					return ParseIfStatement();
 				default:	// expression
 					statement = new ExpressionStatement(ParseExpression());
 					break;
@@ -94,6 +93,27 @@ namespace Compiler
 			} while (scanner.Peek().Code == TokenCode.COMMA && scanner.Next().Code == TokenCode.COMMA);
 
 			return declaration;
+		}
+
+		// Method parses an if-else statement
+		// input: none
+		// return: parsed if-else statement
+		private IfStatement ParseIfStatement()
+		{
+			// skip if keyword
+			scanner.Next(); 
+			// get condition and true-block
+			Expression condition = ParseExpression();
+			Statement trueBlock = ParseStatement();
+			// get else-block
+			Statement? elseBlock = null;
+			if(scanner.Peek().Code == TokenCode.ELSE)
+			{
+				// skip else keyword and get block
+				scanner.Next();
+				elseBlock = ParseStatement();
+			}
+			return new IfStatement(condition, trueBlock, elseBlock);
 		}
 
 		// Method parses a block of statements

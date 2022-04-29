@@ -69,6 +69,7 @@ namespace Compiler
 			new KeyValuePair<TokenCode, string>(TokenCode.CLOSE_BRACE, "}" ),
 			// if else
 			new KeyValuePair<TokenCode, string>(TokenCode.IF, "if" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.ELSE, "else" ),
 			// other
 			new KeyValuePair<TokenCode, string>(TokenCode.PRINT_KEYWORD, "print" ),
 
