@@ -417,7 +417,7 @@ namespace Compiler
 				// end of if block, start else
 				elseLabel + ":\n" +
 				(stmt.HasElse() ? ToAssembly(stmt.GetFalseBlock()) : "") +
-				(stmt.HasElse() ? finalLabel + ":" : "");
+				(stmt.HasElse() ? finalLabel + ":\n" : "");
 		}
 
 		// Method adds necessary global variables after turning program to assembly
