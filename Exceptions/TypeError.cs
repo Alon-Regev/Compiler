@@ -25,5 +25,10 @@ namespace Compiler
 			: base("TypeError", op.Line, msg)
 		{
 		}
+
+		public TypeError(IfStatement stmt, string msg)
+			: base("TypeError", stmt.Line, msg)
+		{
+		}
 	}
 }

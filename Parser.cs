@@ -46,6 +46,9 @@ namespace Compiler
 					scanner.Next();
 					statement = new PrintStatement(ParseExpression());
 					break;
+				case TokenCode.IF:  // return (don't check semicolon)
+					scanner.Next();
+					return new IfStatement(ParseExpression(), ParseStatement());
 				default:	// expression
 					statement = new ExpressionStatement(ParseExpression());
 					break;
@@ -262,6 +265,7 @@ namespace Compiler
 				// end of expression
 				case TokenCode.EOF:
 				case TokenCode.RIGHT_PARENTHESIS:
+				case TokenCode.OPEN_BRACE:
 				case TokenCode.COLON:
 				case TokenCode.SEMI_COLON:
 				case TokenCode.COMMA:

@@ -64,6 +64,8 @@ namespace Compiler
 		// blocks
 		OPEN_BRACE,
 		CLOSE_BRACE,
+		// if else
+		IF,
 		// other
 		PRINT_KEYWORD,
 
