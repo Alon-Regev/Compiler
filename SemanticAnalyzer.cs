@@ -123,6 +123,9 @@ namespace Compiler
 				case IfStatement stmt:
 					AnalyzeIfStatement(stmt);
 					break;
+				case WhileLoop stmt:
+					AnalyzeWhileLoop(stmt);
+					break;
 				default:
 					break;
 			}
@@ -268,6 +271,17 @@ namespace Compiler
 			AnalyzeSubtree(stmt.GetTrueBlock());
 			if(stmt.HasElse())
 				AnalyzeSubtree(stmt.GetFalseBlock());
+		}
+
+		// if statement analysis
+		private void AnalyzeWhileLoop(WhileLoop stmt)
+		{
+			// analyze condition
+			AnalyzeSubtree(stmt.GetCondition());
+			if (stmt.GetCondition().Type != TypeCode.BOOL)
+				throw new TypeError(stmt, "Expected BOOL for condition, instead got " + stmt.GetCondition().Type);
+			// analyze substatements
+			AnalyzeSubtree(stmt.GetBlock());
 		}
 	}
 }

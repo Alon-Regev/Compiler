@@ -70,6 +70,10 @@ namespace Compiler
 			// if else
 			new KeyValuePair<TokenCode, string>(TokenCode.IF, "if" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.ELSE, "else" ),
+			// loops
+			new KeyValuePair<TokenCode, string>(TokenCode.WHILE, "while" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.DO, "do" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.FOR, "for" ),
 			// other
 			new KeyValuePair<TokenCode, string>(TokenCode.PRINT_KEYWORD, "print" ),
 

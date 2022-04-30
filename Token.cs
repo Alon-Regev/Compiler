@@ -67,6 +67,10 @@ namespace Compiler
 		// if else
 		IF,
 		ELSE,
+		// loops
+		WHILE,
+		DO,
+		FOR,
 		// other
 		PRINT_KEYWORD,
 
