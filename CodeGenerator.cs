@@ -92,6 +92,8 @@ namespace Compiler
 					return ToAssembly(stmt);
 				case VariableDeclaration decl:
 					return ToAssembly(decl);
+				case IfStatement stmt:
+					return ToAssembly(stmt);
 				default:
 					return "";
 			}
@@ -396,7 +398,27 @@ namespace Compiler
 					TypeCode.BOOL => HelperCall("print_bool"),
 					_ => ""
 				};
-			}
+		}
+
+		// Method generates assembly for an if statement
+		private string ToAssembly(IfStatement stmt)
+		{
+			string elseLabel = GetLabel();
+			string finalLabel = stmt.HasElse() ? GetLabel() : "";
+			return
+				// condition in eax
+				ToAssembly(stmt.GetCondition()) +
+				// cmp and jump
+				"cmp eax, 0\n" +
+				"je " + elseLabel + "\n" +
+				// code for if block
+				ToAssembly(stmt.GetTrueBlock()) +
+				(stmt.HasElse() ? "jmp " + finalLabel + "\n" : "") +
+				// end of if block, start else
+				elseLabel + ":\n" +
+				(stmt.HasElse() ? ToAssembly(stmt.GetFalseBlock()) : "") +
+				(stmt.HasElse() ? finalLabel + ":\n" : "");
+		}
 
 		// Method adds necessary global variables after turning program to assembly
 		// input: none

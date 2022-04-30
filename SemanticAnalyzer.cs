@@ -120,6 +120,9 @@ namespace Compiler
 				case VariableDeclaration decl:
 					_declaredSymbols.UnionWith(decl.Identifiers);
 					break;
+				case IfStatement stmt:
+					AnalyzeIfStatement(stmt);
+					break;
 				default:
 					break;
 			}
@@ -252,6 +255,19 @@ namespace Compiler
 			// check if already passed declaration
 			if (!_declaredSymbols.Contains(variable.Identifier))
 				throw new ReferenceBeforeDeclarationError(variable);
+		}
+
+		// if statement analysis
+		private void AnalyzeIfStatement(IfStatement stmt)
+		{
+			// analyze condition
+			AnalyzeSubtree(stmt.GetCondition());
+			if(stmt.GetCondition().Type != TypeCode.BOOL)
+				throw new TypeError(stmt, "Expected BOOL for condition, instead got " + stmt.GetCondition().Type);
+			// analyze substatements
+			AnalyzeSubtree(stmt.GetTrueBlock());
+			if(stmt.HasElse())
+				AnalyzeSubtree(stmt.GetFalseBlock());
 		}
 	}
 }
