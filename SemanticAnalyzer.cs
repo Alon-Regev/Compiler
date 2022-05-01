@@ -108,6 +108,9 @@ namespace Compiler
 					AnalyzeVariable(v);
 					break;
 				// --- Statements
+				case ForLoop stmt:
+					AnalyzeForLoop(stmt);
+					break;
 				case Block block:
 					AnalyzeBlock(block);
 					break;
@@ -273,7 +276,7 @@ namespace Compiler
 				AnalyzeSubtree(stmt.GetFalseBlock());
 		}
 
-		// if statement analysis
+		// while loop analysis
 		private void AnalyzeWhileLoop(WhileLoop stmt)
 		{
 			// analyze condition
@@ -282,6 +285,27 @@ namespace Compiler
 				throw new TypeError(stmt, "Expected BOOL for condition, instead got " + stmt.GetCondition().Type);
 			// analyze substatements
 			AnalyzeSubtree(stmt.GetBlock());
+		}
+
+		// while loop analysis
+		private void AnalyzeForLoop(ForLoop stmt)
+		{
+			Block previousBlock = _currentBlock;
+			_currentBlock = stmt;
+			// analyze condition
+			AnalyzeSubtree(stmt.GetChild(ForLoop.INIT_INDEX));
+			AnalyzeSubtree(stmt.GetChild(ForLoop.CONDITION_INDEX));
+			AnalyzeSubtree(stmt.GetChild(ForLoop.ACTION_INDEX));
+			// check condition type
+			Expression condition = stmt.GetChild(ForLoop.CONDITION_INDEX) as Expression;
+			if (condition?.Type != TypeCode.BOOL)
+				throw new TypeError(stmt, "Expected BOOL for condition, instead got " + condition.Type);
+
+			// analyze block
+			AnalyzeSubtree(stmt.GetChild(ForLoop.BODY_INDEX));
+
+			// return to previous block
+			_currentBlock = previousBlock;
 		}
 	}
 }

@@ -51,6 +51,8 @@ namespace Compiler
 				case TokenCode.WHILE:
 				case TokenCode.DO:
 					return ParseWhileLoop();
+				case TokenCode.FOR:
+					return ParseForLoop();
 				default:	// expression
 					statement = new ExpressionStatement(ParseExpression());
 					break;
@@ -143,6 +145,26 @@ namespace Compiler
 				scanner.Require(TokenCode.SEMI_COLON);
 				return new WhileLoop(condition, block, true);
 			}
+		}
+
+		// Method parses a for loop
+		// input: none
+		// return: parsed for loop statement
+		private ForLoop ParseForLoop()
+		{
+			// skip while keyword
+			Token startToken = scanner.Next();
+			scanner.NextIf(TokenCode.LEFT_PARENTHESIS);
+			// regular while
+			VariableDeclaration initialization = ParseVariableDeclaration();
+			scanner.Require(TokenCode.SEMI_COLON);
+			Expression condition = ParseExpression();
+			scanner.Require(TokenCode.SEMI_COLON);
+			Expression action = ParseExpression();
+			scanner.NextIf(TokenCode.RIGHT_PARENTHESIS);
+			Statement body = ParseStatement();
+
+			return new ForLoop(initialization, condition, action, body);
 		}
 
 		// Method parses a block of statements

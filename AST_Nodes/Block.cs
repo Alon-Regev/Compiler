@@ -35,7 +35,7 @@ namespace Compiler
 		public void OffsetAddresses(int offset)
 		{
 			SymbolTable.OffsetAddresses(offset);
-			foreach (Statement stmt in Children)
+			foreach (AST_Node stmt in Children)
 				if (stmt is Block)
 					(stmt as Block).OffsetAddresses(offset);
 		}
