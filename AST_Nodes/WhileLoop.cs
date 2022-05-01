@@ -6,10 +6,13 @@ namespace Compiler
 {
 	class WhileLoop : Statement
 	{
-		public WhileLoop(Expression condition, Statement block) : base(condition.Line)
+		public bool IsDoWhile { private set; get; }
+
+		public WhileLoop(Expression condition, Statement block, bool isDoWhile = false) : base(condition.Line)
 		{
 			AddChild(condition);
 			AddChild(block);
+			IsDoWhile = isDoWhile;
 		}
 
 		// Getters for children

@@ -425,16 +425,29 @@ namespace Compiler
 		// Method generates assembly for an if statement
 		private string ToAssembly(WhileLoop stmt)
 		{
-			string loopStartLabel = GetLabel();
-			string loopEndLabel = GetLabel();
-			return
-				loopStartLabel + ":\n" +
-				ToAssembly(stmt.GetCondition()) +
-				"cmp eax, 0\n" +    // if false end loop
-				"je " + loopEndLabel + "\n" +
-				ToAssembly(stmt.GetBlock()) +
-				"jmp " + loopStartLabel + "\n" +
-				loopEndLabel + ":\n";
+			if (stmt.IsDoWhile)
+			{
+				string loopStartLabel = GetLabel();
+				return
+					loopStartLabel + ":\n" +
+					ToAssembly(stmt.GetBlock()) +
+					ToAssembly(stmt.GetCondition()) +
+					"cmp eax, 0\n" +
+					"jne " + loopStartLabel + "\n";
+			}
+			else
+			{
+				string loopStartLabel = GetLabel();
+				string loopEndLabel = GetLabel();
+				return
+					loopStartLabel + ":\n" +
+					ToAssembly(stmt.GetCondition()) +
+					"cmp eax, 0\n" +    // if false end loop
+					"je " + loopEndLabel + "\n" +
+					ToAssembly(stmt.GetBlock()) +
+					"jmp " + loopStartLabel + "\n" +
+					loopEndLabel + ":\n";
+			}
 		}
 
 		// Method adds necessary global variables after turning program to assembly

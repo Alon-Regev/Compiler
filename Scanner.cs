@@ -157,6 +157,16 @@ namespace Compiler
 			return result;
 		}
 
+		// Method skips over required token. Throws exception if the required token is missing.
+		// input: requiredToken: token required in the syntax (example: keywords)
+		// return: none
+		public void Require(TokenCode requiredToken)
+		{
+			Token next = Next();
+			if (next.Code != requiredToken)
+				throw new UnexpectedToken(requiredToken.ToString(), next);
+		}
+
 		// Method skips whitespace in the program.
 		// input: none
 		// return: none
