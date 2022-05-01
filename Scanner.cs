@@ -130,6 +130,15 @@ namespace Compiler
 			return token;
 		}
 
+		// Method moves to the next token if the current token is a certain value
+		// input: required current token to move
+		// return: nonve
+		public void NextIf(TokenCode required)
+		{
+			if (Peek().Code == required)
+				Next();
+		}
+
 		// Method returns the next token in the program without moving to next token. only skips whitespace
 		// input: none
 		// return: the next Token
