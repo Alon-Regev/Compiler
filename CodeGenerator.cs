@@ -84,6 +84,8 @@ namespace Compiler
 				case Cast c:
 					return ToAssembly(c);
 				// --- Statements
+				case ForLoop stmt:
+					return ToAssembly(stmt);
 				case Block block:
 					return ToAssembly(block);
 				case ExpressionStatement stmt:
@@ -448,6 +450,42 @@ namespace Compiler
 					"jmp " + loopStartLabel + "\n" +
 					loopEndLabel + ":\n";
 			}
+		}
+
+		// Method generates assembly for an if statement
+		private string ToAssembly(ForLoop stmt)
+		{
+			// change current block
+			Block prevBlock = _currentBlock;
+			_currentBlock = stmt;
+
+			string loopStartLabel = GetLabel();
+			string loopEndLabel = GetLabel();
+			string result = "";
+			// start block
+			int stackOffset = stmt.SymbolTable.VariableBytes();
+			if (stackOffset != 0)
+				result += "sub esp, " + stackOffset + "\n";
+			// loop
+			result +=
+				// initialization
+				ToAssembly(stmt.GetChild(ForLoop.INIT_INDEX)) +
+				loopStartLabel + ":\n" +
+				// check condition
+				ToAssembly(stmt.GetChild(ForLoop.CONDITION_INDEX)) +
+				"cmp eax, 0\n" +
+				"je " + loopEndLabel + "\n" +
+				// body
+				ToAssembly(stmt.GetChild(ForLoop.BODY_INDEX)) +
+				// loop end
+				ToAssembly(stmt.GetChild(ForLoop.ACTION_INDEX)) +
+				"jmp " + loopStartLabel + "\n" +
+				loopEndLabel + ":\n";
+			// end block and return
+			if (stackOffset != 0)
+				result += "add esp, " + stackOffset + "\n";
+			_currentBlock = prevBlock;
+			return result;
 		}
 
 		// Method adds necessary global variables after turning program to assembly

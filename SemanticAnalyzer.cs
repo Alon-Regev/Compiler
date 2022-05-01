@@ -295,7 +295,7 @@ namespace Compiler
 			// analyze condition
 			AnalyzeSubtree(stmt.GetChild(ForLoop.INIT_INDEX));
 			AnalyzeSubtree(stmt.GetChild(ForLoop.CONDITION_INDEX));
-			AnalyzeSubtree(stmt.GetChild(ForLoop.CONDITION_INDEX));
+			AnalyzeSubtree(stmt.GetChild(ForLoop.ACTION_INDEX));
 			// check condition type
 			Expression condition = stmt.GetChild(ForLoop.CONDITION_INDEX) as Expression;
 			if (condition?.Type != TypeCode.BOOL)
