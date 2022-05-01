@@ -48,6 +48,9 @@ namespace Compiler
 					break;
 				case TokenCode.IF:  // return (don't check semicolon)
 					return ParseIfStatement();
+				case TokenCode.WHILE:
+				case TokenCode.DO:
+					return ParseWhileLoop();
 				default:	// expression
 					statement = new ExpressionStatement(ParseExpression());
 					break;
@@ -116,6 +119,32 @@ namespace Compiler
 			return new IfStatement(condition, trueBlock, elseBlock);
 		}
 
+		// Method parses a while loop
+		// input: none
+		// return: parsed while loop statement
+		private WhileLoop ParseWhileLoop()
+		{
+			// skip while keyword
+			Token startToken = scanner.Next();
+			// regular while
+			if (startToken.Code == TokenCode.WHILE)
+			{
+				// get condition and block
+				return new WhileLoop(ParseExpression(), ParseStatement());
+			}
+			// do while
+			else
+			{
+				Statement block = ParseStatement();
+				// get keyword
+				scanner.Require(TokenCode.WHILE);
+				// get condition and return
+				Expression condition = ParseExpression();
+				scanner.Require(TokenCode.SEMI_COLON);
+				return new WhileLoop(condition, block, true);
+			}
+		}
+
 		// Method parses a block of statements
 		// input: none
 		// return: Block node
@@ -155,11 +184,34 @@ namespace Compiler
 			// offset addresses of sub-blocks
 			foreach (Statement stmt in block.Children)
 			{
-				if (stmt is Block)
+				switch(stmt)
 				{
-					// set parent and address offset
-					(stmt as Block).SymbolTable.ParentTable = block.SymbolTable;
-					(stmt as Block).OffsetAddresses(block.SymbolTable.VariableBytes());
+					case IfStatement ifStatement:
+						Statement?[] statements = new Statement?[] { ifStatement.GetTrueBlock(), ifStatement.GetFalseBlock() };
+						foreach (Statement? statement in statements)
+						{
+							if (statement != null && statement is Block)
+							{
+								(statement as Block).SymbolTable.ParentTable = block.SymbolTable;
+								(statement as Block).OffsetAddresses(block.SymbolTable.VariableBytes());
+							}
+						}
+						break;
+					case WhileLoop whileLoop:
+						if (whileLoop.GetBlock() is Block)
+						{
+							(whileLoop.GetBlock() as Block).SymbolTable.ParentTable = block.SymbolTable;
+							(whileLoop.GetBlock() as Block).OffsetAddresses(block.SymbolTable.VariableBytes());
+						}
+						break;
+					case Block subBlock:
+						// set parent and address offset
+						subBlock.SymbolTable.ParentTable = block.SymbolTable;
+						subBlock.OffsetAddresses(block.SymbolTable.VariableBytes());
+						break;
+					default:
+						break;
+
 				}
 			}
 
