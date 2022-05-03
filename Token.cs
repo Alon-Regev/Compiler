@@ -71,6 +71,10 @@ namespace Compiler
 		WHILE,
 		DO,
 		FOR,
+		// switch case
+		SWITCH,
+		CASE,
+		DEFAULT,
 		// other
 		PRINT_KEYWORD,
 
