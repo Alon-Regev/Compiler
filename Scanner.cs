@@ -74,6 +74,10 @@ namespace Compiler
 			new KeyValuePair<TokenCode, string>(TokenCode.WHILE, "while" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.DO, "do" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.FOR, "for" ),
+			// switch case
+			new KeyValuePair<TokenCode, string>(TokenCode.SWITCH, "switch" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.CASE, "case" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.DEFAULT, "default" ),
 			// other
 			new KeyValuePair<TokenCode, string>(TokenCode.PRINT_KEYWORD, "print" ),
 
@@ -168,12 +172,13 @@ namespace Compiler
 
 		// Method skips over required token. Throws exception if the required token is missing.
 		// input: requiredToken: token required in the syntax (example: keywords)
-		// return: none
-		public void Require(TokenCode requiredToken)
+		// return: token
+		public Token Require(TokenCode requiredToken)
 		{
 			Token next = Next();
 			if (next.Code != requiredToken)
 				throw new UnexpectedToken(requiredToken.ToString(), next);
+			return next;
 		}
 
 		// Method skips whitespace in the program.

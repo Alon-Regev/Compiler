@@ -129,6 +129,9 @@ namespace Compiler
 				case WhileLoop stmt:
 					AnalyzeWhileLoop(stmt);
 					break;
+				case SwitchCase stmt:
+					AnalyzeSwitchCase(stmt);
+					break;
 				default:
 					break;
 			}
@@ -287,7 +290,7 @@ namespace Compiler
 			AnalyzeSubtree(stmt.GetBlock());
 		}
 
-		// while loop analysis
+		// for loop analysis
 		private void AnalyzeForLoop(ForLoop stmt)
 		{
 			Block previousBlock = _currentBlock;
@@ -306,6 +309,35 @@ namespace Compiler
 
 			// return to previous block
 			_currentBlock = previousBlock;
+		}
+
+		// switch case analysis
+		private void AnalyzeSwitchCase(SwitchCase stmt)
+		{
+			// get switch type
+			AnalyzeSubtree(stmt.GetChild(0));
+			TypeCode type = (stmt.GetChild(0) as Expression).Type;
+			// analyze cases
+			int startIndex = 1;
+			if(stmt.HasDefault)
+			{
+				AnalyzeSubtree(stmt.GetChild(1));
+				startIndex = 2;
+			}
+
+			for(int i = startIndex; i < stmt.Children.Count; i += 2)
+			{
+				AnalyzeSubtree(stmt.GetChild(i));
+				AnalyzeSubtree(stmt.GetChild(i+1));
+				// check case type
+				if ((stmt.GetChild(i) as Expression).Type != type)
+				{
+					throw new TypeError(stmt,
+						"Switch case on type " + type +
+						" has a case with type " + (stmt.GetChild(i) as Expression).Type
+					);
+				}
+			}
 		}
 	}
 }

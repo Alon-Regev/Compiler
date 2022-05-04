@@ -98,6 +98,8 @@ namespace Compiler
 					return ToAssembly(stmt);
 				case WhileLoop stmt:
 					return ToAssembly(stmt);
+				case SwitchCase stmt:
+					return ToAssembly(stmt);
 				default:
 					return "";
 			}
@@ -485,6 +487,53 @@ namespace Compiler
 			if (stackOffset != 0)
 				result += "add esp, " + stackOffset + "\n";
 			_currentBlock = prevBlock;
+			return result;
+		}
+
+		// Method generates assembly for a switch case statement
+		private string ToAssembly(SwitchCase stmt)
+		{
+			string result = "";
+			// generate labels
+			List<string> caseLabels = new List<string>();
+			int caseCount = (stmt.Children.Count - 1) / 2;
+			for (int i = 0; i < caseCount; i++)
+			{
+				caseLabels.Add(GetLabel());
+			}
+			string endLabel = GetLabel();
+			int caseStartIndex = stmt.HasDefault ? 2 : 1;
+			// get switch value on the stack
+			result += ToAssembly(stmt.GetChild(0)) +
+				"push eax\n";
+			// case jumps
+			for(int i = 0; i < caseCount; i++)
+			{
+				Expression caseExpression = stmt.GetChild(caseStartIndex + 2 * i) as Expression;
+				result +=
+					ToAssembly(caseExpression) +
+					"cmp [esp], eax\n" +
+					"je " + caseLabels[i] + "\n";
+			}
+			// default
+			if(stmt.HasDefault)
+			{
+				result += ToAssembly(stmt.GetChild(1)) + 
+					"jmp " + endLabel + "\n";
+			}
+			// case blocks
+			for(int i = 0; i < caseCount; i++)
+			{
+				Statement caseStatement = stmt.GetChild(caseStartIndex + 2 * i + 1) as Statement;
+				result +=
+					caseLabels[i] + ":\n" +
+					ToAssembly(caseStatement);
+				if(i != caseCount - 1)
+					result += "jmp " + endLabel + "\n";
+			}
+			// switch case exit
+			result += endLabel + ":\n" + 
+				"sub esp, 4\n\n";	// pop switch value
 			return result;
 		}
 

@@ -53,6 +53,8 @@ namespace Compiler
 					return ParseWhileLoop();
 				case TokenCode.FOR:
 					return ParseForLoop();
+				case TokenCode.SWITCH:
+					return ParseSwitchCase();
 				default:	// expression
 					statement = new ExpressionStatement(ParseExpression());
 					break;
@@ -165,6 +167,38 @@ namespace Compiler
 			Statement body = ParseStatement();
 
 			return new ForLoop(initialization, condition, action, body);
+		}
+
+		// Method parses a switch case statement
+		// input: none
+		// return: parsed switch case statement
+		private SwitchCase ParseSwitchCase()
+		{
+			Token switchKeyword = scanner.Require(TokenCode.SWITCH);
+			Expression switchValue = ParseExpression();
+			scanner.Require(TokenCode.OPEN_BRACE);
+
+			SwitchCase switchCase = new SwitchCase(switchValue);
+			// parse cases
+			while (scanner.Peek().Code == TokenCode.CASE)
+			{
+				scanner.Require(TokenCode.CASE);
+				Expression caseExpression = ParseExpression();
+				scanner.Require(TokenCode.COLON);
+				// read statements
+				switchCase.AddCase(caseExpression, ParseBlock());
+			}
+			// check default
+			if(scanner.Peek().Code == TokenCode.DEFAULT)
+			{
+				scanner.Next();
+				scanner.Require(TokenCode.COLON);
+				switchCase.AddDefault(ParseBlock());
+			}
+
+			scanner.Require(TokenCode.CLOSE_BRACE);
+
+			return switchCase;
 		}
 
 		// Method parses a block of statements
