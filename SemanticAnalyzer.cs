@@ -121,7 +121,7 @@ namespace Compiler
 					AnalyzeSubtree(stmt.GetExpression());
 					break;
 				case VariableDeclaration decl:
-					_declaredSymbols.UnionWith(decl.Identifiers);
+					AnalyzeVariableDeclaration(decl);
 					break;
 				case IfStatement stmt:
 					AnalyzeIfStatement(stmt);
@@ -338,6 +338,13 @@ namespace Compiler
 					);
 				}
 			}
+		}
+
+		// analayzes variable declaration node
+		private void AnalyzeVariableDeclaration(VariableDeclaration decl)
+		{
+			_declaredSymbols.UnionWith(decl.Identifiers);
+			AnalyzeSubtree(decl.GetChild(0));
 		}
 	}
 }
