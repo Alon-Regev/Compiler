@@ -164,8 +164,8 @@ namespace Compiler
 							TokenCode.ADD_OP => "add eax, ebx\n",
 							TokenCode.SUB_OP => "sub eax, ebx\n",
 							TokenCode.MUL_OP => "mul ebx\n",
-							TokenCode.DIV_OP => "div ebx\n",
-							TokenCode.MOD_OP => "div ebx\n" +
+							TokenCode.DIV_OP => "xor edx, edx\ndiv ebx\n",
+							TokenCode.MOD_OP => "xor edx, edx\ndiv ebx\n" +
 												"mov eax, edx\n",
 							// --- Bitwise
 							TokenCode.BIT_OR_OP =>  "or eax, ebx\n",
