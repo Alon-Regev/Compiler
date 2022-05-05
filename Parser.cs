@@ -108,9 +108,11 @@ namespace Compiler
 		private IfStatement ParseIfStatement()
 		{
 			// skip if keyword
-			scanner.Next(); 
+			scanner.Next();
 			// get condition and true-block
+			scanner.Require(TokenCode.LEFT_PARENTHESIS);
 			Expression condition = ParseExpression();
+			scanner.Require(TokenCode.RIGHT_PARENTHESIS);
 			Statement trueBlock = ParseStatement();
 			// get else-block
 			Statement? elseBlock = null;
@@ -134,7 +136,10 @@ namespace Compiler
 			if (startToken.Code == TokenCode.WHILE)
 			{
 				// get condition and block
-				return new WhileLoop(ParseExpression(), ParseStatement());
+				scanner.Require(TokenCode.LEFT_PARENTHESIS);
+				Expression expr = ParseExpression();
+				scanner.Require(TokenCode.RIGHT_PARENTHESIS);
+				return new WhileLoop(expr, ParseStatement());
 			}
 			// do while
 			else
@@ -154,16 +159,16 @@ namespace Compiler
 		// return: parsed for loop statement
 		private ForLoop ParseForLoop()
 		{
-			// skip while keyword
+			// skip for keyword
 			Token startToken = scanner.Next();
-			scanner.NextIf(TokenCode.LEFT_PARENTHESIS);
+			scanner.Require(TokenCode.LEFT_PARENTHESIS);
 			// regular while
 			VariableDeclaration initialization = ParseVariableDeclaration();
 			scanner.Require(TokenCode.SEMI_COLON);
 			Expression condition = ParseExpression();
 			scanner.Require(TokenCode.SEMI_COLON);
 			Expression action = ParseExpression();
-			scanner.NextIf(TokenCode.RIGHT_PARENTHESIS);
+			scanner.Require(TokenCode.RIGHT_PARENTHESIS);
 			Statement body = ParseStatement();
 
 			return new ForLoop(initialization, condition, action, body);
