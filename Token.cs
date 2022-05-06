@@ -45,14 +45,41 @@ namespace Compiler
 		// ternary
 		QUESTION_MARK,
 		COLON,
+		// assignment
+		ASSIGN_OP,
 		// other
 		EXCLAMATION_MARK,
+		COMMA,
 
 		// --- Expressions
 		LEFT_PARENTHESIS,
 		RIGHT_PARENTHESIS,
 
+		// --- Statements
+		SEMI_COLON,
+		// variable declaration
+		INT_KEYWORD,
+		FLOAT_KEYWORD,
+		BOOL_KEYWORD,
+		// blocks
+		OPEN_BRACE,
+		CLOSE_BRACE,
+		// if else
+		IF,
+		ELSE,
+		// loops
+		WHILE,
+		DO,
+		FOR,
+		// switch case
+		SWITCH,
+		CASE,
+		DEFAULT,
+		// other
+		PRINT_KEYWORD,
+
 		// --- Other
+		IDENTIFIER,
 		UNKNOWN,
 		EOF,
 	}

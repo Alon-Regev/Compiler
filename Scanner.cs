@@ -38,8 +38,11 @@ namespace Compiler
 			// ternary
 			new KeyValuePair<TokenCode, string>(TokenCode.QUESTION_MARK, @"\?" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.COLON, ":" ),
+			// assignment
+			new KeyValuePair<TokenCode, string>(TokenCode.ASSIGN_OP, "=" ),
 			// other
-			new KeyValuePair<TokenCode, string>(TokenCode.EXCLAMATION_MARK, @"!" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.EXCLAMATION_MARK, "!" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.COMMA, "," ),
 
 			// --- Castings
 			new KeyValuePair<TokenCode, string>(TokenCode.INT_CAST, @"\(int\)" ),
@@ -55,7 +58,31 @@ namespace Compiler
 			new KeyValuePair<TokenCode, string>(TokenCode.INTEGER, @"\d+" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.BOOLEAN, @"true|false" ),
 
+			// --- Statements
+			new KeyValuePair<TokenCode, string>(TokenCode.SEMI_COLON, ";" ),
+			// variable declaration
+			new KeyValuePair<TokenCode, string>(TokenCode.INT_KEYWORD, "int" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.FLOAT_KEYWORD, "float" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.BOOL_KEYWORD, "bool" ),
+			// blocks
+			new KeyValuePair<TokenCode, string>(TokenCode.OPEN_BRACE, "{" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.CLOSE_BRACE, "}" ),
+			// if else
+			new KeyValuePair<TokenCode, string>(TokenCode.IF, "if" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.ELSE, "else" ),
+			// loops
+			new KeyValuePair<TokenCode, string>(TokenCode.WHILE, "while" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.DO, "do" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.FOR, "for" ),
+			// switch case
+			new KeyValuePair<TokenCode, string>(TokenCode.SWITCH, "switch" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.CASE, "case" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.DEFAULT, "default" ),
+			// other
+			new KeyValuePair<TokenCode, string>(TokenCode.PRINT_KEYWORD, "print" ),
+
 			// --- Other
+			new KeyValuePair<TokenCode, string>(TokenCode.IDENTIFIER, @"[_a-zA-Z][_a-zA-Z0-9]*" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.UNKNOWN, @".+" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.EOF, @""),
 		};
@@ -63,7 +90,8 @@ namespace Compiler
 		// fields to check where we are in the program
 		private string _programLeft;
 		private int _line = 1, _pos = 0;
-		//private int increment = 0;
+		
+		public Token Last { private set; get; }
 
 		// Constructor
 		// program: program to tokenize
@@ -101,7 +129,18 @@ namespace Compiler
 			_programLeft = _programLeft.Substring(increment);
 			_pos += increment;
 
+			Last = token;
+
 			return token;
+		}
+
+		// Method moves to the next token if the current token is a certain value
+		// input: required current token to move
+		// return: nonve
+		public void NextIf(TokenCode required)
+		{
+			if (Peek().Code == required)
+				Next();
 		}
 
 		// Method returns the next token in the program without moving to next token. only skips whitespace
@@ -129,6 +168,17 @@ namespace Compiler
 				throw new UnknownToken(result);
 
 			return result;
+		}
+
+		// Method skips over required token. Throws exception if the required token is missing.
+		// input: requiredToken: token required in the syntax (example: keywords)
+		// return: token
+		public Token Require(TokenCode requiredToken)
+		{
+			Token next = Next();
+			if (next.Code != requiredToken)
+				throw new UnexpectedToken(requiredToken.ToString(), next);
+			return next;
 		}
 
 		// Method skips whitespace in the program.

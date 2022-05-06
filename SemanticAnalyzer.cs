@@ -15,6 +15,10 @@ namespace Compiler
 	class SemanticAnalyzer
 	{
 		private AST_Node _tree;
+		private Block _currentBlock;
+
+		private HashSet<string> _declaredSymbols = new HashSet<string>();
+
 		private static Dictionary<TokenCode, HashSet<TypeCode>> _binOpAllowedTypes = new Dictionary<TokenCode, HashSet<TypeCode>>
 		{
 			// --- Arithmetic
@@ -44,6 +48,8 @@ namespace Compiler
 			{ TokenCode.EQUAL_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
 			{ TokenCode.NOT_EQUAL_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
 
+			// --- Assignment
+			{ TokenCode.ASSIGN_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT, TypeCode.BOOL } },
 		};
 
 		private static Dictionary<TokenCode, HashSet<TypeCode>> _unaryPrefixOpAllowedTypes = new Dictionary<TokenCode, HashSet<TypeCode>>
@@ -82,6 +88,7 @@ namespace Compiler
 		{
 			switch(tree)
 			{
+				// --- Expressions
 				case TernaryOperator op:
 					AnalyzeTernaryOperator(op);
 					break;
@@ -97,14 +104,60 @@ namespace Compiler
 				case Cast c:
 					AnalyzeCast(c);
 					break;
+				case Variable v:
+					AnalyzeVariable(v);
+					break;
+				// --- Statements
+				case ForLoop stmt:
+					AnalyzeForLoop(stmt);
+					break;
+				case Block block:
+					AnalyzeBlock(block);
+					break;
+				case ExpressionStatement stmt:
+					AnalyzeSubtree(stmt.GetExpression());
+					break;
+				case PrintStatement stmt:
+					AnalyzeSubtree(stmt.GetExpression());
+					break;
+				case VariableDeclaration decl:
+					AnalyzeVariableDeclaration(decl);
+					break;
+				case IfStatement stmt:
+					AnalyzeIfStatement(stmt);
+					break;
+				case WhileLoop stmt:
+					AnalyzeWhileLoop(stmt);
+					break;
+				case SwitchCase stmt:
+					AnalyzeSwitchCase(stmt);
+					break;
 				default:
 					break;
 			}
 		}
 
+		// Method does a semantic analysis for a block
+		// input: block to check
+		// return: none
+		private void AnalyzeBlock(Block block)
+		{
+			// set current block
+			Block prevBlock = _currentBlock;
+			_currentBlock = block;
+
+			// analyze all statements in block
+			foreach(Statement stmt in block.Children)
+			{
+				AnalyzeSubtree(stmt);
+			}
+
+			// return to previous block
+			_currentBlock = prevBlock;
+		}
+
 		// Method does a semantic analysis for a BinaryOperator subtree
 		// input: binary operator to check
-		//		  what type the result needs to be
 		// return: none
 		private void AnalyzeBinaryOperator(BinaryOperator op)
 		{
@@ -122,6 +175,14 @@ namespace Compiler
 			// check if operation is allowed
 			if (!_binOpAllowedTypes[op.Operator].Contains(op.Operand(0).Type))
 				throw new TypeError(op);
+			
+			// additional checks
+			if(op.Operator == TokenCode.ASSIGN_OP)
+			{
+				// check if assigning to a variable
+				if (!(op.Operand(0) is Variable))
+					throw new AssignmentError(op.Line);
+			}
 		}
 
 		// Method checks if a binary operator is a relational operator
@@ -192,6 +253,98 @@ namespace Compiler
 		{
 			AnalyzeSubtree(cast.GetChild(0));
 			cast.FromType = cast.Child().Type;
+		}
+
+		// does a semantic analysis on a variable
+		private void AnalyzeVariable(Variable variable)
+		{
+			// get type from current block's symbol table
+			variable.Type = _currentBlock.SymbolTable.GetEntry(variable).ValueType;
+
+			// check if already passed declaration
+			if (!_declaredSymbols.Contains(variable.Identifier))
+				throw new ReferenceBeforeDeclarationError(variable);
+		}
+
+		// if statement analysis
+		private void AnalyzeIfStatement(IfStatement stmt)
+		{
+			// analyze condition
+			AnalyzeSubtree(stmt.GetCondition());
+			if(stmt.GetCondition().Type != TypeCode.BOOL)
+				throw new TypeError(stmt, "Expected BOOL for condition, instead got " + stmt.GetCondition().Type);
+			// analyze substatements
+			AnalyzeSubtree(stmt.GetTrueBlock());
+			if(stmt.HasElse())
+				AnalyzeSubtree(stmt.GetFalseBlock());
+		}
+
+		// while loop analysis
+		private void AnalyzeWhileLoop(WhileLoop stmt)
+		{
+			// analyze condition
+			AnalyzeSubtree(stmt.GetCondition());
+			if (stmt.GetCondition().Type != TypeCode.BOOL)
+				throw new TypeError(stmt, "Expected BOOL for condition, instead got " + stmt.GetCondition().Type);
+			// analyze substatements
+			AnalyzeSubtree(stmt.GetBlock());
+		}
+
+		// for loop analysis
+		private void AnalyzeForLoop(ForLoop stmt)
+		{
+			Block previousBlock = _currentBlock;
+			_currentBlock = stmt;
+			// analyze condition
+			AnalyzeSubtree(stmt.GetChild(ForLoop.INIT_INDEX));
+			AnalyzeSubtree(stmt.GetChild(ForLoop.CONDITION_INDEX));
+			AnalyzeSubtree(stmt.GetChild(ForLoop.ACTION_INDEX));
+			// check condition type
+			Expression condition = stmt.GetChild(ForLoop.CONDITION_INDEX) as Expression;
+			if (condition?.Type != TypeCode.BOOL)
+				throw new TypeError(stmt, "Expected BOOL for condition, instead got " + condition.Type);
+
+			// analyze block
+			AnalyzeSubtree(stmt.GetChild(ForLoop.BODY_INDEX));
+
+			// return to previous block
+			_currentBlock = previousBlock;
+		}
+
+		// switch case analysis
+		private void AnalyzeSwitchCase(SwitchCase stmt)
+		{
+			// get switch type
+			AnalyzeSubtree(stmt.GetChild(0));
+			TypeCode type = (stmt.GetChild(0) as Expression).Type;
+			// analyze cases
+			int startIndex = 1;
+			if(stmt.HasDefault)
+			{
+				AnalyzeSubtree(stmt.GetChild(1));
+				startIndex = 2;
+			}
+
+			for(int i = startIndex; i < stmt.Children.Count; i += 2)
+			{
+				AnalyzeSubtree(stmt.GetChild(i));
+				AnalyzeSubtree(stmt.GetChild(i+1));
+				// check case type
+				if ((stmt.GetChild(i) as Expression).Type != type)
+				{
+					throw new TypeError(stmt,
+						"Switch case on type " + type +
+						" has a case with type " + (stmt.GetChild(i) as Expression).Type
+					);
+				}
+			}
+		}
+
+		// analayzes variable declaration node
+		private void AnalyzeVariableDeclaration(VariableDeclaration decl)
+		{
+			_declaredSymbols.UnionWith(decl.Identifiers);
+			AnalyzeSubtree(decl.GetChild(0));
 		}
 	}
 }

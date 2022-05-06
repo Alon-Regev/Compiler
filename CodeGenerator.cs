@@ -6,13 +6,17 @@ namespace Compiler
 {
 	class CodeGenerator
 	{
-		AST_Node _tree;
+		private AST_Node _tree;
+		private Block _currentBlock;
 
 		private int _labelCounter = 0;
 
 		List<DataSectionVar> _varsToDeclare = new List<DataSectionVar>
 		{
-			new DataSectionVar("__temp", DataSize.DWORD, "0")
+			new DataSectionVar("__temp", DataSize.DWORD, "0"),
+			DataSectionVar.StringConstant("format", "%?", true),
+			DataSectionVar.StringConstant("true_string", "true", false),
+			DataSectionVar.StringConstant("false_string", "false", false),
 		};
 
 		private HashSet<string> _helperFunctionsUsed = new HashSet<string>();
@@ -23,23 +27,6 @@ namespace Compiler
 		public CodeGenerator(AST_Node tree)
 		{
 			_tree = tree;
-			// set result format
-			switch((_tree as Expression).Type)
-			{
-				case TypeCode.INT:
-					_varsToDeclare.Add(DataSectionVar.StringConstant("format", "Result: %d"));
-					break;
-				case TypeCode.FLOAT:
-					_varsToDeclare.Add(DataSectionVar.StringConstant("format", "Result: %f"));
-					break;
-				case TypeCode.BOOL:
-					_varsToDeclare.Add(DataSectionVar.StringConstant("format", "Result: %s"));
-					_varsToDeclare.Add(DataSectionVar.StringConstant("true_string", "true"));
-					_varsToDeclare.Add(DataSectionVar.StringConstant("false_string", "false"));
-					break;
-				default:
-					break;
-			}
 		}
 
 		// Method generates assembly program from input program
@@ -49,11 +36,12 @@ namespace Compiler
 		{
 			string programAssembly = ToAssembly(_tree);
 			string data = DataSectionAssembly();
-			string result =
+			return
 				"global _main\n" +
 				"extern _printf\n" +
 				"\n" +
-
+				MacrosAssembly() +
+				"\n" +
 				"section .data\n" +
 				Indent(data) +
 				"\n" +
@@ -61,16 +49,16 @@ namespace Compiler
 				"section .text\n" +
 				"_main:\n" +
 				Indent(
+					"push ebp\n" +
+					"mov ebp, esp\n\n" +
 					programAssembly +
 					"\n" +
-					AssemblyPrintResult((_tree as Expression).Type) + 
-					"\n" +
+					"mov esp, ebp\n" +
+					"pop ebp\n" +
 					"mov eax, 0\n" +
 					"ret"
 				) + "\n\n" +
 				HelperFunctionsAssembly();
-
-			return MacrosAssembly() + result;
 		}
 
 		// Methods generate assembly code from subtrees
@@ -80,6 +68,9 @@ namespace Compiler
 		{
 			switch(tree)
 			{
+				// --- Expressions
+				case BinaryOperator op when op.Operator == TokenCode.ASSIGN_OP:
+					return AssignmentAssembly(op);
 				case BinaryOperator op:
 					return ToAssembly(op);
 				case UnaryOperator op:
@@ -88,11 +79,59 @@ namespace Compiler
 					return ToAssembly(op);
 				case IPrimitive p:
 					return ToAssembly(p);
+				case Variable v:
+					return ToAssembly(v);
 				case Cast c:
 					return ToAssembly(c);
+				// --- Statements
+				case ForLoop stmt:
+					return ToAssembly(stmt);
+				case Block block:
+					return ToAssembly(block);
+				case ExpressionStatement stmt:
+					return ToAssembly(stmt.GetExpression());
+				case PrintStatement stmt:
+					return ToAssembly(stmt);
+				case VariableDeclaration decl:
+					return ToAssembly(decl);
+				case IfStatement stmt:
+					return ToAssembly(stmt);
+				case WhileLoop stmt:
+					return ToAssembly(stmt);
+				case SwitchCase stmt:
+					return ToAssembly(stmt);
 				default:
 					return "";
 			}
+		}
+
+		// Methods generate assembly code for a block of statements
+		// tree: Block to turn into ASM
+		// return: assembly as string
+		private string ToAssembly(Block block)
+		{
+			// change current block
+			Block prevBlock = _currentBlock;
+			_currentBlock = block;
+
+			string result = "";
+			// allocate memory for local variables
+			int stackOffset = block.SymbolTable.VariableBytes();
+			if(stackOffset != 0)
+				result += "sub esp, " + stackOffset + "\n";
+			// add assembly code for all statements
+			foreach (Statement stmt in block.Children)
+			{
+				result += ToAssembly(stmt);
+			}
+			// deallocate memory from the stack
+			if (stackOffset != 0)
+				result += "add esp, " + stackOffset + "\n";
+
+			// return to previous block and return
+			_currentBlock = prevBlock;
+
+			return result;
 		}
 
 		// binary operator assembly rules:
@@ -125,8 +164,8 @@ namespace Compiler
 							TokenCode.ADD_OP => "add eax, ebx\n",
 							TokenCode.SUB_OP => "sub eax, ebx\n",
 							TokenCode.MUL_OP => "mul ebx\n",
-							TokenCode.DIV_OP => "div ebx\n",
-							TokenCode.MOD_OP => "div ebx\n" +
+							TokenCode.DIV_OP => "xor edx, edx\ndiv ebx\n",
+							TokenCode.MOD_OP => "xor edx, edx\ndiv ebx\n" +
 												"mov eax, edx\n",
 							// --- Bitwise
 							TokenCode.BIT_OR_OP =>  "or eax, ebx\n",
@@ -199,6 +238,17 @@ namespace Compiler
 				default:
 					throw new ImplementationError(DEFAULT_TYPE_BINARY);
 			}
+		}
+
+		// generates assembly for assignment
+		// rules: value to assign at eax, moves into memory
+		private string AssignmentAssembly(BinaryOperator op)
+		{
+			Variable variable = op.Operand(0) as Variable;
+			SymbolTableEntry entry = _currentBlock.SymbolTable.GetEntry(variable);
+
+			return ToAssembly(op.Operand(1)) +
+				"mov [ebp - " + entry.Address + "], eax\n";
 		}
 
 		// unary operator assembly rules:
@@ -322,6 +372,171 @@ namespace Compiler
 			}
 		}
 
+		// generate assembly for variable reference
+		// load local var from memory to eax
+		private string ToAssembly(Variable variable)
+		{
+			int address = _currentBlock.SymbolTable.GetEntry(variable).Address;
+			return "mov eax, [ebp - " + address + "]\n";
+		}
+
+		// generate assembly for variable declaration
+		// load local var from memory to eax
+		private string ToAssembly(VariableDeclaration variableDeclaration)
+		{
+			string result = "";
+			// add assignments ASM
+			foreach(AST_Node child in variableDeclaration.Children)
+			{
+				result += ToAssembly(child);
+			}
+			return result;
+		}
+
+		// Method generates assembly for a print statement
+		private string ToAssembly(PrintStatement statement)
+		{
+			return ToAssembly(statement.GetExpression()) +
+				statement.GetExpression().Type switch
+				{
+					TypeCode.INT => HelperCall("print_int"),
+					TypeCode.FLOAT => HelperCall("print_float"),
+					TypeCode.BOOL => HelperCall("print_bool"),
+					_ => ""
+				};
+		}
+
+		// Method generates assembly for an if statement
+		private string ToAssembly(IfStatement stmt)
+		{
+			string elseLabel = GetLabel();
+			string finalLabel = stmt.HasElse() ? GetLabel() : "";
+			return
+				// condition in eax
+				ToAssembly(stmt.GetCondition()) +
+				// cmp and jump
+				"cmp eax, 0\n" +
+				"je " + elseLabel + "\n" +
+				// code for if block
+				ToAssembly(stmt.GetTrueBlock()) +
+				(stmt.HasElse() ? "jmp " + finalLabel + "\n" : "") +
+				// end of if block, start else
+				elseLabel + ":\n" +
+				(stmt.HasElse() ? ToAssembly(stmt.GetFalseBlock()) : "") +
+				(stmt.HasElse() ? finalLabel + ":\n" : "");
+		}
+
+		// Method generates assembly for an if statement
+		private string ToAssembly(WhileLoop stmt)
+		{
+			if (stmt.IsDoWhile)
+			{
+				string loopStartLabel = GetLabel();
+				return
+					loopStartLabel + ":\n" +
+					ToAssembly(stmt.GetBlock()) +
+					ToAssembly(stmt.GetCondition()) +
+					"cmp eax, 0\n" +
+					"jne " + loopStartLabel + "\n";
+			}
+			else
+			{
+				string loopStartLabel = GetLabel();
+				string loopEndLabel = GetLabel();
+				return
+					loopStartLabel + ":\n" +
+					ToAssembly(stmt.GetCondition()) +
+					"cmp eax, 0\n" +    // if false end loop
+					"je " + loopEndLabel + "\n" +
+					ToAssembly(stmt.GetBlock()) +
+					"jmp " + loopStartLabel + "\n" +
+					loopEndLabel + ":\n";
+			}
+		}
+
+		// Method generates assembly for an if statement
+		private string ToAssembly(ForLoop stmt)
+		{
+			// change current block
+			Block prevBlock = _currentBlock;
+			_currentBlock = stmt;
+
+			string loopStartLabel = GetLabel();
+			string loopEndLabel = GetLabel();
+			string result = "";
+			// start block
+			int stackOffset = stmt.SymbolTable.VariableBytes();
+			if (stackOffset != 0)
+				result += "sub esp, " + stackOffset + "\n";
+			// loop
+			result +=
+				// initialization
+				ToAssembly(stmt.GetChild(ForLoop.INIT_INDEX)) +
+				loopStartLabel + ":\n" +
+				// check condition
+				ToAssembly(stmt.GetChild(ForLoop.CONDITION_INDEX)) +
+				"cmp eax, 0\n" +
+				"je " + loopEndLabel + "\n" +
+				// body
+				ToAssembly(stmt.GetChild(ForLoop.BODY_INDEX)) +
+				// loop end
+				ToAssembly(stmt.GetChild(ForLoop.ACTION_INDEX)) +
+				"jmp " + loopStartLabel + "\n" +
+				loopEndLabel + ":\n";
+			// end block and return
+			if (stackOffset != 0)
+				result += "add esp, " + stackOffset + "\n";
+			_currentBlock = prevBlock;
+			return result;
+		}
+
+		// Method generates assembly for a switch case statement
+		private string ToAssembly(SwitchCase stmt)
+		{
+			string result = "";
+			// generate labels
+			List<string> caseLabels = new List<string>();
+			int caseCount = (stmt.Children.Count - 1) / 2;
+			for (int i = 0; i < caseCount; i++)
+			{
+				caseLabels.Add(GetLabel());
+			}
+			string endLabel = GetLabel();
+			int caseStartIndex = stmt.HasDefault ? 2 : 1;
+			// get switch value on the stack
+			result += ToAssembly(stmt.GetChild(0)) +
+				"push eax\n";
+			// case jumps
+			for(int i = 0; i < caseCount; i++)
+			{
+				Expression caseExpression = stmt.GetChild(caseStartIndex + 2 * i) as Expression;
+				result +=
+					ToAssembly(caseExpression) +
+					"cmp [esp], eax\n" +
+					"je " + caseLabels[i] + "\n";
+			}
+			// default
+			if(stmt.HasDefault)
+			{
+				result += ToAssembly(stmt.GetChild(1)) + 
+					"jmp " + endLabel + "\n";
+			}
+			// case blocks
+			for(int i = 0; i < caseCount; i++)
+			{
+				Statement caseStatement = stmt.GetChild(caseStartIndex + 2 * i + 1) as Statement;
+				result +=
+					caseLabels[i] + ":\n" +
+					ToAssembly(caseStatement);
+				if(i != caseCount - 1)
+					result += "jmp " + endLabel + "\n";
+			}
+			// switch case exit
+			result += endLabel + ":\n" + 
+				"sub esp, 4\n\n";	// pop switch value
+			return result;
+		}
+
 		// Method adds necessary global variables after turning program to assembly
 		// input: none
 		// return: assembly code for data section
@@ -341,24 +556,6 @@ namespace Compiler
 		private string Indent(string str)
 		{
 			return "\t" + str.Replace("\n", "\n\t");
-		}
-
-		// Method returns assembly code for printing final result
-		// input: none
-		// return: assembly code
-		private string AssemblyPrintResult(TypeCode type)
-		{
-			switch (type)
-			{
-				case TypeCode.INT:
-					return HelperCall("print_int");
-				case TypeCode.FLOAT:
-					return HelperCall("print_float");
-				case TypeCode.BOOL:
-					return HelperCall("print_bool");
-				default:
-					return "";
-			}
 		}
 
 		// Method returns an assembly call to a helper function and makes sure it's added to the final assembly.
