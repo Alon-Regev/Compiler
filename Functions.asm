@@ -36,7 +36,7 @@ print_float:
 	mov [__temp], eax
 	fld dword [__temp]
 	sub esp, 8
-	fst qword [esp]
+	fstp qword [esp]
 	
 	mov ebx, format
 	mov byte [ebx + 1], 'f'
