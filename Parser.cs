@@ -40,6 +40,8 @@ namespace Compiler
 				case TokenCode.BOOL_KEYWORD:
 					statement = ParseVariableDeclaration();
 					break;
+				case TokenCode.VOID:
+					return ParseFunctionDeclaration();
 				case TokenCode.OPEN_BRACE:
 					return ParseBlock();
 				case TokenCode.PRINT_KEYWORD:
@@ -100,6 +102,22 @@ namespace Compiler
 			} while (scanner.Peek().Code == TokenCode.COMMA && scanner.Next().Code == TokenCode.COMMA);
 
 			return declaration;
+		}
+
+		// Method parses a function declaration
+		// input: none
+		// return: VariableDeclaration Node
+		public FunctionDeclaration ParseFunctionDeclaration()
+		{
+			Token retType = scanner.Next();
+			Token identifier = scanner.Require(TokenCode.IDENTIFIER);
+			// parameters
+			scanner.Require(TokenCode.LEFT_PARENTHESIS);
+			scanner.Require(TokenCode.RIGHT_PARENTHESIS);
+			// implementation
+			Block block = ParseBlock();
+
+			return new FunctionDeclaration(retType, identifier.Value, block);
 		}
 
 		// Method parses an if-else statement

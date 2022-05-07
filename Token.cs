@@ -61,6 +61,8 @@ namespace Compiler
 		INT_KEYWORD,
 		FLOAT_KEYWORD,
 		BOOL_KEYWORD,
+		// function declaration
+		VOID,
 		// blocks
 		OPEN_BRACE,
 		CLOSE_BRACE,
