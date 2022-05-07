@@ -10,6 +10,7 @@ namespace Compiler
 		INT,
 		FLOAT,
 		BOOL,
+		VOID,
 	}
 
 	class SemanticAnalyzer
@@ -122,6 +123,9 @@ namespace Compiler
 					break;
 				case VariableDeclaration decl:
 					AnalyzeVariableDeclaration(decl);
+					break;
+				case FunctionDeclaration decl:
+					AnalyzeSubtree(decl.GetChild(0));
 					break;
 				case IfStatement stmt:
 					AnalyzeIfStatement(stmt);

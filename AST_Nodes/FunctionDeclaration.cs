@@ -11,10 +11,11 @@ namespace Compiler
 		
 		// Constructor
 		// input: var type keyword token (int, float...), identifier token
-		public FunctionDeclaration(Token retType, string identifier) : base(retType.Line)
+		public FunctionDeclaration(Token retType, string identifier, Block block) : base(retType.Line)
 		{
 			ReturnType = retType.Code;
 			Identifier = identifier;
+			AddChild(block);
 		}
 
 		// Method returns variable type code
@@ -27,13 +28,14 @@ namespace Compiler
 				TokenCode.INT_KEYWORD => TypeCode.INT,
 				TokenCode.FLOAT_KEYWORD => TypeCode.FLOAT,
 				TokenCode.BOOL_KEYWORD => TypeCode.BOOL,
+				TokenCode.VOID => TypeCode.VOID,
 			};
 		}
 
 		// ToString override specifies the variable declaration
 		public override string ToString(int indent)
 		{
-			return "Function Declaration (" + Identifier + " " + GetTypeCode() + " -> Void)" + base.ToString(indent);
+			return "Function Declaration (" + Identifier + " VOID -> " + GetTypeCode() + ")" + base.ToString(indent);
 		}
 	}
 }

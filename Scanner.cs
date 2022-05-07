@@ -64,6 +64,8 @@ namespace Compiler
 			new KeyValuePair<TokenCode, string>(TokenCode.INT_KEYWORD, "int" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.FLOAT_KEYWORD, "float" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.BOOL_KEYWORD, "bool" ),
+			// function declaration
+			new KeyValuePair<TokenCode, string>(TokenCode.VOID, "void" ),
 			// blocks
 			new KeyValuePair<TokenCode, string>(TokenCode.OPEN_BRACE, "{" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.CLOSE_BRACE, "}" ),
