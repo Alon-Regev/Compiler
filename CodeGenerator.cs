@@ -8,6 +8,7 @@ namespace Compiler
 	{
 		private AST_Node _tree;
 		private Block _currentBlock;
+		private string _functionDefinitions = "";
 
 		private int _labelCounter = 0;
 
@@ -58,6 +59,7 @@ namespace Compiler
 					"mov eax, 0\n" +
 					"ret"
 				) + "\n\n" +
+				_functionDefinitions +
 				HelperFunctionsAssembly();
 		}
 
@@ -66,7 +68,7 @@ namespace Compiler
 		// return: assembly as string
 		private string ToAssembly(AST_Node tree)
 		{
-			switch(tree)
+			switch (tree)
 			{
 				// --- Expressions
 				case BinaryOperator op when op.Operator == TokenCode.ASSIGN_OP:
@@ -94,6 +96,9 @@ namespace Compiler
 					return ToAssembly(stmt);
 				case VariableDeclaration decl:
 					return ToAssembly(decl);
+				case FunctionDeclaration decl:
+					_functionDefinitions += ToAssembly(decl);
+					return "";
 				case IfStatement stmt:
 					return ToAssembly(stmt);
 				case WhileLoop stmt:
@@ -117,7 +122,7 @@ namespace Compiler
 			string result = "";
 			// allocate memory for local variables
 			int stackOffset = block.SymbolTable.VariableBytes();
-			if(stackOffset != 0)
+			if (stackOffset != 0)
 				result += "sub esp, " + stackOffset + "\n";
 			// add assembly code for all statements
 			foreach (Statement stmt in block.Children)
@@ -142,7 +147,7 @@ namespace Compiler
 		private string ToAssembly(BinaryOperator op)
 		{
 			string operandsASM = "";
-			if (op.Operand(0).Type != TypeCode.BOOL)	// bool logical operators use operands differently (short-circuit)
+			if (op.Operand(0).Type != TypeCode.BOOL)    // bool logical operators use operands differently (short-circuit)
 			{
 				// get operand2 on stack
 				operandsASM += ToAssembly(op.Operand(1));
@@ -168,12 +173,12 @@ namespace Compiler
 							TokenCode.MOD_OP => "xor edx, edx\ndiv ebx\n" +
 												"mov eax, edx\n",
 							// --- Bitwise
-							TokenCode.BIT_OR_OP =>  "or eax, ebx\n",
+							TokenCode.BIT_OR_OP => "or eax, ebx\n",
 							TokenCode.BIT_XOR_OP => "xor eax, ebx\n",
 							TokenCode.BIT_AND_OP => "and eax, ebx\n",
 							TokenCode.LEFT_SHIFT => "mov cl, bl\n" +
 													"shl eax, cl\n",
-							TokenCode.RIGHT_SHIFT =>"mov cl, bl\n" +
+							TokenCode.RIGHT_SHIFT => "mov cl, bl\n" +
 													"shr eax, cl\n",
 							// --- Relational
 							TokenCode.LESS_OP => "cmp eax, ebx\nmov eax, 0\nsetl al\n",
@@ -202,12 +207,12 @@ namespace Compiler
 							TokenCode.DIV_OP => "fdivp\n",
 							TokenCode.POW_OP => HelperCall("pow"),
 							// --- Relational
-							TokenCode.LESS_OP => Macro("float_comparison", "0000000000000000b"),	// not condition flags
+							TokenCode.LESS_OP => Macro("float_comparison", "0000000000000000b"),    // not condition flags
 							TokenCode.LESS_EQUAL_OP => Macro("float_comparison_inverse", "0000000100000000b"),  // not greater,
-							TokenCode.GREATER_OP => Macro("float_comparison", "0000000100000000b"),	// carry flag
-							TokenCode.GREATER_EQUAL_OP => Macro("float_comparison_inverse", "0000000000000000b"),	// not less
-							TokenCode.EQUAL_OP => Macro("float_comparison", "0100000000000000b"),	// zero flag
-							TokenCode.NOT_EQUAL_OP => Macro("float_comparison_inverse", "0100000000000000b"),	// not equal
+							TokenCode.GREATER_OP => Macro("float_comparison", "0000000100000000b"), // carry flag
+							TokenCode.GREATER_EQUAL_OP => Macro("float_comparison_inverse", "0000000000000000b"),   // not less
+							TokenCode.EQUAL_OP => Macro("float_comparison", "0100000000000000b"),   // zero flag
+							TokenCode.NOT_EQUAL_OP => Macro("float_comparison_inverse", "0100000000000000b"),   // not equal
 							_ => throw new ImplementationError(DEFAULT_OPERATOR_BINARY)
 						} +
 						// mov result from fpu to eax if type is float
@@ -220,13 +225,13 @@ namespace Compiler
 					return operandsASM +
 						op.Operator switch
 						{
-							TokenCode.LOGIC_AND_OP =>	ToAssembly(op.Operand(0)) + 
+							TokenCode.LOGIC_AND_OP => ToAssembly(op.Operand(0)) +
 														"cmp eax, 0\n" +
 														"je " + label + "\n" +
 														ToAssembly(op.Operand(1)) +
 														label + ":\n",
 
-							TokenCode.LOGIC_OR_OP =>	ToAssembly(op.Operand(0)) +
+							TokenCode.LOGIC_OR_OP => ToAssembly(op.Operand(0)) +
 														"cmp eax, 1\n" +
 														"je " + label + "\n" +
 														ToAssembly(op.Operand(1)) +
@@ -259,14 +264,14 @@ namespace Compiler
 		{
 			string operandASM = ToAssembly(op.Operand());
 			// calculate result of op
-			switch(op.Type)
+			switch (op.Type)
 			{
 				case TypeCode.INT:
 					return operandASM +
 						(op.Operator, op.Prefix) switch
 						{
 							(TokenCode.BIT_NOT_OP, true) => "not eax\n",
-							(TokenCode.SUB_OP, true) => "neg eax\n",	// negation
+							(TokenCode.SUB_OP, true) => "neg eax\n",    // negation
 							(TokenCode.EXCLAMATION_MARK, false) => HelperCall("factorial"),
 							_ => throw new ImplementationError(DEFAULT_OPERATOR_UNARY)
 						};
@@ -289,7 +294,7 @@ namespace Compiler
 					return operandASM +
 						(op.Operator, op.Prefix) switch
 						{
-							(TokenCode.EXCLAMATION_MARK, true) =>	"cmp eax, 0\n" +
+							(TokenCode.EXCLAMATION_MARK, true) => "cmp eax, 0\n" +
 																	"mov eax, 0\n" +
 																	"sete al\n",    // logical not
 							_ => throw new ImplementationError(DEFAULT_OPERATOR_UNARY)
@@ -328,7 +333,7 @@ namespace Compiler
 		// place at eax
 		private string ToAssembly(IPrimitive primitive)
 		{
-			switch(primitive)
+			switch (primitive)
 			{
 				case Primitive<int> p:
 					return "mov eax, " + p.Value + "\n";
@@ -348,11 +353,11 @@ namespace Compiler
 		// result at eax
 		private string ToAssembly(Cast cast)
 		{
-			switch(cast.FromType, cast.Type)
+			switch (cast.FromType, cast.Type)
 			{
 				case (TypeCode.INT, TypeCode.FLOAT):
-					return	// eax -> __temp -(cast)> fpu -> __temp -> eax
-						ToAssembly(cast.Child()) + 
+					return  // eax -> __temp -(cast)> fpu -> __temp -> eax
+						ToAssembly(cast.Child()) +
 						"mov [__temp], eax\n" +
 						"fild dword [__temp]\n" +
 						"fstp dword [__temp]\n" +
@@ -366,7 +371,7 @@ namespace Compiler
 						"mov eax, [__temp]\n";
 				case (TypeCode.INT, TypeCode.BOOL):
 				case (TypeCode.BOOL, TypeCode.INT):
-					return ToAssembly(cast.Child());	// no need to change data
+					return ToAssembly(cast.Child());    // no need to change data
 				default:
 					throw new TypeError(cast);
 			}
@@ -386,11 +391,26 @@ namespace Compiler
 		{
 			string result = "";
 			// add assignments ASM
-			foreach(AST_Node child in variableDeclaration.Children)
+			foreach (AST_Node child in variableDeclaration.Children)
 			{
 				result += ToAssembly(child);
 			}
 			return result;
+		}
+
+		// generate assembly for function definition
+		private string ToAssembly(FunctionDeclaration function)
+		{
+			return function.Identifier + ":\n" +
+				Indent(
+					"push ebp\n" +
+					"mov ebp, esp\n\n" +
+					ToAssembly(function.GetChild(0)) +
+					"\nmov esp, ebp\n" +
+					"pop ebp\n" +
+					"ret"
+				) +
+				"\n\n";
 		}
 
 		// Method generates assembly for a print statement
