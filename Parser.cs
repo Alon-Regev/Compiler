@@ -38,10 +38,15 @@ namespace Compiler
 				case TokenCode.INT_KEYWORD:
 				case TokenCode.FLOAT_KEYWORD:
 				case TokenCode.BOOL_KEYWORD:
-					statement = ParseVariableDeclaration();
-					break;
 				case TokenCode.VOID:
-					return ParseFunctionDeclaration();
+					Token type = scanner.Next();
+					Token identifier = scanner.Require(TokenCode.IDENTIFIER);
+					// check if variable or function declaration
+					if (scanner.Peek().Code == TokenCode.LEFT_PARENTHESIS)
+						return ParseFunctionDeclaration(type, identifier);
+					else
+						statement = ParseVariableDeclaration(type, identifier);
+					break;
 				case TokenCode.OPEN_BRACE:
 					return ParseBlock();
 				case TokenCode.PRINT_KEYWORD:
@@ -75,26 +80,30 @@ namespace Compiler
 		// Method parses a local variable declaration
 		// input: none
 		// return: VariableDeclaration Node
-		public VariableDeclaration ParseVariableDeclaration()
+		public VariableDeclaration ParseVariableDeclaration(Token type=null, Token identifier=null)
 		{
 			// varDecl := <type> { <identifier> [ = <value>], }
 
-			Token type = scanner.Next();
+			if (type == null)
+				type = scanner.Next();
+
 			VariableDeclaration declaration = new VariableDeclaration(type);
 
+			bool first = identifier != null;
 			// add identifiers
 			do
 			{
-				Token identifier = scanner.Next();
-				if (identifier.Code != TokenCode.IDENTIFIER)
-					throw new UnexpectedToken("identifier", identifier);
+				// get identifier (first was already taken)
+				if (!first)
+					identifier = scanner.Require(TokenCode.IDENTIFIER);
+				else
+					first = false;
 				// add to declaration
 				declaration.Identifiers.Add(identifier.Value);
 
 				// check optional assignment
-				if (scanner.Peek().Code == TokenCode.ASSIGN_OP)
+				if (scanner.NextIf(TokenCode.ASSIGN_OP))
 				{
-					scanner.Next();
 					declaration.AddChild(
 						new BinaryOperator(TokenCode.ASSIGN_OP,
 							new Variable(identifier),
@@ -103,7 +112,7 @@ namespace Compiler
 					);
 				}
 				// check if comma (and eat it)
-			} while (scanner.Peek().Code == TokenCode.COMMA && scanner.Next().Code == TokenCode.COMMA);
+			} while (scanner.NextIf(TokenCode.COMMA));
 
 			return declaration;
 		}
@@ -111,10 +120,8 @@ namespace Compiler
 		// Method parses a function declaration
 		// input: none
 		// return: VariableDeclaration Node
-		public FunctionDeclaration ParseFunctionDeclaration()
+		public FunctionDeclaration ParseFunctionDeclaration(Token retType, Token identifier)
 		{
-			Token retType = scanner.Next();
-			Token identifier = scanner.Require(TokenCode.IDENTIFIER);
 			// parameters
 			scanner.Require(TokenCode.LEFT_PARENTHESIS);
 			scanner.Require(TokenCode.RIGHT_PARENTHESIS);
