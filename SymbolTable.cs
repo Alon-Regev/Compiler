@@ -31,8 +31,13 @@ namespace Compiler
 			// check if insertion is possible
 			if (EntryExists(identifier))
 				throw new MultipleDefinedNamesError(identifier, line);
-			_addressCounter += 4;
-			entry.Address = _addressCounter;
+			if (entry.SymbolType == SymbolType.LOCAL_VAR)
+			{
+				_addressCounter += 4;
+				entry.Address = _addressCounter;
+			}
+			else
+				entry.Address = 0;
 			// set address
 			// insert new entry
 			_table.Add(identifier, entry);
