@@ -108,6 +108,9 @@ namespace Compiler
 				case Variable v:
 					AnalyzeVariable(v);
 					break;
+				case FunctionCall call:
+					AnalyzeFunctionCall(call);
+					break;
 				// --- Statements
 				case ForLoop stmt:
 					AnalyzeForLoop(stmt);
@@ -125,7 +128,7 @@ namespace Compiler
 					AnalyzeVariableDeclaration(decl);
 					break;
 				case FunctionDeclaration decl:
-					AnalyzeSubtree(decl.GetChild(0));
+					AnalyzeFunctionDeclaration(decl);
 					break;
 				case IfStatement stmt:
 					AnalyzeIfStatement(stmt);
@@ -349,6 +352,21 @@ namespace Compiler
 		{
 			_declaredSymbols.UnionWith(decl.Identifiers);
 			AnalyzeSubtree(decl.GetChild(0));
+		}
+
+		// analayzes function declaration node
+		private void AnalyzeFunctionDeclaration(FunctionDeclaration decl)
+		{
+			_declaredSymbols.Add(decl.Identifier);
+			AnalyzeSubtree(decl.GetChild(0));
+		}
+
+		// analyzes function call node
+		private void AnalyzeFunctionCall(FunctionCall call)
+		{
+			AnalyzeVariable(call.Function);
+			// get type from symbol table
+			call.Type = _currentBlock.SymbolTable.GetEntry(call.Function.Identifier, call.Line).ValueType;
 		}
 	}
 }

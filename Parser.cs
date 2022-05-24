@@ -254,6 +254,15 @@ namespace Compiler
 						);
 					}
 				}
+				else if(newStatement is FunctionDeclaration)
+				{
+					FunctionDeclaration decl = newStatement as FunctionDeclaration;
+					block.SymbolTable.AddEntry(
+						decl.Identifier,
+						decl.Line,
+						new SymbolTableEntry(SymbolType.FUNCTION, TypeCode.VOID)
+					);
+				}
 			}
 
 			// check close brace

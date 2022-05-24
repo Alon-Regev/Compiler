@@ -6,7 +6,8 @@ namespace Compiler
 {
 	enum SymbolType
 	{
-		LOCAL_VAR
+		LOCAL_VAR,
+		FUNCTION,
 	}
 
 	class SymbolTable
