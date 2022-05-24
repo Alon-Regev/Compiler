@@ -48,6 +48,10 @@ namespace Compiler
 					scanner.Next();
 					statement = new PrintStatement(ParseExpression());
 					break;
+				case TokenCode.RETURN:
+					scanner.Next();
+					statement = new ReturnStatement(ParseExpression());
+					break;
 				case TokenCode.IF:  // return (don't check semicolon)
 					return ParseIfStatement();
 				case TokenCode.WHILE:

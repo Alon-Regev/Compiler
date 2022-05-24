@@ -63,6 +63,7 @@ namespace Compiler
 		BOOL_KEYWORD,
 		// function declaration
 		VOID,
+		RETURN,
 		// blocks
 		OPEN_BRACE,
 		CLOSE_BRACE,

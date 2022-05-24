@@ -17,6 +17,7 @@ namespace Compiler
 	{
 		private AST_Node _tree;
 		private Block _currentBlock;
+		private FunctionDeclaration _currentFunction = null;
 
 		private HashSet<string> _declaredSymbols = new HashSet<string>();
 
@@ -123,6 +124,9 @@ namespace Compiler
 					break;
 				case PrintStatement stmt:
 					AnalyzeSubtree(stmt.GetExpression());
+					break;
+				case ReturnStatement stmt:
+					AnalyzeReturn(stmt);
 					break;
 				case VariableDeclaration decl:
 					AnalyzeVariableDeclaration(decl);
@@ -357,8 +361,22 @@ namespace Compiler
 		// analayzes function declaration node
 		private void AnalyzeFunctionDeclaration(FunctionDeclaration decl)
 		{
+			FunctionDeclaration prev = _currentFunction;
+			_currentFunction = decl;
+			// analyze
 			_declaredSymbols.Add(decl.Identifier);
 			AnalyzeSubtree(decl.GetChild(0));
+			// return to prev
+			_currentFunction = prev;
+		}
+
+		// analyzes type of return statement
+		private void AnalyzeReturn(ReturnStatement ret)
+		{
+			AnalyzeSubtree(ret.GetExpression());
+			// check type
+			if(_currentFunction != null && ret.GetExpression().Type != _currentFunction.GetTypeCode())
+				throw new TypeError(ret, _currentFunction.GetTypeCode());
 		}
 
 		// analyzes function call node
