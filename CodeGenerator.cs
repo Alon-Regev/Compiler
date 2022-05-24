@@ -96,6 +96,8 @@ namespace Compiler
 					return ToAssembly(stmt.GetExpression());
 				case PrintStatement stmt:
 					return ToAssembly(stmt);
+				case ReturnStatement stmt:
+					return ToAssembly(stmt);
 				case VariableDeclaration decl:
 					return ToAssembly(decl);
 				case FunctionDeclaration decl:
@@ -433,6 +435,18 @@ namespace Compiler
 					TypeCode.BOOL => HelperCall("print_bool"),
 					_ => ""
 				};
+		}
+
+		// Method generates assembly for a return statement
+		// return value in eax
+		private string ToAssembly(ReturnStatement stmt)
+		{
+			return
+				// calculate return value in eax
+				ToAssembly(stmt.GetExpression()) +
+				"mov esp, ebp\n" +
+				"pop ebp\n" +
+				"ret\n";
 		}
 
 		// Method generates assembly for an if statement

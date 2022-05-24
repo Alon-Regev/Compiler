@@ -271,7 +271,7 @@ namespace Compiler
 					block.SymbolTable.AddEntry(
 						decl.Identifier,
 						decl.Line,
-						new SymbolTableEntry(SymbolType.FUNCTION, TypeCode.VOID)
+						new SymbolTableEntry(SymbolType.FUNCTION, decl.GetTypeCode())
 					);
 				}
 			}
