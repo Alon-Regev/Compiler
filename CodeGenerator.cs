@@ -85,6 +85,8 @@ namespace Compiler
 					return ToAssembly(v);
 				case Cast c:
 					return ToAssembly(c);
+				case FunctionCall call:
+					return ToAssembly(call);
 				// --- Statements
 				case ForLoop stmt:
 					return ToAssembly(stmt);
@@ -375,6 +377,13 @@ namespace Compiler
 				default:
 					throw new TypeError(cast);
 			}
+		}
+
+		// function call assembly
+		// TODO: params and return values
+		private string ToAssembly(FunctionCall call)
+		{
+			return "call " + call.Function.Identifier + "\n";
 		}
 
 		// generate assembly for variable reference

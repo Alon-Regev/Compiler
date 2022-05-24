@@ -254,6 +254,15 @@ namespace Compiler
 						);
 					}
 				}
+				else if(newStatement is FunctionDeclaration)
+				{
+					FunctionDeclaration decl = newStatement as FunctionDeclaration;
+					block.SymbolTable.AddEntry(
+						decl.Identifier,
+						decl.Line,
+						new SymbolTableEntry(SymbolType.FUNCTION, TypeCode.VOID)
+					);
+				}
 			}
 
 			// check close brace
@@ -498,8 +507,18 @@ namespace Compiler
 			// check postfix unary operator
 			if (IsUnaryPostfixOperator(scanner.Peek()))
 				return new UnaryOperator(scanner.Next().Code, result, false);
+			// check function call
+			else if (result is Variable && scanner.Peek().Code == TokenCode.LEFT_PARENTHESIS)
+				return ParseFunctionCall(result as Variable);
 			else
 				return result;
+		}
+
+		FunctionCall ParseFunctionCall(Variable function)
+		{
+			scanner.Require(TokenCode.LEFT_PARENTHESIS);
+			scanner.Require(TokenCode.RIGHT_PARENTHESIS);
+			return new FunctionCall(function);
 		}
 	}
 }
