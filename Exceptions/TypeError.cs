@@ -21,6 +21,11 @@ namespace Compiler
 		{
 		}
 
+		public TypeError(ReturnStatement ret, TypeCode type)
+			: base("TypeError", ret.Line, "Returning type " + ret.GetExpression().Type + " in function of type " + type)
+		{
+		}
+
 		public TypeError(TernaryOperator op, string msg)
 			: base("TypeError", op.Line, msg)
 		{

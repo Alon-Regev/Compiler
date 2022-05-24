@@ -66,6 +66,7 @@ namespace Compiler
 			new KeyValuePair<TokenCode, string>(TokenCode.BOOL_KEYWORD, "bool" ),
 			// function declaration
 			new KeyValuePair<TokenCode, string>(TokenCode.VOID, "void" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.RETURN, "return" ),
 			// blocks
 			new KeyValuePair<TokenCode, string>(TokenCode.OPEN_BRACE, "{" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.CLOSE_BRACE, "}" ),
@@ -138,11 +139,15 @@ namespace Compiler
 
 		// Method moves to the next token if the current token is a certain value
 		// input: required current token to move
-		// return: nonve
-		public void NextIf(TokenCode required)
+		// return: true if moved to next
+		public bool NextIf(TokenCode required)
 		{
 			if (Peek().Code == required)
+			{
 				Next();
+				return true;
+			}
+			return false;
 		}
 
 		// Method returns the next token in the program without moving to next token. only skips whitespace
