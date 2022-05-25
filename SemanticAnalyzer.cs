@@ -269,11 +269,13 @@ namespace Compiler
 		// does a semantic analysis on a variable
 		private void AnalyzeVariable(Variable variable)
 		{
+			SymbolTableEntry entry = _currentBlock.SymbolTable.GetEntry(variable);
+
 			// get type from current block's symbol table
-			variable.Type = _currentBlock.SymbolTable.GetEntry(variable).ValueType;
+			variable.Type = entry.ValueType;
 
 			// check if already passed declaration
-			if (!_declaredSymbols.Contains(variable.Identifier))
+			if (entry.SymbolType != SymbolType.PARAMETER && !_declaredSymbols.Contains(variable.Identifier))
 				throw new ReferenceBeforeDeclarationError(variable);
 		}
 
@@ -382,9 +384,39 @@ namespace Compiler
 		// analyzes function call node
 		private void AnalyzeFunctionCall(FunctionCall call)
 		{
-			AnalyzeVariable(call.Function);
+			AnalyzeVariable(call.Function());
 			// get type from symbol table
-			call.Type = _currentBlock.SymbolTable.GetEntry(call.Function.Identifier, call.Line).ValueType;
+			SymbolTableEntry entry = _currentBlock.SymbolTable.GetEntry(call.Function().Identifier, call.Line);
+			if (entry.SymbolType != SymbolType.FUNCTION)
+				throw new TypeError("Calling variable \"" + call.Function().Identifier + "\" which is not a function", call.Line);
+			call.Type = entry.ValueType;
+			// check arguments
+			FunctionDeclaration decl = entry.Declaration as FunctionDeclaration;
+			if (decl.Parameters.Count != call.ArgumentCount())
+				throw new TypeError(
+					"Wrong number of arguments when calling function \"" + call.Function().Identifier + "\"" +
+					" (" + call.ArgumentCount() + " given instead of " + decl.Parameters.Count + ")", call.Line);
+			// check arguments types
+			for(int i = 0; i < call.ArgumentCount(); i++)
+			{
+				// analyze argument
+				AnalyzeSubtree(call.GetArgument(i));
+				if (call.GetArgument(i).Type != decl.Parameters[i].Value)
+					throw new TypeError("Argument " + i + " of function \"" + call.Function().Identifier + 
+						"\" is type " + call.GetArgument(i).Type + " but " + decl.Parameters[i].Value + " was expected", call.Line);
+			}
+		}
+
+		// converts type token code to type code
+		public static TypeCode ToTypeCode(TokenCode token, int line)
+		{
+			return token switch
+			{
+				TokenCode.INT_KEYWORD => TypeCode.INT,
+				TokenCode.FLOAT_KEYWORD => TypeCode.FLOAT,
+				TokenCode.BOOL_KEYWORD => TypeCode.BOOL,
+				_ => throw new UnexpectedToken("type", token, line)
+			};
 		}
 	}
 }

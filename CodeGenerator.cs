@@ -385,7 +385,18 @@ namespace Compiler
 		// TODO: params and return values
 		private string ToAssembly(FunctionCall call)
 		{
-			return "call " + call.Function.Identifier + "\n";
+			string result = "";
+			// push arguments
+			for(int i = call.ArgumentCount() - 1; i >= 0 ; i--)
+			{
+				result += ToAssembly(call.GetArgument(i)) +
+					"push eax\n";
+			}
+			result += "call " + call.Function().Identifier + "\n";
+			// pop arguments
+			if (call.ArgumentCount() != 0)
+				result += "add esp, " + call.ArgumentCount() * 4 + "\n";
+			return result;
 		}
 
 		// generate assembly for variable reference
@@ -393,7 +404,7 @@ namespace Compiler
 		private string ToAssembly(Variable variable)
 		{
 			int address = _currentBlock.SymbolTable.GetEntry(variable).Address;
-			return "mov eax, [ebp - " + address + "]\n";
+			return "mov eax, [ebp" + (-address).ToString(" + #; - #;") + "]\n";
 		}
 
 		// generate assembly for variable declaration

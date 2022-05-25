@@ -8,6 +8,7 @@ namespace Compiler
 	{
 		LOCAL_VAR,
 		FUNCTION,
+		PARAMETER,
 	}
 
 	class SymbolTable
@@ -15,6 +16,7 @@ namespace Compiler
 		public SymbolTable ParentTable { get; set; }
 		private Dictionary<string, SymbolTableEntry> _table;
 		private int _addressCounter = 0;
+		private int _paramAddressCounter = -4;
 
 		// Constructor
 		// input: none
@@ -36,6 +38,11 @@ namespace Compiler
 				_addressCounter += 4;
 				entry.Address = _addressCounter;
 			}
+			else if(entry.SymbolType == SymbolType.PARAMETER)
+			{
+				_paramAddressCounter -= 4;
+				entry.Address = _paramAddressCounter;
+			}	
 			else
 				entry.Address = 0;
 			// set address

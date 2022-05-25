@@ -6,6 +6,11 @@ namespace Compiler
 {
 	class TypeError : CompilerError
 	{
+		public TypeError(string msg, int line)
+			: base("TypeError", line, msg)
+		{
+		}
+
 		public TypeError(BinaryOperator op)
 			: base("TypeError", op.Line, "Operator " + op.Operator + " on types " + op.Operand(0).Type + " and " + op.Operand(1).Type)
 		{

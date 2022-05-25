@@ -8,14 +8,24 @@ namespace Compiler
 	{
 		public TokenCode ReturnType { private set; get; }
 		public string Identifier { private set; get; }
+		public List<KeyValuePair<string, TypeCode>> Parameters { private set; get; }
 		
 		// Constructor
 		// input: var type keyword token (int, float...), identifier token
-		public FunctionDeclaration(Token retType, string identifier, Block block) : base(retType.Line)
+		public FunctionDeclaration(Token retType, string identifier, Block block, List<KeyValuePair<string, TypeCode>> parameters) : base(retType.Line)
 		{
+			// add parameters to symbol table
+			foreach (KeyValuePair<string, TypeCode> param in parameters)
+			{
+				block.SymbolTable.AddEntry(param.Key, Line,
+					new SymbolTableEntry(SymbolType.PARAMETER, param.Value, null)
+				);
+			}
+
 			ReturnType = retType.Code;
 			Identifier = identifier;
 			AddChild(block);
+			Parameters = parameters;
 		}
 
 		// Method returns variable type code
@@ -35,7 +45,16 @@ namespace Compiler
 		// ToString override specifies the variable declaration
 		public override string ToString(int indent)
 		{
-			return "Function Declaration (" + Identifier + " VOID -> " + GetTypeCode() + ")" + base.ToString(indent);
+			string parameterTypes = Parameters.Count == 0 ? "Void" : "(";
+			foreach(KeyValuePair<string, TypeCode> param in Parameters)
+			{
+				parameterTypes += param.Value + ", ";
+			}
+			if(Parameters.Count != 0)
+			{
+				parameterTypes = parameterTypes.Substring(0, parameterTypes.Length - 2) + ")";
+			}
+			return "Function Declaration (" + Identifier + " " + parameterTypes + " -> " + GetTypeCode() + ")" + base.ToString(indent);
 		}
 	}
 }

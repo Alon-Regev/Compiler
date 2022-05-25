@@ -23,7 +23,7 @@ namespace Compiler
 				SymbolTable.AddEntry(
 					identifier,
 					initialization.Line,
-					new SymbolTableEntry(SymbolType.LOCAL_VAR, initialization.GetTypeCode())
+					new SymbolTableEntry(SymbolType.LOCAL_VAR, initialization.GetTypeCode(), initialization)
 				);
 			}
 			// setup body symbol table

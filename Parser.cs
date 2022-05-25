@@ -122,13 +122,26 @@ namespace Compiler
 		// return: VariableDeclaration Node
 		public FunctionDeclaration ParseFunctionDeclaration(Token retType, Token identifier)
 		{
+			List<KeyValuePair<string, TypeCode>> parameters = new List<KeyValuePair<string, TypeCode>>();
 			// parameters
 			scanner.Require(TokenCode.LEFT_PARENTHESIS);
+			if (scanner.Peek().Code != TokenCode.RIGHT_PARENTHESIS)
+			{
+				do
+				{
+					// parse parameter declarations
+					Token type = scanner.Next();
+					Token name = scanner.Require(TokenCode.IDENTIFIER);
+					parameters.Add(
+						new KeyValuePair<string, TypeCode>(name.Value, SemanticAnalyzer.ToTypeCode(type.Code, type.Line))
+					);
+				} while (scanner.NextIf(TokenCode.COMMA));
+			}
 			scanner.Require(TokenCode.RIGHT_PARENTHESIS);
 			// implementation
 			Block block = ParseBlock();
 
-			return new FunctionDeclaration(retType, identifier.Value, block);
+			return new FunctionDeclaration(retType, identifier.Value, block, parameters);
 		}
 
 		// Method parses an if-else statement
@@ -261,7 +274,7 @@ namespace Compiler
 						block.SymbolTable.AddEntry(
 							identifier,
 							declaration.Line,
-							new SymbolTableEntry(SymbolType.LOCAL_VAR, declaration.GetTypeCode())
+							new SymbolTableEntry(SymbolType.LOCAL_VAR, declaration.GetTypeCode(), declaration)
 						);
 					}
 				}
@@ -271,7 +284,7 @@ namespace Compiler
 					block.SymbolTable.AddEntry(
 						decl.Identifier,
 						decl.Line,
-						new SymbolTableEntry(SymbolType.FUNCTION, decl.GetTypeCode())
+						new SymbolTableEntry(SymbolType.FUNCTION, decl.GetTypeCode(), decl)
 					);
 				}
 			}
@@ -528,8 +541,13 @@ namespace Compiler
 		FunctionCall ParseFunctionCall(Variable function)
 		{
 			scanner.Require(TokenCode.LEFT_PARENTHESIS);
-			scanner.Require(TokenCode.RIGHT_PARENTHESIS);
-			return new FunctionCall(function);
+			List<Expression> arguments = new List<Expression>();
+			// parse arguments
+			while(scanner.NextIf(TokenCode.COMMA) || !scanner.NextIf(TokenCode.RIGHT_PARENTHESIS))
+			{
+				arguments.Add(ParseExpression());
+			}
+			return new FunctionCall(function, arguments);
 		}
 	}
 }
