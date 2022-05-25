@@ -22,12 +22,7 @@ namespace Compiler
 		// return: type code of the declared variable
 		public TypeCode GetTypeCode()
 		{
-			return Type switch 
-			{ 
-				TokenCode.INT_KEYWORD => TypeCode.INT,
-				TokenCode.FLOAT_KEYWORD => TypeCode.FLOAT,
-				TokenCode.BOOL_KEYWORD => TypeCode.BOOL,
-			};
+			return SemanticAnalyzer.ToTypeCode(Type, Line);
 		}
 
 		// Method returns list of identifiers as string

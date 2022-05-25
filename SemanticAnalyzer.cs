@@ -382,9 +382,21 @@ namespace Compiler
 		// analyzes function call node
 		private void AnalyzeFunctionCall(FunctionCall call)
 		{
-			AnalyzeVariable(call.Function);
+			AnalyzeVariable(call.Function());
 			// get type from symbol table
-			call.Type = _currentBlock.SymbolTable.GetEntry(call.Function.Identifier, call.Line).ValueType;
+			call.Type = _currentBlock.SymbolTable.GetEntry(call.Function().Identifier, call.Line).ValueType;
+		}
+
+		// converts type token code to type code
+		public static TypeCode ToTypeCode(TokenCode token, int line)
+		{
+			return token switch
+			{
+				TokenCode.INT_KEYWORD => TypeCode.INT,
+				TokenCode.FLOAT_KEYWORD => TypeCode.FLOAT,
+				TokenCode.BOOL_KEYWORD => TypeCode.BOOL,
+				_ => throw new UnexpectedToken("type", token, line)
+			};
 		}
 	}
 }

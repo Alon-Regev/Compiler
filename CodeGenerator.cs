@@ -385,7 +385,7 @@ namespace Compiler
 		// TODO: params and return values
 		private string ToAssembly(FunctionCall call)
 		{
-			return "call " + call.Function.Identifier + "\n";
+			return "call " + call.Function().Identifier + "\n";
 		}
 
 		// generate assembly for variable reference
