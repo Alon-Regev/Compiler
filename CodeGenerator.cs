@@ -393,7 +393,7 @@ namespace Compiler
 		private string ToAssembly(Variable variable)
 		{
 			int address = _currentBlock.SymbolTable.GetEntry(variable).Address;
-			return "mov eax, [ebp - " + address + "]\n";
+			return "mov eax, [ebp" + address.ToString(" + #; - #;") + "]\n";
 		}
 
 		// generate assembly for variable declaration

@@ -14,6 +14,14 @@ namespace Compiler
 		// input: var type keyword token (int, float...), identifier token
 		public FunctionDeclaration(Token retType, string identifier, Block block, List<KeyValuePair<string, TypeCode>> parameters) : base(retType.Line)
 		{
+			// add parameters to symbol table
+			foreach (KeyValuePair<string, TypeCode> param in parameters)
+			{
+				block.SymbolTable.AddEntry(param.Key, Line,
+					new SymbolTableEntry(SymbolType.PARAMETER, param.Value, null)
+				);
+			}
+
 			ReturnType = retType.Code;
 			Identifier = identifier;
 			AddChild(block);

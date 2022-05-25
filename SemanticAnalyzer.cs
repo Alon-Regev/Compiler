@@ -269,11 +269,13 @@ namespace Compiler
 		// does a semantic analysis on a variable
 		private void AnalyzeVariable(Variable variable)
 		{
+			SymbolTableEntry entry = _currentBlock.SymbolTable.GetEntry(variable);
+
 			// get type from current block's symbol table
-			variable.Type = _currentBlock.SymbolTable.GetEntry(variable).ValueType;
+			variable.Type = entry.ValueType;
 
 			// check if already passed declaration
-			if (!_declaredSymbols.Contains(variable.Identifier))
+			if (entry.SymbolType != SymbolType.PARAMETER && !_declaredSymbols.Contains(variable.Identifier))
 				throw new ReferenceBeforeDeclarationError(variable);
 		}
 
