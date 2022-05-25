@@ -8,11 +8,11 @@ namespace Compiler
 	{
 		public TokenCode ReturnType { private set; get; }
 		public string Identifier { private set; get; }
-		public Dictionary<string, TypeCode> Parameters { private set; get; }
+		public List<KeyValuePair<string, TypeCode>> Parameters { private set; get; }
 		
 		// Constructor
 		// input: var type keyword token (int, float...), identifier token
-		public FunctionDeclaration(Token retType, string identifier, Block block, Dictionary<string, TypeCode> parameters) : base(retType.Line)
+		public FunctionDeclaration(Token retType, string identifier, Block block, List<KeyValuePair<string, TypeCode>> parameters) : base(retType.Line)
 		{
 			ReturnType = retType.Code;
 			Identifier = identifier;

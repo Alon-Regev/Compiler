@@ -16,9 +16,22 @@ namespace Compiler
 				AddChild(arg);
 		}
 
+		// returns function variable node
 		public Variable Function()
 		{
 			return GetChild(0) as Variable;
+		}
+
+		// returns number of arguments in function call
+		public int ArgumentCount()
+		{
+			return Children.Count - 1;
+		}
+
+		// gets one of the function call arguments by index
+		public Expression GetArgument(int index)
+		{
+			return GetChild(index + 1) as Expression;
 		}
 
 		// ToString prints operator and children

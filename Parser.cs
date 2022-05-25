@@ -122,7 +122,7 @@ namespace Compiler
 		// return: VariableDeclaration Node
 		public FunctionDeclaration ParseFunctionDeclaration(Token retType, Token identifier)
 		{
-			Dictionary<string, TypeCode> parameters = new Dictionary<string, TypeCode>();
+			List<KeyValuePair<string, TypeCode>> parameters = new List<KeyValuePair<string, TypeCode>>();
 			// parameters
 			scanner.Require(TokenCode.LEFT_PARENTHESIS);
 			if (scanner.Peek().Code != TokenCode.RIGHT_PARENTHESIS)
@@ -132,7 +132,9 @@ namespace Compiler
 					// parse parameter declarations
 					Token type = scanner.Next();
 					Token name = scanner.Require(TokenCode.IDENTIFIER);
-					parameters.Add(name.Value, SemanticAnalyzer.ToTypeCode(type.Code, type.Line));
+					parameters.Add(
+						new KeyValuePair<string, TypeCode>(name.Value, SemanticAnalyzer.ToTypeCode(type.Code, type.Line))
+					);
 				} while (scanner.NextIf(TokenCode.COMMA));
 			}
 			scanner.Require(TokenCode.RIGHT_PARENTHESIS);
@@ -272,7 +274,7 @@ namespace Compiler
 						block.SymbolTable.AddEntry(
 							identifier,
 							declaration.Line,
-							new SymbolTableEntry(SymbolType.LOCAL_VAR, declaration.GetTypeCode())
+							new SymbolTableEntry(SymbolType.LOCAL_VAR, declaration.GetTypeCode(), declaration)
 						);
 					}
 				}
@@ -282,7 +284,7 @@ namespace Compiler
 					block.SymbolTable.AddEntry(
 						decl.Identifier,
 						decl.Line,
-						new SymbolTableEntry(SymbolType.FUNCTION, decl.GetTypeCode())
+						new SymbolTableEntry(SymbolType.FUNCTION, decl.GetTypeCode(), decl)
 					);
 				}
 			}
