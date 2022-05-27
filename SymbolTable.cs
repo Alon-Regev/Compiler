@@ -122,7 +122,7 @@ namespace Compiler
 			if (OuterTable != null)
 				return OuterTable;
 			else
-				return ParentTable.GetOuterTable();
+				return ParentTable?.GetOuterTable();
 		}
 	}
 }

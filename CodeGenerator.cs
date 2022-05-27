@@ -422,7 +422,7 @@ namespace Compiler
 					entry = outer.GetEntry(variable);
 					asm += "mov ebx, [" + baseRegister + (-pebp.Address).ToString(" + #; - #;") + "]\n";
 					baseRegister = "ebx";
-					outer = outer.OuterTable;
+					outer = outer.GetOuterTable();
 				}
 				return
 					asm + 
