@@ -254,11 +254,11 @@ namespace Compiler
 		// rules: value to assign at eax, moves into memory
 		private string AssignmentAssembly(BinaryOperator op)
 		{
-			Variable variable = op.Operand(0) as Variable;
-			SymbolTableEntry entry = _currentBlock.SymbolTable.GetEntry(variable);
+			Tuple<string, string> addressASM = VariableAddress(op.Operand(0) as Variable);
 
-			return ToAssembly(op.Operand(1)) +
-				"mov [ebp - " + entry.Address + "], eax\n";
+			return ToAssembly(op.Operand(1)) + 
+				addressASM.Item1 + 
+				"mov [" + addressASM.Item2 + "], eax\n";
 		}
 
 		// unary operator assembly rules:
@@ -406,12 +406,23 @@ namespace Compiler
 		// load local var from memory to eax
 		private string ToAssembly(Variable variable)
 		{
-			string asm = "";
+			Tuple<string, string> addressASM = VariableAddress(variable);
+			return addressASM.Item1 +
+				"mov eax, [" + addressASM.Item2 + "]\n";
+		}
+
+		// method gets assembly address of variable
+		// input: variable
+		// return: assembly for address, tuple (code before, address)
+		private Tuple<string, string> VariableAddress(Variable variable)
+		{
 			SymbolTableEntry entry = _currentBlock.SymbolTable.GetEntry(variable);
+
 			if (entry.SymbolType == SymbolType.LOCAL_VAR || entry.SymbolType == SymbolType.PARAMETER)
-				return "mov eax, [ebp" + (-entry.Address).ToString(" + #; - #;") + "]\n";
+				return Tuple.Create("", "ebp" + (-entry.Address).ToString(" + #; - #;"));
 			else if (entry.SymbolType == SymbolType.OUTER_VAR)
 			{
+				string asm = "";
 				string baseRegister = "ebp";
 				SymbolTable outer = _currentBlock.SymbolTable.GetOuterTable();
 				while (entry.SymbolType == SymbolType.OUTER_VAR)
@@ -422,15 +433,12 @@ namespace Compiler
 					entry = outer.GetEntry(variable);
 					asm += "mov ebx, [" + baseRegister + (-pebp.Address).ToString(" + #; - #;") + "]\n";
 					baseRegister = "ebx";
-					outer = outer.OuterTable;
+					outer = outer.GetOuterTable();
 				}
-				return
-					asm + 
-					// get outer variable based on pebp
-					"mov eax, [ebx" + (-entry.Address).ToString(" + #; - #;") + "]\n";
+				return Tuple.Create(asm, "ebx" + (-entry.Address).ToString(" + #; - #;"));
 			}
 			else
-				return "";
+				return null;
 		}
 
 		// generate assembly for variable declaration
