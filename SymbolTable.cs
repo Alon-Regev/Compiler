@@ -9,11 +9,13 @@ namespace Compiler
 		LOCAL_VAR,
 		FUNCTION,
 		PARAMETER,
+		OUTER_VAR,
 	}
 
 	class SymbolTable
 	{
 		public SymbolTable ParentTable { get; set; }
+		public SymbolTable OuterTable { get; set; }
 		private Dictionary<string, SymbolTableEntry> _table;
 		private int _addressCounter = 0;
 		private int _paramAddressCounter = -4;
@@ -28,7 +30,7 @@ namespace Compiler
 		// Method adds an entry to the symbol table
 		// input: declaration object, data (entry)
 		// return: none
-		public void AddEntry(string identifier, int line, SymbolTableEntry entry)
+		public void AddEntry(string identifier, int line, SymbolTableEntry entry, int address = 0)
 		{
 			// check if insertion is possible
 			if (EntryExists(identifier))
@@ -44,7 +46,7 @@ namespace Compiler
 				entry.Address = _paramAddressCounter;
 			}	
 			else
-				entry.Address = 0;
+				entry.Address = address;
 			// set address
 			// insert new entry
 			_table.Add(identifier, entry);
@@ -110,6 +112,17 @@ namespace Compiler
 					_table[key].Address += offset;
 				}
 			}
+		}
+
+		// Method finds closest outer table
+		// input: none
+		// return: outer table
+		public SymbolTable GetOuterTable()
+		{
+			if (OuterTable != null)
+				return OuterTable;
+			else
+				return ParentTable.GetOuterTable();
 		}
 	}
 }

@@ -19,6 +19,27 @@ namespace Compiler
 		public void AddStatement(Statement statement)
 		{
 			AddChild(statement);
+			if (statement is VariableDeclaration)
+			{
+				VariableDeclaration declaration = statement as VariableDeclaration;
+				foreach (string identifier in declaration.Identifiers)
+				{
+					SymbolTable.AddEntry(
+						identifier,
+						declaration.Line,
+						new SymbolTableEntry(SymbolType.LOCAL_VAR, declaration.GetTypeCode(), declaration)
+					);
+				}
+			}
+			else if (statement is FunctionDeclaration)
+			{
+				FunctionDeclaration decl = statement as FunctionDeclaration;
+				SymbolTable.AddEntry(
+					decl.Identifier,
+					decl.Line,
+					new SymbolTableEntry(SymbolType.FUNCTION, decl.GetTypeCode(), decl)
+				);
+			}
 		}
 
 		// Method gets a statement from the block based on the index

@@ -28,6 +28,12 @@ namespace Compiler
 			Parameters = parameters;
 		}
 
+		// Method returns function's implementation block
+		public Block GetBlock()
+		{
+			return GetChild(0) as Block;
+		}
+
 		// Method returns variable type code
 		// input: none
 		// return: type code of the declared variable
