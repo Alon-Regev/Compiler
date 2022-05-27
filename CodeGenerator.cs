@@ -413,6 +413,8 @@ namespace Compiler
 			{
 				// get address of last parameter (pebp)
 				SymbolTableEntry pebp = _currentBlock.SymbolTable.GetEntry("pebp", variable.Line);
+				// get address from outer table
+				//SymbolTable outerTable = _currentBlock.OuterTable;
 				return
 					// put pebp in ebx
 					"mov ebx, [ebp" + (-pebp.Address).ToString(" + #; - #;") + "]\n" +

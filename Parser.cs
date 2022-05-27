@@ -261,71 +261,31 @@ namespace Compiler
 			// gather statements
 			while(scanner.Peek().Code != TokenCode.CLOSE_BRACE && scanner.Peek().Code != TokenCode.EOF)
 			{
-				// add statement
+				// add statement and add to symbol table if needed
 				Statement newStatement = ParseStatement();
 				block.AddStatement(newStatement);
-				// add symbols to symbol table
-				if (newStatement is VariableDeclaration)
-				{
-					VariableDeclaration declaration = newStatement as VariableDeclaration;
-					foreach (string identifier in declaration.Identifiers)
-					{
-						block.SymbolTable.AddEntry(
-							identifier,
-							declaration.Line,
-							new SymbolTableEntry(SymbolType.LOCAL_VAR, declaration.GetTypeCode(), declaration)
-						);
-					}
-				}
-				else if(newStatement is FunctionDeclaration)
-				{
-					FunctionDeclaration decl = newStatement as FunctionDeclaration;
-					block.SymbolTable.AddEntry(
-						decl.Identifier,
-						decl.Line,
-						new SymbolTableEntry(SymbolType.FUNCTION, decl.GetTypeCode(), decl)
-					);
-				}
 			}
 
 			// check close brace
 			scanner.Require(TokenCode.CLOSE_BRACE);
 
-			// offset addresses of sub-blocks
+			// handle sub-blocks
 			foreach (Statement stmt in block.Children)
 			{
-				switch(stmt)
+				foreach (AST_Node node in stmt.Children)
 				{
-					case IfStatement ifStatement:
-						Statement?[] statements = new Statement?[] { ifStatement.GetTrueBlock(), ifStatement.GetFalseBlock() };
-						foreach (Statement? statement in statements)
-						{
-							if (statement != null && statement is Block)
-							{
-								(statement as Block).SymbolTable.ParentTable = block.SymbolTable;
-								(statement as Block).OffsetAddresses(block.SymbolTable.VariableBytes());
-							}
-						}
-						break;
-					case WhileLoop whileLoop:
-						if (whileLoop.GetBlock() is Block)
-						{
-							(whileLoop.GetBlock() as Block).SymbolTable.ParentTable = block.SymbolTable;
-							(whileLoop.GetBlock() as Block).OffsetAddresses(block.SymbolTable.VariableBytes());
-						}
-						break;
-					case Block subBlock:
-						// set parent and address offset
-						subBlock.SymbolTable.ParentTable = block.SymbolTable;
-						subBlock.OffsetAddresses(block.SymbolTable.VariableBytes());
-						break;
-					case FunctionDeclaration decl:
-						Block body = decl.GetChild(0) as Block;
-						body.OuterTable = block.SymbolTable;
-						break;
-					default:
-						break;
-
+					if (!(node is Block))
+						continue;
+					else if (stmt is FunctionDeclaration)
+						// no parent, new outer table
+						(node as Block).OuterTable = block.SymbolTable;
+					else
+					{
+						// block is parent, same outer table
+						(node as Block).SymbolTable.ParentTable = block.SymbolTable;
+						(node as Block).OuterTable = block.OuterTable;
+						(node as Block).OffsetAddresses(block.SymbolTable.VariableBytes());
+					}
 				}
 			}
 
