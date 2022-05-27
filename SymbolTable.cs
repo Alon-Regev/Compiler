@@ -113,5 +113,16 @@ namespace Compiler
 				}
 			}
 		}
+
+		// Method finds closest outer table
+		// input: none
+		// return: outer table
+		public SymbolTable GetOuterTable()
+		{
+			if (OuterTable != null)
+				return OuterTable;
+			else
+				return ParentTable.GetOuterTable();
+		}
 	}
 }

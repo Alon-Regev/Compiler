@@ -286,7 +286,6 @@ namespace Compiler
 					{
 						// block is parent, same outer table
 						(node as Block).SymbolTable.ParentTable = block.SymbolTable;
-						(node as Block).SymbolTable.OuterTable = block.SymbolTable.OuterTable;
 						(node as Block).OffsetAddresses(block.SymbolTable.VariableBytes());
 					}
 				}

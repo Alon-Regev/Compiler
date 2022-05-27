@@ -413,7 +413,7 @@ namespace Compiler
 			else if (entry.SymbolType == SymbolType.OUTER_VAR)
 			{
 				string baseRegister = "ebp";
-				SymbolTable outer = _currentBlock.SymbolTable.OuterTable;
+				SymbolTable outer = _currentBlock.SymbolTable.GetOuterTable();
 				while (entry.SymbolType == SymbolType.OUTER_VAR)
 				{
 					// get address of last parameter (pebp)
