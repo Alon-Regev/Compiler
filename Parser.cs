@@ -277,13 +277,16 @@ namespace Compiler
 					if (!(node is Block))
 						continue;
 					else if (stmt is FunctionDeclaration)
+					{
 						// no parent, new outer table
-						(node as Block).OuterTable = block.SymbolTable;
+						(node as Block).SymbolTable.OuterTable = block.SymbolTable;
+						(node as Block).SymbolTable.OuterTable.ParentTable = block.SymbolTable.OuterTable;
+					}
 					else
 					{
 						// block is parent, same outer table
 						(node as Block).SymbolTable.ParentTable = block.SymbolTable;
-						(node as Block).OuterTable = block.OuterTable;
+						(node as Block).SymbolTable.OuterTable = block.SymbolTable.OuterTable;
 						(node as Block).OffsetAddresses(block.SymbolTable.VariableBytes());
 					}
 				}

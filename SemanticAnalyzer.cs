@@ -280,11 +280,10 @@ namespace Compiler
 				if (_currentFunction == null)
 					throw;
 
-				entry = _currentFunction.GetBlock().OuterTable.GetEntry(variable);
-				int address = entry.Address;
+				entry = _currentFunction.GetBlock().SymbolTable.OuterTable.GetEntry(variable);
 				// add outer variable entry
 				entry = new SymbolTableEntry(SymbolType.OUTER_VAR, entry.ValueType, entry.Declaration);
-				_currentFunction.GetBlock().SymbolTable.AddEntry(variable.Identifier, entry.Declaration.Line, entry, address);
+				_currentFunction.GetBlock().SymbolTable.AddEntry(variable.Identifier, entry.Declaration.Line, entry);
 				// add pebp entry
 				if(!_currentFunction.GetBlock().SymbolTable.EntryExists("pebp"))
 					_currentFunction.GetBlock().SymbolTable.AddEntry("pebp", -1,

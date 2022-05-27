@@ -15,6 +15,7 @@ namespace Compiler
 	class SymbolTable
 	{
 		public SymbolTable ParentTable { get; set; }
+		public SymbolTable OuterTable { get; set; }
 		private Dictionary<string, SymbolTableEntry> _table;
 		private int _addressCounter = 0;
 		private int _paramAddressCounter = -4;
