@@ -255,8 +255,7 @@ namespace Compiler
 		{
 			// block: {<statements>}
 			// check open brace
-			if (scanner.Next().Code != TokenCode.OPEN_BRACE)
-				throw new UnexpectedToken("block open brace {", scanner.Last);
+			scanner.Require(TokenCode.OPEN_BRACE);
 
 			Block block = new Block(scanner.Last.Line);
 			// gather statements
@@ -290,8 +289,7 @@ namespace Compiler
 			}
 
 			// check close brace
-			if (scanner.Next().Code != TokenCode.CLOSE_BRACE)
-				throw new UnexpectedToken("block open brace }", scanner.Last);
+			scanner.Require(TokenCode.CLOSE_BRACE);
 
 			// offset addresses of sub-blocks
 			foreach (Statement stmt in block.Children)
@@ -320,6 +318,10 @@ namespace Compiler
 						// set parent and address offset
 						subBlock.SymbolTable.ParentTable = block.SymbolTable;
 						subBlock.OffsetAddresses(block.SymbolTable.VariableBytes());
+						break;
+					case FunctionDeclaration decl:
+						Block body = decl.GetChild(0) as Block;
+						body.OuterTable = block.SymbolTable;
 						break;
 					default:
 						break;

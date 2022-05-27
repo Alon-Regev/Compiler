@@ -386,6 +386,8 @@ namespace Compiler
 		private string ToAssembly(FunctionCall call)
 		{
 			string result = "";
+			// push pebp
+			result += "push ebp\n";
 			// push arguments
 			for(int i = call.ArgumentCount() - 1; i >= 0 ; i--)
 			{
@@ -403,8 +405,21 @@ namespace Compiler
 		// load local var from memory to eax
 		private string ToAssembly(Variable variable)
 		{
-			int address = _currentBlock.SymbolTable.GetEntry(variable).Address;
-			return "mov eax, [ebp" + (-address).ToString(" + #; - #;") + "]\n";
+			SymbolTableEntry entry = _currentBlock.SymbolTable.GetEntry(variable);
+			if (entry.SymbolType == SymbolType.LOCAL_VAR || entry.SymbolType == SymbolType.PARAMETER)
+				return "mov eax, [ebp" + (-entry.Address).ToString(" + #; - #;") + "]\n";
+			else if (entry.SymbolType == SymbolType.OUTER_VAR)
+			{
+				// get address of last parameter (pebp)
+				SymbolTableEntry pebp = _currentBlock.SymbolTable.GetEntry("pebp", variable.Line);
+				return
+					// put pebp in ebx
+					"mov ebx, [ebp" + (-pebp.Address).ToString(" + #; - #;") + "]\n" +
+					// get outer variable based on pebp
+					"mov eax, [ebx" + (-entry.Address).ToString(" + #; - #;") + "]\n";
+			}
+			else
+				return "";
 		}
 
 		// generate assembly for variable declaration

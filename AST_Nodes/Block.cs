@@ -7,10 +7,12 @@ namespace Compiler
 	class Block : Statement
 	{
 		public SymbolTable SymbolTable { get; private set; }
+		public SymbolTable OuterTable { get; set; }
 
 		public Block(int line) : base(line)
 		{
 			SymbolTable = new SymbolTable();
+			OuterTable = null;
 		}
 
 		// Method adds a statement to the block

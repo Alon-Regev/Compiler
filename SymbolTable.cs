@@ -9,6 +9,7 @@ namespace Compiler
 		LOCAL_VAR,
 		FUNCTION,
 		PARAMETER,
+		OUTER_VAR,
 	}
 
 	class SymbolTable
@@ -28,7 +29,7 @@ namespace Compiler
 		// Method adds an entry to the symbol table
 		// input: declaration object, data (entry)
 		// return: none
-		public void AddEntry(string identifier, int line, SymbolTableEntry entry)
+		public void AddEntry(string identifier, int line, SymbolTableEntry entry, int address = 0)
 		{
 			// check if insertion is possible
 			if (EntryExists(identifier))
@@ -44,7 +45,7 @@ namespace Compiler
 				entry.Address = _paramAddressCounter;
 			}	
 			else
-				entry.Address = 0;
+				entry.Address = address;
 			// set address
 			// insert new entry
 			_table.Add(identifier, entry);

@@ -269,7 +269,29 @@ namespace Compiler
 		// does a semantic analysis on a variable
 		private void AnalyzeVariable(Variable variable)
 		{
-			SymbolTableEntry entry = _currentBlock.SymbolTable.GetEntry(variable);
+			SymbolTableEntry entry = null;
+			try
+			{
+				entry = _currentBlock.SymbolTable.GetEntry(variable);
+			}
+			catch(UnknownNameError)
+			{
+				// if not found, check outer variables
+				if (_currentFunction == null)
+					throw;
+
+				entry = _currentFunction.GetBlock().OuterTable.GetEntry(variable);
+				int address = entry.Address;
+				// add outer variable entry
+				entry = new SymbolTableEntry(SymbolType.OUTER_VAR, entry.ValueType, entry.Declaration);
+				_currentFunction.GetBlock().SymbolTable.AddEntry(variable.Identifier, entry.Declaration.Line, entry, address);
+				// add pebp entry
+				if(!_currentFunction.GetBlock().SymbolTable.EntryExists("pebp"))
+					_currentFunction.GetBlock().SymbolTable.AddEntry("pebp", -1,
+						new SymbolTableEntry(SymbolType.PARAMETER, TypeCode.UNKNOWN, null)
+					);
+			}
+			
 
 			// get type from current block's symbol table
 			variable.Type = entry.ValueType;
