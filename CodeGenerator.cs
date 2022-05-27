@@ -101,7 +101,8 @@ namespace Compiler
 				case VariableDeclaration decl:
 					return ToAssembly(decl);
 				case FunctionDeclaration decl:
-					_functionDefinitions += ToAssembly(decl);
+					string toAdd = ToAssembly(decl);
+					_functionDefinitions += toAdd;
 					return "";
 				case IfStatement stmt:
 					return ToAssembly(stmt);
