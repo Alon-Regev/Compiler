@@ -270,27 +270,30 @@ namespace Compiler
 		private void AnalyzeVariable(Variable variable)
 		{
 			SymbolTableEntry entry = null;
-			try
+			SymbolTable table = _currentBlock.SymbolTable;
+			do
 			{
-				entry = _currentBlock.SymbolTable.GetEntry(variable);
-			}
-			catch(UnknownNameError)
-			{
-				// if not found, check outer variables
-				if (_currentFunction == null)
-					throw;
+				try
+				{
+					entry = table.GetEntry(variable);
+				}
+				catch (UnknownNameError)
+				{
+					// if not found, check outer variables
+					if (_currentFunction == null)
+						throw;
 
-				entry = _currentFunction.GetBlock().SymbolTable.OuterTable.GetEntry(variable);
-				// add outer variable entry
-				entry = new SymbolTableEntry(SymbolType.OUTER_VAR, entry.ValueType, entry.Declaration);
-				_currentFunction.GetBlock().SymbolTable.AddEntry(variable.Identifier, entry.Declaration.Line, entry);
-				// add pebp entry
-				if(!_currentFunction.GetBlock().SymbolTable.EntryExists("pebp"))
-					_currentFunction.GetBlock().SymbolTable.AddEntry("pebp", -1,
-						new SymbolTableEntry(SymbolType.PARAMETER, TypeCode.UNKNOWN, null)
-					);
+					table = table.GetOuterTable();
+				}
+			} while (entry == null);
+			// add outer variable to current block if variable was found
+			if (table != _currentBlock.SymbolTable)
+			{
+				SymbolType type = entry.SymbolType switch { SymbolType.LOCAL_VAR => SymbolType.OUTER_VAR, SymbolType other => other };
+				entry = new SymbolTableEntry(type, entry.ValueType, entry.Declaration);
+				_currentBlock.SymbolTable.AddEntry(variable.Identifier, entry.Declaration.Line, entry);
 			}
-			
+
 
 			// get type from current block's symbol table
 			variable.Type = entry.ValueType;
