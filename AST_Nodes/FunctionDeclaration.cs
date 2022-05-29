@@ -21,6 +21,10 @@ namespace Compiler
 					new SymbolTableEntry(SymbolType.PARAMETER, param.Value, null)
 				);
 			}
+			// add pebp entry
+			block.SymbolTable.AddEntry("pebp", -1,
+					new SymbolTableEntry(SymbolType.PARAMETER, TypeCode.UNKNOWN, null)
+			);
 
 			ReturnType = retType.Code;
 			Identifier = identifier;
