@@ -388,7 +388,18 @@ namespace Compiler
 		{
 			string result = "";
 			// push pebp
-			result += "push ebp\n";
+			// find function call entry
+			Tuple<string, string> functionScopeInfo = VariableAddress(call.Function());
+			if(functionScopeInfo.Item1 != "")
+			{
+				result += functionScopeInfo.Item1;
+				// push pebp from scope
+				SymbolTable table = ((FunctionDeclaration)_currentBlock.SymbolTable.GetOuterEntry(call.Function()).Item1.Declaration).GetBlock().SymbolTable;
+				SymbolTableEntry pebpEntry = table.GetEntry("pebp", call.Line);
+				result += "push ebx\n";
+			}
+			else
+				result += "push ebp\n";
 			// push arguments
 			for(int i = call.ArgumentCount() - 1; i >= 0 ; i--)
 			{
@@ -416,29 +427,27 @@ namespace Compiler
 		// return: assembly for address, tuple (code before, address)
 		private Tuple<string, string> VariableAddress(Variable variable)
 		{
-			SymbolTableEntry entry = _currentBlock.SymbolTable.GetEntry(variable);
+			Tuple<SymbolTableEntry, SymbolTable> entry = _currentBlock.SymbolTable.GetOuterEntry(variable);
 
-			if (entry.SymbolType == SymbolType.LOCAL_VAR || entry.SymbolType == SymbolType.PARAMETER)
-				return Tuple.Create("", "ebp" + (-entry.Address).ToString(" + #; - #;"));
-			else if (entry.SymbolType == SymbolType.OUTER_VAR)
+			if (entry.Item2 == _currentBlock.SymbolTable)
+				return Tuple.Create("", "ebp" + (-entry.Item1.Address).ToString(" + #; - #;"));
+			else
 			{
 				string asm = "";
 				string baseRegister = "ebp";
-				SymbolTable outer = _currentBlock.SymbolTable.GetOuterTable();
-				while (entry.SymbolType == SymbolType.OUTER_VAR)
+				SymbolTable outer = _currentBlock.SymbolTable;
+				while (entry.Item2 != outer)
 				{
+					outer = outer.GetOuterTable();
 					// get address of last parameter (pebp)
 					SymbolTableEntry pebp = _currentBlock.SymbolTable.GetEntry("pebp", variable.Line);
 					// get address from outer table
-					entry = outer.GetEntry(variable);
+					entry = outer.GetOuterEntry(variable);
 					asm += "mov ebx, [" + baseRegister + (-pebp.Address).ToString(" + #; - #;") + "]\n";
 					baseRegister = "ebx";
-					outer = outer.GetOuterTable();
 				}
-				return Tuple.Create(asm, "ebx" + (-entry.Address).ToString(" + #; - #;"));
+				return Tuple.Create(asm, "ebx" + (-entry.Item1.Address).ToString(" + #; - #;"));
 			}
-			else
-				return null;
 		}
 
 		// generate assembly for variable declaration

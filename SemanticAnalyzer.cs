@@ -269,7 +269,7 @@ namespace Compiler
 		// does a semantic analysis on a variable
 		private void AnalyzeVariable(Variable variable)
 		{
-			SymbolTableEntry entry = null;
+			/*SymbolTableEntry entry = null;
 			SymbolTable table = _currentBlock.SymbolTable;
 			do
 			{
@@ -285,15 +285,18 @@ namespace Compiler
 
 					table = table.GetOuterTable();
 				}
-			} while (entry == null);
+			} while (entry == null);*/
+			SymbolTableEntry entry = _currentBlock.SymbolTable.GetOuterEntry(variable).Item1;
 			// add outer variable to current block if variable was found
-			if (table != _currentBlock.SymbolTable)
+			/*if (table != _currentBlock.SymbolTable)
 			{
 				SymbolType type = entry.SymbolType switch { SymbolType.LOCAL_VAR => SymbolType.OUTER_VAR, SymbolType other => other };
-				entry = new SymbolTableEntry(type, entry.ValueType, entry.Declaration);
-				_currentBlock.SymbolTable.AddEntry(variable.Identifier, entry.Declaration.Line, entry);
-			}
-
+				if (type == SymbolType.OUTER_VAR)
+				{
+					entry = new SymbolTableEntry(type, entry.ValueType, entry.Declaration);
+					_currentBlock.SymbolTable.AddEntry(variable.Identifier, entry.Declaration.Line, entry);
+				}
+			}*/
 
 			// get type from current block's symbol table
 			variable.Type = entry.ValueType;
@@ -410,7 +413,8 @@ namespace Compiler
 		{
 			AnalyzeVariable(call.Function());
 			// get type from symbol table
-			SymbolTableEntry entry = _currentBlock.SymbolTable.GetEntry(call.Function().Identifier, call.Line);
+			Tuple<SymbolTableEntry, SymbolTable> entryInfo = _currentBlock.SymbolTable.GetOuterEntry(call.Function());
+			SymbolTableEntry entry = entryInfo.Item1;
 			if (entry.SymbolType != SymbolType.FUNCTION)
 				throw new TypeError("Calling variable \"" + call.Function().Identifier + "\" which is not a function", call.Line);
 			call.Type = entry.ValueType;
