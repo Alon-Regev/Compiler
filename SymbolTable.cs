@@ -9,7 +9,6 @@ namespace Compiler
 		LOCAL_VAR,
 		FUNCTION,
 		PARAMETER,
-		OUTER_VAR,
 	}
 
 	class SymbolTable
@@ -89,6 +88,11 @@ namespace Compiler
 		{
 			return _table.ContainsKey(symbol);
 		}
+		public bool EntryExistsRecursive(string symbol)
+		{
+			return EntryExists(symbol) ||
+				ParentTable != null && ParentTable.EntryExists(symbol);
+		}
 
 		// Method returns the amount of bytes needed for the local variables of this block
 		// input: none
@@ -123,6 +127,23 @@ namespace Compiler
 				return OuterTable;
 			else
 				return ParentTable?.GetOuterTable();
+		}
+
+		// Method finds entry in this or in outer tables
+		// input: variable to find
+		// return: tuple. Entry and Symbol Table it was found in (or null)
+		public Tuple<SymbolTableEntry, SymbolTable> GetOuterEntry(Variable var)
+		{
+			if (EntryExistsRecursive(var.Identifier))
+				return Tuple.Create(GetEntry(var), this);
+			else
+			{
+				SymbolTable outer = GetOuterTable();
+				if (outer != null)
+					return outer.GetOuterEntry(var);
+				else
+					return Tuple.Create(GetEntry(var), (SymbolTable)null);
+			}
 		}
 	}
 }
