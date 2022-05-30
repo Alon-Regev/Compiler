@@ -392,10 +392,8 @@ namespace Compiler
 			Tuple<string, string> functionScopeInfo = VariableAddress(call.Function());
 			if(functionScopeInfo.Item1 != "")
 			{
+				// push pebp
 				result += functionScopeInfo.Item1;
-				// push pebp from scope
-				SymbolTable table = ((FunctionDeclaration)_currentBlock.SymbolTable.GetOuterEntry(call.Function()).Item1.Declaration).GetBlock().SymbolTable;
-				SymbolTableEntry pebpEntry = table.GetEntry("pebp", call.Line);
 				result += "push ebx\n";
 			}
 			else

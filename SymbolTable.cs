@@ -9,7 +9,6 @@ namespace Compiler
 		LOCAL_VAR,
 		FUNCTION,
 		PARAMETER,
-		OUTER_VAR,
 	}
 
 	class SymbolTable
