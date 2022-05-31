@@ -12,7 +12,7 @@ namespace Compiler
 		
 		// Constructor
 		// input: var type keyword token (int, float...), identifier token
-		public FunctionDeclaration(Token retType, string identifier, Block block, List<KeyValuePair<string, TypeCode>> parameters) : base(retType.Line)
+		public FunctionDeclaration(Token retType, string identifier, Block block, List<KeyValuePair<string, TypeCode>> parameters, bool builtin = false) : base(retType.Line)
 		{
 			// add parameters to symbol table
 			foreach (KeyValuePair<string, TypeCode> param in parameters)
