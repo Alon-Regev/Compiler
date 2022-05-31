@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Compiler
 {
@@ -73,6 +72,22 @@ namespace Compiler
 		public SemanticAnalyzer(AST_Node tree)
 		{
 			_tree = tree;
+			AddBuiltInFunctions();
+		}
+
+		// Method adds built in functions to base symbol table.
+		// input: none
+		// return: none
+		public void AddBuiltInFunctions()
+		{
+			if (!(_tree is Block))
+				return;
+			Block baseBlock = _tree as Block;
+			baseBlock.SymbolTable.AddEntry("input_int", -1,
+				new SymbolTableEntry(SymbolType.BUILTIN_FUNCTION, TypeCode.INT, 
+				new FunctionDeclaration(new Token(TokenCode.INTEGER, -1, -1, ""), "input_int", null, new List<KeyValuePair<string, TypeCode>>() { })
+			));
+			_declaredSymbols.Add("input_int");
 		}
 
 		// Method does a semantic analysis on the AST and adds necessary operations
@@ -388,7 +403,7 @@ namespace Compiler
 			// get type from symbol table
 			Tuple<SymbolTableEntry, SymbolTable> entryInfo = _currentBlock.SymbolTable.GetOuterEntry(call.Function());
 			SymbolTableEntry entry = entryInfo.Item1;
-			if (entry.SymbolType != SymbolType.FUNCTION)
+			if (entry.SymbolType != SymbolType.FUNCTION && entry.SymbolType != SymbolType.BUILTIN_FUNCTION)
 				throw new TypeError("Calling variable \"" + call.Function().Identifier + "\" which is not a function", call.Line);
 			call.Type = entry.ValueType;
 			// check arguments

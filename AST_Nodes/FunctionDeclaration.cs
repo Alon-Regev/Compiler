@@ -22,7 +22,7 @@ namespace Compiler
 				);
 			}
 			// add pebp entry
-			block.SymbolTable.AddEntry("pebp", -1,
+			block?.SymbolTable?.AddEntry("pebp", -1,
 					new SymbolTableEntry(SymbolType.PARAMETER, TypeCode.UNKNOWN, null)
 			);
 
