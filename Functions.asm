@@ -80,3 +80,17 @@ pow:
 	fxch st1
 	fstp st0
 	ret
+	
+;FUNCTION;
+input_int:
+; int input into eax
+	mov ebx, formatin
+	mov byte[ebx + 1], 'd'
+	sub esp, 4
+	push esp
+	push formatin
+	call _scanf
+	add esp, 8
+	pop eax
+	ret
+extern _scanf

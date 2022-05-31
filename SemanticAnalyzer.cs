@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Compiler
 {
@@ -68,11 +67,47 @@ namespace Compiler
 			{ TokenCode.EXCLAMATION_MARK, new HashSet<TypeCode>{ TypeCode.INT } },	// factorial
 		};
 
+		// built in function list
+		public struct BuiltInFunctionData
+		{
+			public string Identifier;
+			public TokenCode ReturnType;
+			public List<KeyValuePair<string, TypeCode>> Parameters;
+		}
+
+		public List<BuiltInFunctionData> builtInFunctions = new List<BuiltInFunctionData>
+		{
+			new BuiltInFunctionData{
+				Identifier = "input_int",
+				ReturnType = TokenCode.INT_KEYWORD,
+				Parameters = new List<KeyValuePair<string, TypeCode>>()
+			}
+		};
+
 		// Constructor
 		// tree: AST to check
 		public SemanticAnalyzer(AST_Node tree)
 		{
 			_tree = tree;
+			AddBuiltInFunctions();
+		}
+
+		// Method adds built in functions to base symbol table.
+		// input: none
+		// return: none
+		public void AddBuiltInFunctions()
+		{
+			if (!(_tree is Block))
+				return;
+			foreach (BuiltInFunctionData func in builtInFunctions)
+			{
+				Block baseBlock = _tree as Block;
+				baseBlock.SymbolTable.AddEntry(func.Identifier, -1,
+					new SymbolTableEntry(SymbolType.BUILTIN_FUNCTION, ToTypeCode(func.ReturnType, -1),
+					new FunctionDeclaration(new Token(func.ReturnType, -1, -1, ""), func.Identifier, null, func.Parameters)
+				));
+				_declaredSymbols.Add(func.Identifier);
+			}
 		}
 
 		// Method does a semantic analysis on the AST and adds necessary operations
@@ -388,7 +423,7 @@ namespace Compiler
 			// get type from symbol table
 			Tuple<SymbolTableEntry, SymbolTable> entryInfo = _currentBlock.SymbolTable.GetOuterEntry(call.Function());
 			SymbolTableEntry entry = entryInfo.Item1;
-			if (entry.SymbolType != SymbolType.FUNCTION)
+			if (entry.SymbolType != SymbolType.FUNCTION && entry.SymbolType != SymbolType.BUILTIN_FUNCTION)
 				throw new TypeError("Calling variable \"" + call.Function().Identifier + "\" which is not a function", call.Line);
 			call.Type = entry.ValueType;
 			// check arguments

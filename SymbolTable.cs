@@ -8,6 +8,7 @@ namespace Compiler
 	{
 		LOCAL_VAR,
 		FUNCTION,
+		BUILTIN_FUNCTION,
 		PARAMETER,
 	}
 

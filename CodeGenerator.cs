@@ -16,6 +16,7 @@ namespace Compiler
 		{
 			new DataSectionVar("__temp", DataSize.DWORD, "0"),
 			DataSectionVar.StringConstant("format", "%?", true),
+			DataSectionVar.StringConstant("formatin", "%?", false),
 			DataSectionVar.StringConstant("true_string", "true", false),
 			DataSectionVar.StringConstant("false_string", "false", false),
 		};
@@ -390,24 +391,34 @@ namespace Compiler
 			// push pebp
 			// find function call entry
 			Tuple<string, string> functionScopeInfo = VariableAddress(call.Function());
-			if(functionScopeInfo.Item1 != "")
+			SymbolTableEntry entry = _currentBlock.SymbolTable.GetOuterEntry(call.Function()).Item1;
+			if (entry.SymbolType != SymbolType.BUILTIN_FUNCTION)
 			{
-				// push pebp
-				result += functionScopeInfo.Item1;
-				result += "push ebx\n";
+				if (functionScopeInfo.Item1 != "")
+				{
+					// push pebp
+					result += functionScopeInfo.Item1;
+					result += "push ebx\n";
+				}
+				else
+					result += "push ebp\n";
 			}
-			else
-				result += "push ebp\n";
 			// push arguments
 			for(int i = call.ArgumentCount() - 1; i >= 0 ; i--)
 			{
 				result += ToAssembly(call.GetArgument(i)) +
 					"push eax\n";
 			}
-			result += "call " + call.Function().Identifier + "\n";
+			if (entry.SymbolType == SymbolType.BUILTIN_FUNCTION)
+				result += HelperCall(call.Function().Identifier);
+			else
+				result += "call " + call.Function().Identifier + "\n";
 			// pop arguments
-			if (call.ArgumentCount() != 0)
-				result += "add esp, " + call.ArgumentCount() * 4 + "\n";
+			int argCount = call.ArgumentCount();
+			if (entry.SymbolType == SymbolType.BUILTIN_FUNCTION)
+				argCount--;
+			if (argCount != 0)
+				result += "add esp, " + argCount * 4 + "\n";
 			return result;
 		}
 
