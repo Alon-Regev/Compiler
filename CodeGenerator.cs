@@ -16,6 +16,7 @@ namespace Compiler
 		{
 			new DataSectionVar("__temp", DataSize.DWORD, "0"),
 			DataSectionVar.StringConstant("format", "%?", true),
+			DataSectionVar.StringConstant("formatin", "%?", false),
 			DataSectionVar.StringConstant("true_string", "true", false),
 			DataSectionVar.StringConstant("false_string", "false", false),
 		};
@@ -408,7 +409,10 @@ namespace Compiler
 				result += ToAssembly(call.GetArgument(i)) +
 					"push eax\n";
 			}
-			result += "call " + call.Function().Identifier + "\n";
+			if (entry.SymbolType == SymbolType.BUILTIN_FUNCTION)
+				result += HelperCall(call.Function().Identifier);
+			else
+				result += "call " + call.Function().Identifier + "\n";
 			// pop arguments
 			int argCount = call.ArgumentCount();
 			if (entry.SymbolType == SymbolType.BUILTIN_FUNCTION)
