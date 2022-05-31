@@ -79,6 +79,7 @@ namespace Compiler
 		CASE,
 		DEFAULT,
 		// other
+		EXTERN,
 		PRINT_KEYWORD,
 
 		// --- Other

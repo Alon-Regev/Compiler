@@ -53,6 +53,10 @@ namespace Compiler
 					scanner.Next();
 					statement = new PrintStatement(ParseExpression());
 					break;
+				case TokenCode.EXTERN:
+					scanner.Next();
+					statement = new ExternStatement(scanner.Require(TokenCode.IDENTIFIER));
+					break;
 				case TokenCode.RETURN:
 					scanner.Next();
 					statement = new ReturnStatement(ParseExpression());
