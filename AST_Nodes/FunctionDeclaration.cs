@@ -17,7 +17,7 @@ namespace Compiler
 			// add parameters to symbol table
 			foreach (KeyValuePair<string, TypeCode> param in parameters)
 			{
-				block.SymbolTable.AddEntry(param.Key, Line,
+				block?.SymbolTable?.AddEntry(param.Key, Line,
 					new SymbolTableEntry(SymbolType.PARAMETER, param.Value, null)
 				);
 			}
