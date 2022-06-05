@@ -23,7 +23,7 @@ namespace Compiler
 		public AST_Node Parse()
 		{
 			// return a block of statements
-			return ParseBlock();
+			return ParseBlock(false);
 		}
 
 		// Method parses a statement
@@ -275,15 +275,16 @@ namespace Compiler
 		}
 
 		// Method parses a block of statements
-		// input: none
+		// input: whether to check brackets or not (default check)
 		// return: Block node
-		private Block ParseBlock()
+		private Block ParseBlock(bool checkBraces=true)
 		{
 			// block: {<statements>}
 			// check open brace
-			scanner.Require(TokenCode.OPEN_BRACE);
+			if(checkBraces)
+				scanner.Require(TokenCode.OPEN_BRACE);
 
-			Block block = new Block(scanner.Last.Line);
+			Block block = new Block(scanner.Peek().Line);
 			// gather statements
 			while(scanner.Peek().Code != TokenCode.CLOSE_BRACE && scanner.Peek().Code != TokenCode.EOF)
 			{
@@ -293,7 +294,8 @@ namespace Compiler
 			}
 
 			// check close brace
-			scanner.Require(TokenCode.CLOSE_BRACE);
+			if(checkBraces)
+				scanner.Require(TokenCode.CLOSE_BRACE);
 
 			// handle sub-blocks
 			foreach (Statement stmt in block.Children)
