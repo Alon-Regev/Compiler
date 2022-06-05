@@ -470,6 +470,7 @@ namespace Compiler
 				TokenCode.INT_KEYWORD => TypeCode.INT,
 				TokenCode.FLOAT_KEYWORD => TypeCode.FLOAT,
 				TokenCode.BOOL_KEYWORD => TypeCode.BOOL,
+				TokenCode.VOID => TypeCode.VOID,
 				_ => throw new UnexpectedToken("type", token, line)
 			};
 		}

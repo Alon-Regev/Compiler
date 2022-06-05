@@ -43,13 +43,7 @@ namespace Compiler
 		// return: type code of the declared variable
 		public TypeCode GetTypeCode()
 		{
-			return ReturnType switch 
-			{ 
-				TokenCode.INT_KEYWORD => TypeCode.INT,
-				TokenCode.FLOAT_KEYWORD => TypeCode.FLOAT,
-				TokenCode.BOOL_KEYWORD => TypeCode.BOOL,
-				TokenCode.VOID => TypeCode.VOID,
-			};
+			return SemanticAnalyzer.ToTypeCode(ReturnType, Line);
 		}
 
 		// ToString override specifies the variable declaration
