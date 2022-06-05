@@ -89,6 +89,7 @@ namespace Compiler
 		public SemanticAnalyzer(AST_Node tree)
 		{
 			_tree = tree;
+			_currentBlock = tree as Block;
 			AddBuiltInFunctions();
 		}
 
@@ -101,13 +102,17 @@ namespace Compiler
 				return;
 			foreach (BuiltInFunctionData func in builtInFunctions)
 			{
-				Block baseBlock = _tree as Block;
-				baseBlock.SymbolTable.AddEntry(func.Identifier, -1,
-					new SymbolTableEntry(SymbolType.BUILTIN_FUNCTION, ToTypeCode(func.ReturnType, -1),
-					new FunctionDeclaration(new Token(func.ReturnType, -1, -1, ""), func.Identifier, null, func.Parameters)
-				));
-				_declaredSymbols.Add(func.Identifier);
+				AddBuiltInFunction(func);
 			}
+		}
+
+		public void AddBuiltInFunction(BuiltInFunctionData func)
+		{
+			_currentBlock.SymbolTable.AddEntry(func.Identifier, -1,
+				new SymbolTableEntry(SymbolType.BUILTIN_FUNCTION, ToTypeCode(func.ReturnType, -1),
+				new FunctionDeclaration(new Token(func.ReturnType, -1, -1, ""), func.Identifier, null, func.Parameters)
+			));
+			_declaredSymbols.Add(func.Identifier);
 		}
 
 		// Method does a semantic analysis on the AST and adds necessary operations
@@ -159,6 +164,9 @@ namespace Compiler
 					break;
 				case PrintStatement stmt:
 					AnalyzeSubtree(stmt.GetExpression());
+					break;
+				case ExternStatement stmt:
+					AnalyzeExtern(stmt);
 					break;
 				case ReturnStatement stmt:
 					AnalyzeReturn(stmt);
@@ -407,6 +415,17 @@ namespace Compiler
 			_currentFunction = prev;
 		}
 
+		// analyzes extern statement and adds it to declared symbols
+		private void AnalyzeExtern(ExternStatement stmt)
+		{
+			AddBuiltInFunction(new BuiltInFunctionData
+			{
+				Identifier = stmt.Identifier,
+				ReturnType = stmt.ReturnType,
+				Parameters = stmt.Parameters
+			});
+		}
+
 		// analyzes type of return statement
 		private void AnalyzeReturn(ReturnStatement ret)
 		{
@@ -451,6 +470,7 @@ namespace Compiler
 				TokenCode.INT_KEYWORD => TypeCode.INT,
 				TokenCode.FLOAT_KEYWORD => TypeCode.FLOAT,
 				TokenCode.BOOL_KEYWORD => TypeCode.BOOL,
+				TokenCode.VOID => TypeCode.VOID,
 				_ => throw new UnexpectedToken("type", token, line)
 			};
 		}

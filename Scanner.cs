@@ -83,6 +83,7 @@ namespace Compiler
 			new KeyValuePair<TokenCode, string>(TokenCode.DEFAULT, "default" ),
 			// other
 			new KeyValuePair<TokenCode, string>(TokenCode.PRINT_KEYWORD, "print" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.EXTERN, "extern" ),
 
 			// --- Other
 			new KeyValuePair<TokenCode, string>(TokenCode.IDENTIFIER, @"[_a-zA-Z][_a-zA-Z0-9]*" ),

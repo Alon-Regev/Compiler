@@ -17,7 +17,7 @@ namespace Compiler
 			// add parameters to symbol table
 			foreach (KeyValuePair<string, TypeCode> param in parameters)
 			{
-				block.SymbolTable.AddEntry(param.Key, Line,
+				block?.SymbolTable?.AddEntry(param.Key, Line,
 					new SymbolTableEntry(SymbolType.PARAMETER, param.Value, null)
 				);
 			}
@@ -43,13 +43,7 @@ namespace Compiler
 		// return: type code of the declared variable
 		public TypeCode GetTypeCode()
 		{
-			return ReturnType switch 
-			{ 
-				TokenCode.INT_KEYWORD => TypeCode.INT,
-				TokenCode.FLOAT_KEYWORD => TypeCode.FLOAT,
-				TokenCode.BOOL_KEYWORD => TypeCode.BOOL,
-				TokenCode.VOID => TypeCode.VOID,
-			};
+			return SemanticAnalyzer.ToTypeCode(ReturnType, Line);
 		}
 
 		// ToString override specifies the variable declaration
