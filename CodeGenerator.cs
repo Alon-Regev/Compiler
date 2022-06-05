@@ -419,8 +419,6 @@ namespace Compiler
 				result += "call " + call.Function().Identifier + "\n";
 			// pop arguments
 			int argCount = call.ArgumentCount();
-			if (entry.SymbolType == SymbolType.BUILTIN_FUNCTION)
-				argCount--;
 			if (argCount != 0)
 				result += "add esp, " + argCount * 4 + "\n";
 			return result;
