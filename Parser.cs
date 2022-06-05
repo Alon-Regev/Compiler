@@ -54,8 +54,7 @@ namespace Compiler
 					statement = new PrintStatement(ParseExpression());
 					break;
 				case TokenCode.EXTERN:
-					scanner.Next();
-					statement = new ExternStatement(scanner.Require(TokenCode.IDENTIFIER));
+					statement = ParseExtern();
 					break;
 				case TokenCode.RETURN:
 					scanner.Next();
@@ -126,8 +125,18 @@ namespace Compiler
 		// return: VariableDeclaration Node
 		public FunctionDeclaration ParseFunctionDeclaration(Token retType, Token identifier)
 		{
+			List<KeyValuePair<string, TypeCode>> parameters = ParseParameters();
+			Block implementation = ParseBlock();
+
+			return new FunctionDeclaration(retType, identifier.Value, implementation, parameters);
+		}
+
+		// Method parses function parameters
+		// input: none
+		// return: list of (param name, param type)
+		public List<KeyValuePair<string, TypeCode>> ParseParameters()
+		{
 			List<KeyValuePair<string, TypeCode>> parameters = new List<KeyValuePair<string, TypeCode>>();
-			// parameters
 			scanner.Require(TokenCode.LEFT_PARENTHESIS);
 			if (scanner.Peek().Code != TokenCode.RIGHT_PARENTHESIS)
 			{
@@ -142,10 +151,23 @@ namespace Compiler
 				} while (scanner.NextIf(TokenCode.COMMA));
 			}
 			scanner.Require(TokenCode.RIGHT_PARENTHESIS);
-			// implementation
-			Block block = ParseBlock();
+			return parameters;
+		}
 
-			return new FunctionDeclaration(retType, identifier.Value, block, parameters);
+		// Method parses an extern function declaration
+		// input: none
+		// return: ExternStatement
+		public ExternStatement ParseExtern()
+		{
+			scanner.Next();
+			// get return type
+			Token returnType = scanner.Next();
+			Token identifier = scanner.Require(TokenCode.IDENTIFIER);
+			// parse parameters
+			List<KeyValuePair<string, TypeCode>> parameters = ParseParameters();
+
+
+			return new ExternStatement(identifier, returnType, parameters);
 		}
 
 		// Method parses an if-else statement
