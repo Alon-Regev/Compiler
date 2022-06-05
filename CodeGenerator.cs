@@ -9,6 +9,7 @@ namespace Compiler
 		private AST_Node _tree;
 		private Block _currentBlock;
 		private string _functionDefinitions = "";
+		private List<string> _externFunctions = new List<string> { "_printf" };
 
 		private int _labelCounter = 0;
 
@@ -40,7 +41,7 @@ namespace Compiler
 			string data = DataSectionAssembly();
 			return
 				"global _main\n" +
-				"extern _printf\n" +
+				ExternFunctions() + 
 				"\n" +
 				MacrosAssembly() +
 				"\n" +
@@ -104,6 +105,9 @@ namespace Compiler
 				case FunctionDeclaration decl:
 					string toAdd = ToAssembly(decl);
 					_functionDefinitions += toAdd;
+					return "";
+				case ExternStatement stmt:
+					_externFunctions.Add(stmt.Identifier);
 					return "";
 				case IfStatement stmt:
 					return ToAssembly(stmt);
@@ -720,6 +724,17 @@ namespace Compiler
 		private string GetLabel()
 		{
 			return "__" + _labelCounter++;
+		}
+
+		// Method reuturns asm for defining extern functions
+		private string ExternFunctions()
+		{
+			string result = "";
+			foreach(string func in _externFunctions)
+			{
+				result += "extern " + func + "\n";
+			}
+			return result;
 		}
 	}
 }
