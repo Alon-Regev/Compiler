@@ -89,6 +89,7 @@ namespace Compiler
 		public SemanticAnalyzer(AST_Node tree)
 		{
 			_tree = tree;
+			_currentBlock = tree as Block;
 			AddBuiltInFunctions();
 		}
 
@@ -104,10 +105,10 @@ namespace Compiler
 				AddBuiltInFunction(func);
 			}
 		}
+
 		public void AddBuiltInFunction(BuiltInFunctionData func)
 		{
-			Block baseBlock = _tree as Block;
-			baseBlock.SymbolTable.AddEntry(func.Identifier, -1,
+			_currentBlock.SymbolTable.AddEntry(func.Identifier, -1,
 				new SymbolTableEntry(SymbolType.BUILTIN_FUNCTION, ToTypeCode(func.ReturnType, -1),
 				new FunctionDeclaration(new Token(func.ReturnType, -1, -1, ""), func.Identifier, null, func.Parameters)
 			));
