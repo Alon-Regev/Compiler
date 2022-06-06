@@ -6,7 +6,7 @@ namespace Compiler
 {
 	class Cast : Expression
 	{
-		public TypeCode FromType { get; set; }
+		public ValueType FromType { get; set; }
 
 		// Constructor
 		// from: which Expression to cast

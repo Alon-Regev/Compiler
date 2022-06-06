@@ -25,11 +25,16 @@ namespace Compiler
 			Pointer = pointer;
 			Line = keyword.Line;
 		}
-		private ValueType(TypeCode type, int pointer, int line)
+		public ValueType(TypeCode type, int pointer, int line)
 		{
 			TypeCode = type;
 			Pointer = pointer;
 			Line = line;
+		}
+		public ValueType(TypeCode type)
+		{
+			TypeCode = type;
+			Pointer = 0;
 		}
 
 		// converts type token code to type code
@@ -53,6 +58,35 @@ namespace Compiler
 		public static ValueType Unknown(int line)
 		{
 			return new ValueType(TypeCode.UNKNOWN, 0, line);
+		}
+
+		// sets attributes on type based on another type
+		public void Set(TypeCode other)
+		{
+			TypeCode = other;
+		}
+		public void Set(ValueType other)
+		{
+			TypeCode = other.TypeCode;
+			Pointer = other.Pointer;
+		}
+
+		// operator overloading
+		public static bool operator ==(ValueType a, ValueType b)
+		{
+			return a.TypeCode == b.TypeCode && a.Pointer == b.Pointer;
+		}
+		public static bool operator !=(ValueType a, ValueType b)
+		{
+			return !(a == b);
+		}
+		public static bool operator ==(ValueType a, TypeCode b)
+		{
+			return a.TypeCode == b && a.Pointer == 0;
+		}
+		public static bool operator !=(ValueType a, TypeCode b)
+		{
+			return !(a == b);
 		}
 	}
 }

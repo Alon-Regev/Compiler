@@ -11,67 +11,67 @@ namespace Compiler
 
 		private HashSet<string> _declaredSymbols = new HashSet<string>();
 
-		private static Dictionary<TokenCode, HashSet<TypeCode>> _binOpAllowedTypes = new Dictionary<TokenCode, HashSet<TypeCode>>
+		private static Dictionary<TokenCode, HashSet<ValueType>> _binOpAllowedTypes = new Dictionary<TokenCode, HashSet<ValueType>>
 		{
 			// --- Arithmetic
-			{ TokenCode.ADD_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
-			{ TokenCode.SUB_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
-			{ TokenCode.MUL_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
-			{ TokenCode.DIV_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
-			{ TokenCode.MOD_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
-			{ TokenCode.POW_OP, new HashSet<TypeCode>{ TypeCode.FLOAT} },
+			{ TokenCode.ADD_OP, new HashSet<ValueType>{ new ValueType(TypeCode.INT), new ValueType(TypeCode.FLOAT) } },
+			{ TokenCode.SUB_OP, new HashSet<ValueType>{ new ValueType(TypeCode.INT), new ValueType(TypeCode.FLOAT) } },
+			{ TokenCode.MUL_OP, new HashSet<ValueType>{ new ValueType(TypeCode.INT), new ValueType(TypeCode.FLOAT) } },
+			{ TokenCode.DIV_OP, new HashSet<ValueType>{ new ValueType(TypeCode.INT), new ValueType(TypeCode.FLOAT) } },
+			{ TokenCode.MOD_OP, new HashSet<ValueType>{ new ValueType(TypeCode.INT), new ValueType(TypeCode.FLOAT) } },
+			{ TokenCode.POW_OP, new HashSet<ValueType>{ new ValueType(TypeCode.FLOAT)} },
 
 			// --- Bitwise
-			{ TokenCode.BIT_AND_OP, new HashSet<TypeCode>{ TypeCode.INT } },
-			{ TokenCode.BIT_OR_OP, new HashSet<TypeCode>{ TypeCode.INT } },
-			{ TokenCode.BIT_XOR_OP, new HashSet<TypeCode>{ TypeCode.INT } },
-			{ TokenCode.LEFT_SHIFT, new HashSet<TypeCode>{ TypeCode.INT } },
-			{ TokenCode.RIGHT_SHIFT, new HashSet<TypeCode>{ TypeCode.INT } },
+			{ TokenCode.BIT_AND_OP, new HashSet<ValueType>{ new ValueType(TypeCode.INT) } },
+			{ TokenCode.BIT_OR_OP, new HashSet<ValueType>{ new ValueType(TypeCode.INT) } },
+			{ TokenCode.BIT_XOR_OP, new HashSet<ValueType>{ new ValueType(TypeCode.INT) } },
+			{ TokenCode.LEFT_SHIFT, new HashSet<ValueType>{ new ValueType(TypeCode.INT) } },
+			{ TokenCode.RIGHT_SHIFT, new HashSet<ValueType>{ new ValueType(TypeCode.INT) } },
 
 			// --- Logical
-			{ TokenCode.LOGIC_AND_OP, new HashSet<TypeCode>{ TypeCode.BOOL } },
-			{ TokenCode.LOGIC_OR_OP, new HashSet<TypeCode>{ TypeCode.BOOL } },
+			{ TokenCode.LOGIC_AND_OP, new HashSet<ValueType>{ new ValueType(TypeCode.BOOL) } },
+			{ TokenCode.LOGIC_OR_OP, new HashSet<ValueType>{ new ValueType(TypeCode.BOOL) } },
 
 			// --- Relational
-			{ TokenCode.LESS_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
-			{ TokenCode.LESS_EQUAL_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
-			{ TokenCode.GREATER_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
-			{ TokenCode.GREATER_EQUAL_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
-			{ TokenCode.EQUAL_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
-			{ TokenCode.NOT_EQUAL_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },
+			{ TokenCode.LESS_OP, new HashSet<ValueType>{ new ValueType(TypeCode.INT), new ValueType(TypeCode.FLOAT) } },
+			{ TokenCode.LESS_EQUAL_OP, new HashSet<ValueType>{ new ValueType(TypeCode.INT), new ValueType(TypeCode.FLOAT) } },
+			{ TokenCode.GREATER_OP, new HashSet<ValueType>{ new ValueType(TypeCode.INT), new ValueType(TypeCode.FLOAT) } },
+			{ TokenCode.GREATER_EQUAL_OP, new HashSet<ValueType>{ new ValueType(TypeCode.INT), new ValueType(TypeCode.FLOAT) } },
+			{ TokenCode.EQUAL_OP, new HashSet<ValueType>{ new ValueType(TypeCode.INT), new ValueType(TypeCode.FLOAT) } },
+			{ TokenCode.NOT_EQUAL_OP, new HashSet<ValueType>{ new ValueType(TypeCode.INT), new ValueType(TypeCode.FLOAT) } },
 
 			// --- Assignment
-			{ TokenCode.ASSIGN_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT, TypeCode.BOOL } },
+			{ TokenCode.ASSIGN_OP, new HashSet<ValueType>{ new ValueType(TypeCode.INT), new ValueType(TypeCode.FLOAT), new ValueType(TypeCode.BOOL) } },
 		};
 
-		private static Dictionary<TokenCode, HashSet<TypeCode>> _unaryPrefixOpAllowedTypes = new Dictionary<TokenCode, HashSet<TypeCode>>
+		private static Dictionary<TokenCode, HashSet<ValueType>> _unaryPrefixOpAllowedTypes = new Dictionary<TokenCode, HashSet<ValueType>>
 		{
 			// --- Arithmetic
-			{ TokenCode.BIT_NOT_OP, new HashSet<TypeCode>{ TypeCode.INT } },
-			{ TokenCode.SUB_OP, new HashSet<TypeCode>{ TypeCode.INT, TypeCode.FLOAT } },	// negation
-			{ TokenCode.EXCLAMATION_MARK, new HashSet<TypeCode>{ TypeCode.BOOL } },			// logic not
+			{ TokenCode.BIT_NOT_OP, new HashSet<ValueType>{ new ValueType(TypeCode.INT) } },
+			{ TokenCode.SUB_OP, new HashSet<ValueType>{ new ValueType(TypeCode.INT), new ValueType(TypeCode.FLOAT) } },	// negation
+			{ TokenCode.EXCLAMATION_MARK, new HashSet<ValueType>{ new ValueType(TypeCode.BOOL) } },			// logic not
 		};
 
-		private static Dictionary<TokenCode, HashSet<TypeCode>> _unaryPostfixOpAllowedTypes = new Dictionary<TokenCode, HashSet<TypeCode>>
+		private static Dictionary<TokenCode, HashSet<ValueType>> _unaryPostfixOpAllowedTypes = new Dictionary<TokenCode, HashSet<ValueType>>
 		{
 			// --- Arithmetic
-			{ TokenCode.EXCLAMATION_MARK, new HashSet<TypeCode>{ TypeCode.INT } },	// factorial
+			{ TokenCode.EXCLAMATION_MARK, new HashSet<ValueType>{ new ValueType(TypeCode.INT) } },	// factorial
 		};
 
 		// built in function list
 		public struct BuiltInFunctionData
 		{
 			public string Identifier;
-			public TokenCode ReturnType;
-			public List<KeyValuePair<string, TypeCode>> Parameters;
+			public ValueType ReturnType;
+			public List<KeyValuePair<string, ValueType>> Parameters;
 		}
 
 		public List<BuiltInFunctionData> builtInFunctions = new List<BuiltInFunctionData>
 		{
 			new BuiltInFunctionData{
 				Identifier = "input_int",
-				ReturnType = TokenCode.INT_KEYWORD,
-				Parameters = new List<KeyValuePair<string, TypeCode>>()
+				ReturnType = new ValueType(TypeCode.INT, 0, -1),
+				Parameters = new List<KeyValuePair<string, ValueType>>()
 			}
 		};
 
@@ -100,8 +100,8 @@ namespace Compiler
 		public void AddBuiltInFunction(BuiltInFunctionData func)
 		{
 			_currentBlock.SymbolTable.AddEntry(func.Identifier, -1,
-				new SymbolTableEntry(SymbolType.BUILTIN_FUNCTION, ToTypeCode(func.ReturnType, -1),
-				new FunctionDeclaration(new Token(func.ReturnType, -1, -1, ""), func.Identifier, null, func.Parameters)
+				new SymbolTableEntry(SymbolType.BUILTIN_FUNCTION, func.ReturnType,
+				new FunctionDeclaration(func.ReturnType, func.Identifier, null, func.Parameters)
 			));
 			_declaredSymbols.Add(func.Identifier);
 		}
@@ -214,9 +214,9 @@ namespace Compiler
 				throw new TypeError(op);
 			// set type
 			if (IsRelationalOp(op))
-				op.Type = TypeCode.BOOL;
+				op.Type.Set(TypeCode.BOOL);
 			else
-				op.Type = op.Operand(0).Type;
+				op.Type.Set(op.Operand(0).Type);
 			// check if operation is allowed
 			if (!_binOpAllowedTypes[op.Operator].Contains(op.Operand(0).Type))
 				throw new TypeError(op);
@@ -251,7 +251,7 @@ namespace Compiler
 			// set type
 			op.Type = op.Operand().Type;
 			// check if operation is allowed
-			Dictionary<TokenCode, HashSet<TypeCode>> allowedTypes = op.Prefix ? _unaryPrefixOpAllowedTypes : _unaryPostfixOpAllowedTypes;
+			Dictionary<TokenCode, HashSet<ValueType>> allowedTypes = op.Prefix ? _unaryPrefixOpAllowedTypes : _unaryPostfixOpAllowedTypes;
 			if (!allowedTypes[op.Operator].Contains(op.Type))
 				throw new TypeError(op);
 		}
@@ -280,13 +280,13 @@ namespace Compiler
 			switch(primitive)
 			{
 				case Primitive<int> p:
-					p.Type = TypeCode.INT;
+					p.Type.Set(TypeCode.INT);
 					break;
 				case Primitive<float> p:
-					p.Type = TypeCode.FLOAT;
+					p.Type.Set(TypeCode.FLOAT);
 					break;
 				case Primitive<bool> p:
-					p.Type = TypeCode.BOOL;
+					p.Type.Set(TypeCode.BOOL);
 					break;
 				default:
 					break;
@@ -297,7 +297,7 @@ namespace Compiler
 		private void AnalyzeCast(Cast cast)
 		{
 			AnalyzeSubtree(cast.GetChild(0));
-			cast.FromType = cast.Child().Type;
+			cast.FromType.Set(cast.Child().Type);
 		}
 
 		// does a semantic analysis on a variable
@@ -363,7 +363,7 @@ namespace Compiler
 		{
 			// get switch type
 			AnalyzeSubtree(stmt.GetChild(0));
-			TypeCode type = (stmt.GetChild(0) as Expression).Type;
+			ValueType type = (stmt.GetChild(0) as Expression).Type;
 			// analyze cases
 			int startIndex = 1;
 			if(stmt.HasDefault)

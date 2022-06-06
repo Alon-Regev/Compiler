@@ -8,9 +8,9 @@ namespace Compiler
 	{
 		public string Identifier { private set; get; }
 		public List<KeyValuePair<string, ValueType>> Parameters { private set; get; }
-		public TokenCode ReturnType { private set; get; }
+		public ValueType ReturnType { private set; get; }
 
-		public ExternStatement(Token identifier, Token returnType, List<KeyValuePair<string, ValueType>> parameters) : base(identifier.Line)
+		public ExternStatement(Token identifier, ValueType returnType, List<KeyValuePair<string, ValueType>> parameters) : base(identifier.Line)
 		{
 			Identifier = identifier.Value;
 			ReturnType = returnType.Code;

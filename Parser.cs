@@ -175,7 +175,7 @@ namespace Compiler
 		{
 			scanner.Next();
 			// get return type
-			Token returnType = scanner.Next();
+			ValueType returnType = ParseType();
 			Token identifier = scanner.Require(TokenCode.IDENTIFIER);
 			// parse parameters
 			List<KeyValuePair<string, ValueType>> parameters = ParseParameters();
