@@ -6,16 +6,16 @@ namespace Compiler
 {
 	class FunctionDeclaration : Statement
 	{
-		public TokenCode ReturnType { private set; get; }
+		public ValueType ReturnType { private set; get; }
 		public string Identifier { private set; get; }
-		public List<KeyValuePair<string, TypeCode>> Parameters { private set; get; }
+		public List<KeyValuePair<string, ValueType>> Parameters { private set; get; }
 		
 		// Constructor
 		// input: var type keyword token (int, float...), identifier token
-		public FunctionDeclaration(Token retType, string identifier, Block block, List<KeyValuePair<string, TypeCode>> parameters, bool builtin = false) : base(retType.Line)
+		public FunctionDeclaration(ValueType retType, string identifier, Block block, List<KeyValuePair<string, ValueType>> parameters, bool builtin = false) : base(retType.Line)
 		{
 			// add parameters to symbol table
-			foreach (KeyValuePair<string, TypeCode> param in parameters)
+			foreach (KeyValuePair<string, ValueType> param in parameters)
 			{
 				block?.SymbolTable?.AddEntry(param.Key, Line,
 					new SymbolTableEntry(SymbolType.PARAMETER, param.Value, null)
@@ -23,10 +23,10 @@ namespace Compiler
 			}
 			// add pebp entry
 			block?.SymbolTable?.AddEntry("pebp", -1,
-					new SymbolTableEntry(SymbolType.PARAMETER, TypeCode.UNKNOWN, null)
+					new SymbolTableEntry(SymbolType.PARAMETER, ValueType.Unknown(-1), null)
 			);
 
-			ReturnType = retType.Code;
+			ReturnType = retType;
 			Identifier = identifier;
 			AddChild(block);
 			Parameters = parameters;
@@ -43,14 +43,14 @@ namespace Compiler
 		// return: type code of the declared variable
 		public TypeCode GetTypeCode()
 		{
-			return SemanticAnalyzer.ToTypeCode(ReturnType, Line);
+			return ReturnType.TypeCode;
 		}
 
 		// ToString override specifies the variable declaration
 		public override string ToString(int indent)
 		{
 			string parameterTypes = Parameters.Count == 0 ? "Void" : "(";
-			foreach(KeyValuePair<string, TypeCode> param in Parameters)
+			foreach(KeyValuePair<string, ValueType> param in Parameters)
 			{
 				parameterTypes += param.Value + ", ";
 			}

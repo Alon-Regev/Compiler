@@ -39,7 +39,7 @@ namespace Compiler
 				case TokenCode.FLOAT_KEYWORD:
 				case TokenCode.BOOL_KEYWORD:
 				case TokenCode.VOID:
-					Token type = scanner.Next();
+					ValueType type = ParseType();
 					Token identifier = scanner.Require(TokenCode.IDENTIFIER);
 					// check if variable or function declaration
 					if (scanner.Peek().Code == TokenCode.LEFT_PARENTHESIS)
@@ -80,15 +80,31 @@ namespace Compiler
 			return statement;
 		}
 
+		// Method parses a value type
+		// input: none
+		// return: Value type
+		public ValueType ParseType()
+		{
+			Token baseType = scanner.Next();
+			// get pointer count
+			int pointer = 0;
+			while (scanner.NextIf(TokenCode.POW_OP))
+				pointer += 2;
+			while (scanner.NextIf(TokenCode.MUL_OP))
+				pointer++;
+
+			return new ValueType(baseType, pointer);
+		}
+
 		// Method parses a local variable declaration
 		// input: none
 		// return: VariableDeclaration Node
-		public VariableDeclaration ParseVariableDeclaration(Token type=null, Token identifier=null)
+		public VariableDeclaration ParseVariableDeclaration(ValueType type=null, Token identifier=null)
 		{
 			// varDecl := <type> { <identifier> [ = <value>], }
 
 			if (type == null)
-				type = scanner.Next();
+				type = ParseType();
 
 			VariableDeclaration declaration = new VariableDeclaration(type);
 
@@ -123,9 +139,9 @@ namespace Compiler
 		// Method parses a function declaration
 		// input: none
 		// return: VariableDeclaration Node
-		public FunctionDeclaration ParseFunctionDeclaration(Token retType, Token identifier)
+		public FunctionDeclaration ParseFunctionDeclaration(ValueType retType, Token identifier)
 		{
-			List<KeyValuePair<string, TypeCode>> parameters = ParseParameters();
+			List<KeyValuePair<string, ValueType>> parameters = ParseParameters();
 			Block implementation = ParseBlock();
 
 			return new FunctionDeclaration(retType, identifier.Value, implementation, parameters);
@@ -134,19 +150,19 @@ namespace Compiler
 		// Method parses function parameters
 		// input: none
 		// return: list of (param name, param type)
-		public List<KeyValuePair<string, TypeCode>> ParseParameters()
+		public List<KeyValuePair<string, ValueType>> ParseParameters()
 		{
-			List<KeyValuePair<string, TypeCode>> parameters = new List<KeyValuePair<string, TypeCode>>();
+			List<KeyValuePair<string, ValueType>> parameters = new List<KeyValuePair<string, ValueType>>();
 			scanner.Require(TokenCode.LEFT_PARENTHESIS);
 			if (scanner.Peek().Code != TokenCode.RIGHT_PARENTHESIS)
 			{
 				do
 				{
 					// parse parameter declarations
-					Token type = scanner.Next();
+					ValueType type = ParseType();
 					Token name = scanner.Require(TokenCode.IDENTIFIER);
 					parameters.Add(
-						new KeyValuePair<string, TypeCode>(name.Value, SemanticAnalyzer.ToTypeCode(type.Code, type.Line))
+						new KeyValuePair<string, ValueType>(name.Value, type)
 					);
 				} while (scanner.NextIf(TokenCode.COMMA));
 			}
@@ -161,10 +177,10 @@ namespace Compiler
 		{
 			scanner.Next();
 			// get return type
-			Token returnType = scanner.Next();
+			ValueType returnType = ParseType();
 			Token identifier = scanner.Require(TokenCode.IDENTIFIER);
 			// parse parameters
-			List<KeyValuePair<string, TypeCode>> parameters = ParseParameters();
+			List<KeyValuePair<string, ValueType>> parameters = ParseParameters();
 
 
 			return new ExternStatement(identifier, returnType, parameters);
@@ -494,13 +510,13 @@ namespace Compiler
 
 				// --- Castings
 				case TokenCode.INT_CAST:
-					result = new Cast(ParseFactor(), TypeCode.INT);
+					result = new Cast(ParseFactor(), new ValueType(TypeCode.INT));
 					break;
 				case TokenCode.FLOAT_CAST:
-					result = new Cast(ParseFactor(), TypeCode.FLOAT);
+					result = new Cast(ParseFactor(), new ValueType(TypeCode.FLOAT));
 					break;
 				case TokenCode.BOOL_CAST:
-					result = new Cast(ParseFactor(), TypeCode.BOOL);
+					result = new Cast(ParseFactor(), new ValueType(TypeCode.BOOL));
 					break;
 
 				// --- Unary Prefix Operators

@@ -6,14 +6,14 @@ namespace Compiler
 {
 	class VariableDeclaration : Statement
 	{
-		public TokenCode Type { private set; get; }
+		public ValueType Type { private set; get; }
 		public List<string> Identifiers { private set; get; }
 		
 		// Constructor
 		// input: var type keyword token (int, float...), identifier token
-		public VariableDeclaration(Token type) : base(type.Line)
+		public VariableDeclaration(ValueType type) : base(type.Line)
 		{
-			Type = type.Code;
+			Type = type;
 			Identifiers = new List<string>();
 		}
 
@@ -22,7 +22,7 @@ namespace Compiler
 		// return: type code of the declared variable
 		public TypeCode GetTypeCode()
 		{
-			return SemanticAnalyzer.ToTypeCode(Type, Line);
+			return Type.TypeCode;
 		}
 
 		// Method returns list of identifiers as string

@@ -171,7 +171,7 @@ namespace Compiler
 			// calculate based on input type
 			switch (op.Operand(0).Type)
 			{
-				case TypeCode.INT:
+				case ValueType t when t == new ValueType(TypeCode.INT):
 					return operandsASM +
 						op.Operator switch
 						{
@@ -200,7 +200,7 @@ namespace Compiler
 							_ => throw new ImplementationError(DEFAULT_OPERATOR_BINARY)
 						};
 
-				case TypeCode.FLOAT:
+				case ValueType t when t == new ValueType(TypeCode.FLOAT):
 					return operandsASM +
 						// load eax and ebx to fpu
 						"mov [__temp], eax\n" +
@@ -230,7 +230,7 @@ namespace Compiler
 						"fstp dword [__temp]\n" +
 						"mov eax, [__temp]\n" : "");
 
-				case TypeCode.BOOL:
+				case ValueType t when t == new ValueType(TypeCode.BOOL):
 					string label = GetLabel();
 					return operandsASM +
 						op.Operator switch
@@ -276,7 +276,7 @@ namespace Compiler
 			// calculate result of op
 			switch (op.Type)
 			{
-				case TypeCode.INT:
+				case ValueType t when t == new ValueType(TypeCode.INT):
 					return operandASM +
 						(op.Operator, op.Prefix) switch
 						{
@@ -286,7 +286,7 @@ namespace Compiler
 							_ => throw new ImplementationError(DEFAULT_OPERATOR_UNARY)
 						};
 
-				case TypeCode.FLOAT:
+				case ValueType t when t == new ValueType(TypeCode.FLOAT):
 					return operandASM +
 						// load operand to fpu
 						"mov [__temp], eax\n" +
@@ -300,7 +300,7 @@ namespace Compiler
 						"fstp dword [__temp]\n" +
 						"mov eax, [__temp]\n";
 
-				case TypeCode.BOOL:
+				case ValueType t when t == new ValueType(TypeCode.BOOL):
 					return operandASM +
 						(op.Operator, op.Prefix) switch
 						{
@@ -363,7 +363,7 @@ namespace Compiler
 		// result at eax
 		private string ToAssembly(Cast cast)
 		{
-			switch (cast.FromType, cast.Type)
+			/*switch (cast.FromType, cast.Type)
 			{
 				case (TypeCode.INT, TypeCode.FLOAT):
 					return  // eax -> __temp -(cast)> fpu -> __temp -> eax
@@ -384,7 +384,8 @@ namespace Compiler
 					return ToAssembly(cast.Child());    // no need to change data
 				default:
 					throw new TypeError(cast);
-			}
+			}*/
+			throw new NotImplementedException();
 		}
 
 		// function call assembly
@@ -493,7 +494,7 @@ namespace Compiler
 		private string ToAssembly(PrintStatement statement)
 		{
 			return ToAssembly(statement.GetExpression()) +
-				statement.GetExpression().Type switch
+				statement.GetExpression().Type.TypeCode switch
 				{
 					TypeCode.INT => HelperCall("print_int"),
 					TypeCode.FLOAT => HelperCall("print_float"),
