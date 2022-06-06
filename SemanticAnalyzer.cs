@@ -58,6 +58,11 @@ namespace Compiler
 			{ TokenCode.EXCLAMATION_MARK, new HashSet<ValueType>{ new ValueType(TypeCode.INT) } },	// factorial
 		};
 
+		private static HashSet<TokenCode> _pointerOperators = new HashSet<TokenCode>
+		{
+			TokenCode.ASSIGN_OP,
+		};
+
 		// built in function list
 		public struct BuiltInFunctionData
 		{
@@ -212,13 +217,17 @@ namespace Compiler
 			// check types
 			if(op.Operand(0).Type != op.Operand(1).Type)
 				throw new TypeError(op);
+			ValueType type = op.Operand(0).Type;
 			// set type
 			if (IsRelationalOp(op))
 				op.Type.Set(TypeCode.BOOL);
 			else
-				op.Type.Set(op.Operand(0).Type);
+				op.Type.Set(type);
 			// check if operation is allowed
-			if (!_binOpAllowedTypes[op.Operator].Contains(op.Operand(0).Type))
+			if (!_binOpAllowedTypes[op.Operator].Contains(type) &&
+				// pointer op
+				!(type.Pointer != 0 && _pointerOperators.Contains(op.Operator)))
+
 				throw new TypeError(op);
 			
 			// additional checks
