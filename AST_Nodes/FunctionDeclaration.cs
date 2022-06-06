@@ -43,14 +43,14 @@ namespace Compiler
 		// return: type code of the declared variable
 		public TypeCode GetTypeCode()
 		{
-			return SemanticAnalyzer.ToTypeCode(ReturnType, Line);
+			return ReturnType.TypeCode;
 		}
 
 		// ToString override specifies the variable declaration
 		public override string ToString(int indent)
 		{
 			string parameterTypes = Parameters.Count == 0 ? "Void" : "(";
-			foreach(KeyValuePair<string, TypeCode> param in Parameters)
+			foreach(KeyValuePair<string, ValueType> param in Parameters)
 			{
 				parameterTypes += param.Value + ", ";
 			}

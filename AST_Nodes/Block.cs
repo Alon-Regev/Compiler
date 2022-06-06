@@ -27,7 +27,7 @@ namespace Compiler
 					SymbolTable.AddEntry(
 						identifier,
 						declaration.Line,
-						new SymbolTableEntry(SymbolType.LOCAL_VAR, declaration.GetTypeCode(), declaration)
+						new SymbolTableEntry(SymbolType.LOCAL_VAR, declaration.Type, declaration)
 					);
 				}
 			}
@@ -37,7 +37,7 @@ namespace Compiler
 				SymbolTable.AddEntry(
 					decl.Identifier,
 					decl.Line,
-					new SymbolTableEntry(SymbolType.FUNCTION, decl.GetTypeCode(), decl)
+					new SymbolTableEntry(SymbolType.FUNCTION, decl.ReturnType, decl)
 				);
 			}
 		}

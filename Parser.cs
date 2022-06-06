@@ -508,13 +508,13 @@ namespace Compiler
 
 				// --- Castings
 				case TokenCode.INT_CAST:
-					result = new Cast(ParseFactor(), TypeCode.INT);
+					result = new Cast(ParseFactor(), new ValueType(TypeCode.INT));
 					break;
 				case TokenCode.FLOAT_CAST:
-					result = new Cast(ParseFactor(), TypeCode.FLOAT);
+					result = new Cast(ParseFactor(), new ValueType(TypeCode.FLOAT));
 					break;
 				case TokenCode.BOOL_CAST:
-					result = new Cast(ParseFactor(), TypeCode.BOOL);
+					result = new Cast(ParseFactor(), new ValueType(TypeCode.BOOL));
 					break;
 
 				// --- Unary Prefix Operators

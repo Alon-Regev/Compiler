@@ -13,7 +13,7 @@ namespace Compiler
 		public ExternStatement(Token identifier, ValueType returnType, List<KeyValuePair<string, ValueType>> parameters) : base(identifier.Line)
 		{
 			Identifier = identifier.Value;
-			ReturnType = returnType.Code;
+			ReturnType = returnType;
 			Parameters = parameters;
 		}
 
