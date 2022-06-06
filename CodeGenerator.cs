@@ -168,6 +168,12 @@ namespace Compiler
 				operandsASM += "pop ebx\n";
 			}
 
+			// check ptr operations
+			if (op.Operand(0).Type.Pointer != 0)
+				return operandsASM + PointerOperatorAssembly(op.Operand(0), "eax", op.Operand(1), "ebx", op);
+			else if (op.Operand(1).Type.Pointer != 0)
+				return operandsASM + PointerOperatorAssembly(op.Operand(1), "ebx", op.Operand(0), "eax", op);
+
 			// calculate based on input type
 			switch (op.Operand(0).Type)
 			{
@@ -254,6 +260,33 @@ namespace Compiler
 					throw new ImplementationError(DEFAULT_TYPE_BINARY);
 			}
 		}
+		public string PointerOperatorAssembly(Expression ptr, string ptrReg, Expression other, string otherReg, BinaryOperator op)
+		{
+			switch (op.Operator)
+			{
+				case TokenCode.ADD_OP:
+					// add integer
+					return "lea eax, [" + ptrReg + " + 4 * " + otherReg + "]\n";
+				case TokenCode.SUB_OP:
+					if(other.Type.Pointer != 0)
+					{
+						// pointer subtraction
+						return "sub " + ptrReg + ", " + otherReg + "\n" +
+							(ptrReg == "eax" ? "" : "mov " + ptrReg + ", eax\n") +
+							"xor edx, edx\n" +
+							"mov ebx, 4\n" +
+							"div ebx\n";
+					}
+					else
+					{
+						// sub integer
+						return "neg " + otherReg + "\n" +  
+							"lea eax, [" + ptrReg + " + 4 * " + otherReg + "]\n";
+					}
+				default:
+					return "";
+			}
+		}
 
 		// generates assembly for assignment
 		// rules: value to assign at eax, moves into memory
@@ -261,8 +294,8 @@ namespace Compiler
 		{
 			Tuple<string, string> addressASM = VariableAddress(op.Operand(0) as Variable);
 
-			return ToAssembly(op.Operand(1)) + 
-				addressASM.Item1 + 
+			return ToAssembly(op.Operand(1)) +
+				addressASM.Item1 +
 				"mov [" + addressASM.Item2 + "], eax\n";
 		}
 
