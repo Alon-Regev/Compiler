@@ -88,6 +88,8 @@ namespace Compiler
 			Token baseType = scanner.Next();
 			// get pointer count
 			int pointer = 0;
+			while (scanner.NextIf(TokenCode.POW_OP))
+				pointer += 2;
 			while (scanner.NextIf(TokenCode.MUL_OP))
 				pointer++;
 
