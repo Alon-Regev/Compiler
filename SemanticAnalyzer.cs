@@ -3,15 +3,6 @@ using System.Collections.Generic;
 
 namespace Compiler
 {
-	enum TypeCode
-	{
-		UNKNOWN,
-		INT,
-		FLOAT,
-		BOOL,
-		VOID,
-	}
-
 	class SemanticAnalyzer
 	{
 		private AST_Node _tree;
@@ -460,19 +451,6 @@ namespace Compiler
 					throw new TypeError("Argument " + i + " of function \"" + call.Function().Identifier + 
 						"\" is type " + call.GetArgument(i).Type + " but " + decl.Parameters[i].Value + " was expected", call.Line);
 			}
-		}
-
-		// converts type token code to type code
-		public static TypeCode ToTypeCode(TokenCode token, int line)
-		{
-			return token switch
-			{
-				TokenCode.INT_KEYWORD => TypeCode.INT,
-				TokenCode.FLOAT_KEYWORD => TypeCode.FLOAT,
-				TokenCode.BOOL_KEYWORD => TypeCode.BOOL,
-				TokenCode.VOID => TypeCode.VOID,
-				_ => throw new UnexpectedToken("type", token, line)
-			};
 		}
 	}
 }
