@@ -71,10 +71,30 @@ namespace Compiler
 			Pointer = other.Pointer;
 		}
 
+		public override string ToString()
+		{
+			string ptrStr = "";
+			for (int i = 0; i < Pointer; i++)
+				ptrStr += '*';
+			return TypeCode + ptrStr;
+		}
+
+		public override bool Equals(object obj)
+		{
+			return obj is ValueType type &&
+				   TypeCode == type.TypeCode &&
+				   Pointer == type.Pointer;
+		}
+
+		public override int GetHashCode()
+		{
+			return HashCode.Combine(TypeCode, Pointer);
+		}
+
 		// operator overloading
 		public static bool operator ==(ValueType a, ValueType b)
 		{
-			return a.TypeCode == b.TypeCode && a.Pointer == b.Pointer;
+			return a.Equals(b);
 		}
 		public static bool operator !=(ValueType a, ValueType b)
 		{
