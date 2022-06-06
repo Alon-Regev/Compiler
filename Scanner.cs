@@ -44,11 +44,6 @@ namespace Compiler
 			new KeyValuePair<TokenCode, string>(TokenCode.EXCLAMATION_MARK, "!" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.COMMA, "," ),
 
-			// --- Castings
-			new KeyValuePair<TokenCode, string>(TokenCode.INT_CAST, @"\(int\)" ),
-			new KeyValuePair<TokenCode, string>(TokenCode.FLOAT_CAST, @"\(float\)" ),
-			new KeyValuePair<TokenCode, string>(TokenCode.BOOL_CAST, @"\(bool\)" ),
-
 			// --- Expression symbols
 			new KeyValuePair<TokenCode, string>(TokenCode.LEFT_PARENTHESIS, @"\(" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.RIGHT_PARENTHESIS, @"\)" ),

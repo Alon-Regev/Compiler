@@ -501,22 +501,24 @@ namespace Compiler
 
 				// --- Parentheses Expression
 				case TokenCode.LEFT_PARENTHESIS:
-					Expression node = ParseExpression();
-					// check closing parenthesis
-					if (scanner.Next().Code != TokenCode.RIGHT_PARENTHESIS)
-						throw new MissingParenthesis(token);
-					result = node;
-					break;
+					Token next = scanner.Peek();
+					// check casting
+					if (IsType(next))
+					{
+						ValueType type = ParseType();
+						// check closing parenthesis
+						if (scanner.Next().Code != TokenCode.RIGHT_PARENTHESIS)
+							throw new MissingParenthesis(token);
 
-				// --- Castings
-				case TokenCode.INT_CAST:
-					result = new Cast(ParseFactor(), new ValueType(TypeCode.INT));
-					break;
-				case TokenCode.FLOAT_CAST:
-					result = new Cast(ParseFactor(), new ValueType(TypeCode.FLOAT));
-					break;
-				case TokenCode.BOOL_CAST:
-					result = new Cast(ParseFactor(), new ValueType(TypeCode.BOOL));
+						result = new Cast(ParseFactor(), type);
+					}
+					else
+					{
+						result = ParseExpression();
+						// check closing parenthesis
+						if (scanner.Next().Code != TokenCode.RIGHT_PARENTHESIS)
+							throw new MissingParenthesis(token);
+					}
 					break;
 
 				// --- Unary Prefix Operators
@@ -544,6 +546,12 @@ namespace Compiler
 				return ParseFunctionCall(result as Variable);
 			else
 				return result;
+		}
+
+		// method checks if a token is a type (int, bool, float...)
+		public bool IsType(Token t)
+		{
+			return t.Code == TokenCode.INT_KEYWORD || t.Code == TokenCode.BOOL_KEYWORD || t.Code == TokenCode.FLOAT_KEYWORD;
 		}
 
 		FunctionCall ParseFunctionCall(Variable function)
