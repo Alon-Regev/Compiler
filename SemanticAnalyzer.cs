@@ -58,11 +58,6 @@ namespace Compiler
 			{ TokenCode.EXCLAMATION_MARK, new HashSet<ValueType>{ new ValueType(TypeCode.INT) } },	// factorial
 		};
 
-		private static HashSet<TokenCode> _pointerOperators = new HashSet<TokenCode>
-		{
-			TokenCode.ASSIGN_OP,
-		};
-
 		// built in function list
 		public struct BuiltInFunctionData
 		{
@@ -214,21 +209,31 @@ namespace Compiler
 			// analyze operands
 			AnalyzeSubtree(op.Operand(0));
 			AnalyzeSubtree(op.Operand(1));
-			// check types
-			if(op.Operand(0).Type != op.Operand(1).Type)
+			// check types for pointers
+			bool ptr = false;
+			if (op.Operand(0).Type.Pointer != 0)
+			{
+				AnalyzePointerOperator(op.Operand(0), op.Operand(1), op);
+				ptr = true;
+			}
+			else if (op.Operand(1).Type.Pointer != 0)
+			{
+				AnalyzePointerOperator(op.Operand(1), op.Operand(0), op);
+				ptr = true;
+			}
+			// check types for other
+			else if (op.Operand(0).Type != op.Operand(1).Type)
+			{
 				throw new TypeError(op);
-			ValueType type = op.Operand(0).Type;
+			}
+			// check if operation is allowed (non-ptr)
+			else if (!_binOpAllowedTypes[op.Operator].Contains(op.Operand(0).Type))
+				throw new TypeError(op);
 			// set type
 			if (IsRelationalOp(op))
 				op.Type.Set(TypeCode.BOOL);
 			else
-				op.Type.Set(type);
-			// check if operation is allowed
-			if (!_binOpAllowedTypes[op.Operator].Contains(type) &&
-				// pointer op
-				!(type.Pointer != 0 && _pointerOperators.Contains(op.Operator)))
-
-				throw new TypeError(op);
+				op.Type.Set(op.Operand(0).Type);
 			
 			// additional checks
 			if(op.Operator == TokenCode.ASSIGN_OP)
@@ -237,6 +242,26 @@ namespace Compiler
 				if (!(op.Operand(0) is Variable))
 					throw new AssignmentError(op.Line);
 			}
+		}
+		public void AnalyzePointerOperator(Expression ptr, Expression other, BinaryOperator op)
+		{
+			// pointer op
+			switch(op.Operator)
+			{
+				case TokenCode.ASSIGN_OP:
+					if (ptr.Type == other.Type)
+						return;
+					break;
+				case TokenCode.ADD_OP:
+					if (other.Type == new ValueType(TypeCode.INT))
+						return;
+					break;
+				case TokenCode.SUB_OP:
+					if (other.Type == new ValueType(TypeCode.INT) || ptr.Type == other.Type)
+						return;
+					break;
+			}
+			throw new TypeError(op);
 		}
 
 		// Method checks if a binary operator is a relational operator
