@@ -363,29 +363,29 @@ namespace Compiler
 		// result at eax
 		private string ToAssembly(Cast cast)
 		{
-			/*switch (cast.FromType, cast.Type)
+			string result = ToAssembly(cast.Child());
+			// only float cast changes data
+			ValueType floatType = new ValueType(TypeCode.FLOAT);
+			if (cast.FromType == floatType && cast.Type != floatType)
 			{
-				case (TypeCode.INT, TypeCode.FLOAT):
-					return  // eax -> __temp -(cast)> fpu -> __temp -> eax
-						ToAssembly(cast.Child()) +
-						"mov [__temp], eax\n" +
-						"fild dword [__temp]\n" +
-						"fstp dword [__temp]\n" +
-						"mov eax, [__temp]\n";
-				case (TypeCode.FLOAT, TypeCode.INT):
-					return  // eax -> __temp -> fpu -(cast)> __temp -> eax
-						ToAssembly(cast.Child()) +
-						"mov [__temp], eax\n" +
-						"fld dword [__temp]\n" +
-						"fistp dword [__temp]\n" +
-						"mov eax, [__temp]\n";
-				case (TypeCode.INT, TypeCode.BOOL):
-				case (TypeCode.BOOL, TypeCode.INT):
-					return ToAssembly(cast.Child());    // no need to change data
-				default:
-					throw new TypeError(cast);
-			}*/
-			throw new NotImplementedException();
+				// load eax to fpu
+				result += "mov [__temp], eax\n" +
+					"fld dword [__temp]\n";
+				// store in eax as integer
+				result += "fistp dword [__temp]\n" +
+					"mov eax, [__temp]\n";
+			}
+			if(cast.Type == floatType && cast.FromType != floatType)
+			{
+				// load eax to fpu as integer
+				// load eax to fpu
+				result += "mov [__temp], eax\n" +
+					"fild dword [__temp]\n";
+				// store in eax
+				result += "fstp dword [__temp]\n" +
+					"mov eax, [__temp]\n";
+			}
+			return result;
 		}
 
 		// function call assembly
