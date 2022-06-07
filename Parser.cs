@@ -525,6 +525,8 @@ namespace Compiler
 				case TokenCode.BIT_NOT_OP:
 				case TokenCode.SUB_OP:          // negation
 				case TokenCode.EXCLAMATION_MARK:    // logical not
+				case TokenCode.BIT_AND_OP:      // value of ptr
+				case TokenCode.MUL_OP:			// address of
 					result = new UnaryOperator(token.Code, ParseFactor(), true);
 					break;
 

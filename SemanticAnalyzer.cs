@@ -263,6 +263,30 @@ namespace Compiler
 			}
 			throw new TypeError(op);
 		}
+		// return: true if analyed operator
+		public bool AnalyzeUnaryPointerOperator(Expression ptr, UnaryOperator op)
+		{
+			switch (op.Operator)
+			{
+				case TokenCode.MUL_OP:
+					// can only be used on pointers
+					if (ptr.Type.Pointer == 0)
+						throw new TypeError(op);
+					// reduces pointer value by 1
+					op.Type.Set(ptr.Type);
+					op.Type.Pointer--;
+					return true;
+				case TokenCode.BIT_AND_OP:
+					// can only be used on variables
+					if (!(ptr is Variable))
+						throw new TypeError(op);
+					op.Type.Set(ptr.Type);
+					op.Type.Pointer++;
+					return true;
+				default:
+					return false;
+			}
+		}
 
 		// Method checks if a binary operator is a relational operator
 		// input: BinaryOperator to check
@@ -282,11 +306,14 @@ namespace Compiler
 		{
 			// analyze operands
 			AnalyzeSubtree(op.Operand());
+			// check pointer operations
+			if (AnalyzeUnaryPointerOperator(op.Operand(), op))
+				return;
 			// set type
 			op.Type = op.Operand().Type;
 			// check if operation is allowed
 			Dictionary<TokenCode, HashSet<ValueType>> allowedTypes = op.Prefix ? _unaryPrefixOpAllowedTypes : _unaryPostfixOpAllowedTypes;
-			if (!allowedTypes[op.Operator].Contains(op.Type))
+			if (allowedTypes.ContainsKey(op.Operator) && !allowedTypes[op.Operator].Contains(op.Type))
 				throw new TypeError(op);
 		}
 
