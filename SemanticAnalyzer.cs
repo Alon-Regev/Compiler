@@ -209,17 +209,31 @@ namespace Compiler
 			// analyze operands
 			AnalyzeSubtree(op.Operand(0));
 			AnalyzeSubtree(op.Operand(1));
-			// check types
-			if(op.Operand(0).Type != op.Operand(1).Type)
+			// check types for pointers
+			bool ptr = false;
+			if (op.Operand(0).Type.Pointer != 0)
+			{
+				AnalyzePointerOperator(op.Operand(0), op.Operand(1), op);
+				ptr = true;
+			}
+			else if (op.Operand(1).Type.Pointer != 0)
+			{
+				AnalyzePointerOperator(op.Operand(1), op.Operand(0), op);
+				ptr = true;
+			}
+			// check types for other
+			else if (op.Operand(0).Type != op.Operand(1).Type)
+			{
+				throw new TypeError(op);
+			}
+			// check if operation is allowed (non-ptr)
+			else if (!_binOpAllowedTypes[op.Operator].Contains(op.Operand(0).Type))
 				throw new TypeError(op);
 			// set type
 			if (IsRelationalOp(op))
 				op.Type.Set(TypeCode.BOOL);
 			else
 				op.Type.Set(op.Operand(0).Type);
-			// check if operation is allowed
-			if (!_binOpAllowedTypes[op.Operator].Contains(op.Operand(0).Type))
-				throw new TypeError(op);
 			
 			// additional checks
 			if(op.Operator == TokenCode.ASSIGN_OP)
@@ -227,6 +241,50 @@ namespace Compiler
 				// check if assigning to a variable
 				if (!(op.Operand(0) is Variable))
 					throw new AssignmentError(op.Line);
+			}
+		}
+		public void AnalyzePointerOperator(Expression ptr, Expression other, BinaryOperator op)
+		{
+			// pointer op
+			switch(op.Operator)
+			{
+				case TokenCode.ASSIGN_OP:
+					if (ptr.Type == other.Type)
+						return;
+					break;
+				case TokenCode.ADD_OP:
+					if (other.Type == new ValueType(TypeCode.INT))
+						return;
+					break;
+				case TokenCode.SUB_OP:
+					if (other.Type == new ValueType(TypeCode.INT) || ptr.Type == other.Type)
+						return;
+					break;
+			}
+			throw new TypeError(op);
+		}
+		// return: true if analyed operator
+		public bool AnalyzeUnaryPointerOperator(Expression ptr, UnaryOperator op)
+		{
+			switch (op.Operator)
+			{
+				case TokenCode.MUL_OP:
+					// can only be used on pointers
+					if (ptr.Type.Pointer == 0)
+						throw new TypeError(op);
+					// reduces pointer value by 1
+					op.Type.Set(ptr.Type);
+					op.Type.Pointer--;
+					return true;
+				case TokenCode.BIT_AND_OP:
+					// can only be used on variables
+					if (!(ptr is Variable))
+						throw new TypeError(op);
+					op.Type.Set(ptr.Type);
+					op.Type.Pointer++;
+					return true;
+				default:
+					return false;
 			}
 		}
 
@@ -248,11 +306,14 @@ namespace Compiler
 		{
 			// analyze operands
 			AnalyzeSubtree(op.Operand());
+			// check pointer operations
+			if (AnalyzeUnaryPointerOperator(op.Operand(), op))
+				return;
 			// set type
 			op.Type = op.Operand().Type;
 			// check if operation is allowed
 			Dictionary<TokenCode, HashSet<ValueType>> allowedTypes = op.Prefix ? _unaryPrefixOpAllowedTypes : _unaryPostfixOpAllowedTypes;
-			if (!allowedTypes[op.Operator].Contains(op.Type))
+			if (allowedTypes.ContainsKey(op.Operator) && !allowedTypes[op.Operator].Contains(op.Type))
 				throw new TypeError(op);
 		}
 
