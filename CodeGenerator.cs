@@ -309,6 +309,15 @@ namespace Compiler
 			// calculate result of op
 			switch (op.Type)
 			{
+				case ValueType t when op.Operator == TokenCode.BIT_AND_OP:
+					Tuple<string, string> addressASM = VariableAddress(op.Operand() as Variable);
+					return addressASM.Item1 +
+						"lea eax, [" + addressASM.Item2 + "]\n";
+
+				case ValueType t when op.Operator == TokenCode.MUL_OP:
+					return operandASM + 
+						"mov eax, [eax]\n";
+
 				case ValueType t when t == new ValueType(TypeCode.INT):
 					return operandASM +
 						(op.Operator, op.Prefix) switch
