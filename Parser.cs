@@ -571,9 +571,13 @@ namespace Compiler
 			return new FunctionCall(function, arguments);
 		}
 
-		/*ArrayIndex ParseArrayIndex(Expression array)
+		ArrayIndex ParseArrayIndex(Expression array)
 		{
+			scanner.Require(TokenCode.LEFT_SQUARE_BRACKET);
+			Expression index = ParseExpression();
+			scanner.Require(TokenCode.RIGHT_SQUARE_BRACKET);
 
-		}*/
+			return new ArrayIndex(array, index);
+		}
 	}
 }
