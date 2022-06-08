@@ -546,6 +546,9 @@ namespace Compiler
 			// check function call
 			else if (result is Variable && scanner.Peek().Code == TokenCode.LEFT_PARENTHESIS)
 				return ParseFunctionCall(result as Variable);
+			// check index operator
+			else if (result.Type.Pointer != 0 && scanner.Peek().Code == TokenCode.LEFT_SQUARE_BRACKET)
+				return ParseArrayIndex(result);
 			else
 				return result;
 		}
@@ -567,5 +570,10 @@ namespace Compiler
 			}
 			return new FunctionCall(function, arguments);
 		}
+
+		/*ArrayIndex ParseArrayIndex(Expression array)
+		{
+
+		}*/
 	}
 }
