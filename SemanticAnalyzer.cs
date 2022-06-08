@@ -143,6 +143,9 @@ namespace Compiler
 				case FunctionCall call:
 					AnalyzeFunctionCall(call);
 					break;
+				case ArrayIndex expr:
+					AnalyzeArrayIndex(expr);
+					break;
 				// --- Statements
 				case ForLoop stmt:
 					AnalyzeForLoop(stmt);
@@ -512,6 +515,19 @@ namespace Compiler
 					throw new TypeError("Argument " + i + " of function \"" + call.Function().Identifier + 
 						"\" is type " + call.GetArgument(i).Type + " but " + decl.Parameters[i].Value + " was expected", call.Line);
 			}
+		}
+
+		// analyzes array index node
+		private void AnalyzeArrayIndex(ArrayIndex expr)
+		{
+			// analyze children
+			AnalyzeSubtree(expr.Array());
+			AnalyzeSubtree(expr.Index());
+			// check if array is pointer type
+			if (expr.Array().Type.Pointer == 0)
+				throw new TypeError("Array index operator tries to access type " + expr.Array().Type + " which is not a pointer", expr.Line);
+			if (expr.Index().Type != new ValueType(TypeCode.INT))
+				throw new TypeError("Array index is type " + expr.Index().Type + " but " + TypeCode.INT + " was expected", expr.Line);
 		}
 	}
 }
