@@ -457,6 +457,7 @@ namespace Compiler
 				// end of expression
 				case TokenCode.EOF:
 				case TokenCode.RIGHT_PARENTHESIS:
+				case TokenCode.RIGHT_SQUARE_BRACKET:
 				case TokenCode.OPEN_BRACE:
 				case TokenCode.COLON:
 				case TokenCode.SEMI_COLON:
@@ -547,7 +548,7 @@ namespace Compiler
 			else if (result is Variable && scanner.Peek().Code == TokenCode.LEFT_PARENTHESIS)
 				return ParseFunctionCall(result as Variable);
 			// check index operator
-			else if (result.Type.Pointer != 0 && scanner.Peek().Code == TokenCode.LEFT_SQUARE_BRACKET)
+			else if (scanner.Peek().Code == TokenCode.LEFT_SQUARE_BRACKET)
 				return ParseArrayIndex(result);
 			else
 				return result;
