@@ -272,7 +272,7 @@ namespace Compiler
 			{
 				case TokenCode.ADD_OP:
 					// add integer
-					return "lea eax, [" + ptrReg + " + 4 * " + otherReg + "]\n";
+					return "lea eax, [" + ptrReg + " + " + other.Type.Size() + " * " + otherReg + "]\n";
 				case TokenCode.SUB_OP:
 					if(other.Type.Pointer != 0)
 					{
@@ -280,14 +280,14 @@ namespace Compiler
 						return "sub " + ptrReg + ", " + otherReg + "\n" +
 							(ptrReg == "eax" ? "" : "mov " + ptrReg + ", eax\n") +
 							"xor edx, edx\n" +
-							"mov ebx, 4\n" +
+							"mov ebx, " + other.Type.Size() + "\n" +
 							"div ebx\n";
 					}
 					else
 					{
 						// sub integer
 						return "neg " + otherReg + "\n" +  
-							"lea eax, [" + ptrReg + " + 4 * " + otherReg + "]\n";
+							"lea eax, [" + ptrReg + " + " + other.Type.Size() + " * " + otherReg + "]\n";
 					}
 				default:
 					return "";
@@ -322,11 +322,25 @@ namespace Compiler
 						ToAssembly(op.Operand(1)) + // new value in eax
 						"pop ebx\n" +   // base in ebx
 						"pop ecx\n" +  // index in ecx
-						"mov [ebx + 4 * ecx], eax\n";
+						"mov [ebx + " + arrayIndex.Type.Size() + " * ecx], " + RegisterName('a', arrayIndex.Type.Size()) + "\n";
 
 				default:
 					throw new ImplementationError("Invalid assignment passed semantic analysis");
 			}
+		}
+
+		// returns register name based on size
+		// input: base register letter (a, b, c, d), size in bytes
+		// return: register name
+		private string RegisterName(char letter, int size)
+		{
+			return size switch
+			{
+				1 => letter + "l",
+				2 => letter + "x",
+				4 => "e" + letter + "x",
+				_ => ""
+			};
 		}
 
 		// unary operator assembly rules:
@@ -499,6 +513,7 @@ namespace Compiler
 		// array index assembly
 		private string ToAssembly(ArrayIndex arrayIndex)
 		{
+			int size = arrayIndex.Type.Size();
 			return
 				// index expression in stack
 				ToAssembly(arrayIndex.Index()) +
@@ -507,7 +522,21 @@ namespace Compiler
 				ToAssembly(arrayIndex.Array()) +
 				"pop ebx\n" +
 				// access element
-				"mov eax, [eax + ebx * 4]\n";
+				"movzx eax, " + OperationSize(size) + " [eax + ebx * " + size + "]\n";
+		}
+
+		// returns name of operation size based on size in bytes (bytes, word, dword...)
+		// input: size in bytes
+		// return: size name
+		private string OperationSize(int size)
+		{
+			return size switch
+			{
+				1 => "byte",
+				2 => "word",
+				4 => "dword",
+				_ => ""
+			};
 		}
 
 		// generate assembly for variable reference
@@ -823,8 +852,10 @@ namespace Compiler
 
 		private string ToAssembly(NewExpression expr)
 		{
+			ValueType type = expr.Type;
+			type.Pointer--;
 			return ToAssembly(expr.Size()) +
-				"mov ebx, 4\n" +
+				"mov ebx, " + new ValueType(expr.Type.TypeCode, expr.Type.Pointer - 1, expr.Line).Size() + "\n" +
 				"mul ebx\n" +
 				"push eax\n" +
 				"call _malloc\n" +
