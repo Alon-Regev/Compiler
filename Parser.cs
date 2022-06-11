@@ -457,6 +457,7 @@ namespace Compiler
 				// end of expression
 				case TokenCode.EOF:
 				case TokenCode.RIGHT_PARENTHESIS:
+				case TokenCode.RIGHT_SQUARE_BRACKET:
 				case TokenCode.OPEN_BRACE:
 				case TokenCode.COLON:
 				case TokenCode.SEMI_COLON:
@@ -546,6 +547,9 @@ namespace Compiler
 			// check function call
 			else if (result is Variable && scanner.Peek().Code == TokenCode.LEFT_PARENTHESIS)
 				return ParseFunctionCall(result as Variable);
+			// check index operator
+			else if (scanner.Peek().Code == TokenCode.LEFT_SQUARE_BRACKET)
+				return ParseArrayIndex(result);
 			else
 				return result;
 		}
@@ -566,6 +570,15 @@ namespace Compiler
 				arguments.Add(ParseExpression());
 			}
 			return new FunctionCall(function, arguments);
+		}
+
+		ArrayIndex ParseArrayIndex(Expression array)
+		{
+			scanner.Require(TokenCode.LEFT_SQUARE_BRACKET);
+			Expression index = ParseExpression();
+			scanner.Require(TokenCode.RIGHT_SQUARE_BRACKET);
+
+			return new ArrayIndex(array, index);
 		}
 	}
 }

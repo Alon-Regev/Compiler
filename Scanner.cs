@@ -48,6 +48,9 @@ namespace Compiler
 			new KeyValuePair<TokenCode, string>(TokenCode.LEFT_PARENTHESIS, @"\(" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.RIGHT_PARENTHESIS, @"\)" ),
 
+			new KeyValuePair<TokenCode, string>(TokenCode.LEFT_SQUARE_BRACKET, @"\[" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.RIGHT_SQUARE_BRACKET, @"\]" ),
+
 			// --- Values
 			new KeyValuePair<TokenCode, string>(TokenCode.DECIMAL, @"\d+\.\d+" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.INTEGER, @"\d+" ),
