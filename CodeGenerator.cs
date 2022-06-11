@@ -9,7 +9,7 @@ namespace Compiler
 		private AST_Node _tree;
 		private Block _currentBlock;
 		private string _functionDefinitions = "";
-		private List<string> _externFunctions = new List<string> { "_printf" };
+		private List<string> _externFunctions = new List<string> { "_printf", "_malloc", "_free" };
 
 		private int _labelCounter = 0;
 
@@ -116,6 +116,10 @@ namespace Compiler
 				case WhileLoop stmt:
 					return ToAssembly(stmt);
 				case SwitchCase stmt:
+					return ToAssembly(stmt);
+				case NewExpression expr:
+					return ToAssembly(expr);
+				case DeleteStatement stmt:
 					return ToAssembly(stmt);
 				default:
 					return "";
@@ -815,6 +819,24 @@ namespace Compiler
 				result += "extern " + func + "\n";
 			}
 			return result;
+		}
+
+		private string ToAssembly(NewExpression expr)
+		{
+			return ToAssembly(expr.Size()) +
+				"mov ebx, 4\n" +
+				"mul ebx\n" +
+				"push eax\n" +
+				"call _malloc\n" +
+				"add esp, 4\n";
+		}
+
+		private string ToAssembly(DeleteStatement stmt)
+		{
+			return ToAssembly(stmt.GetExpression()) +
+				"push eax\n" +
+				"call _free\n" +
+				"add esp, 4\n";
 		}
 	}
 }
