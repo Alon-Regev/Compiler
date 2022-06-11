@@ -180,6 +180,16 @@ namespace Compiler
 				case SwitchCase stmt:
 					AnalyzeSwitchCase(stmt);
 					break;
+				case NewExpression expr:
+					AnalyzeSubtree(expr.Size());
+					if (expr.Size().Type != new ValueType(TypeCode.INT))
+						throw new TypeError("Type " + expr.Size().Type + " in a new expression size instead of INT", expr.Line);
+					break;
+				case DeleteStatement stmt:
+					AnalyzeSubtree(stmt.GetExpression());
+					if (stmt.GetExpression().Type.Pointer == 0)
+						throw new TypeError("Type " + stmt.GetExpression().Type + " in a delete statement which is not a pointer", stmt.Line);
+					break;
 				default:
 					break;
 			}

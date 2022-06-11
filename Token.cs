@@ -76,6 +76,9 @@ namespace Compiler
 		SWITCH,
 		CASE,
 		DEFAULT,
+		// memory allocation
+		NEW,
+		DELETE,
 		// other
 		EXTERN,
 		PRINT_KEYWORD,

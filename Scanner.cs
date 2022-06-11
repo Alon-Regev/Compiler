@@ -79,6 +79,9 @@ namespace Compiler
 			new KeyValuePair<TokenCode, string>(TokenCode.SWITCH, "switch" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.CASE, "case" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.DEFAULT, "default" ),
+			// memory allocation
+			new KeyValuePair<TokenCode, string>(TokenCode.NEW, "new" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.DELETE, "delete" ),
 			// other
 			new KeyValuePair<TokenCode, string>(TokenCode.PRINT_KEYWORD, "print" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.EXTERN, "extern" ),

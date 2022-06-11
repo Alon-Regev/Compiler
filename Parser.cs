@@ -69,6 +69,9 @@ namespace Compiler
 					return ParseForLoop();
 				case TokenCode.SWITCH:
 					return ParseSwitchCase();
+				case TokenCode.DELETE:
+					statement = ParseDelete();
+					break;
 				default:	// expression
 					statement = new ExpressionStatement(ParseExpression());
 					break;
@@ -536,6 +539,11 @@ namespace Compiler
 					result = new Variable(token);
 					break;
 
+				// --- New Expression
+				case TokenCode.NEW:
+					result = ParseNew();
+					break;
+
 				// --- Unexpected
 				default:
 					throw new UnexpectedToken("expression", token);
@@ -579,6 +587,21 @@ namespace Compiler
 			scanner.Require(TokenCode.RIGHT_SQUARE_BRACKET);
 
 			return new ArrayIndex(array, index);
+		}
+
+		NewExpression ParseNew()
+		{
+			ValueType type = ParseType();
+			scanner.Require(TokenCode.LEFT_SQUARE_BRACKET);
+			Expression size = ParseExpression();
+			scanner.Require(TokenCode.RIGHT_SQUARE_BRACKET);
+			return new NewExpression(type, size);
+		}
+
+		DeleteStatement ParseDelete()
+		{
+			scanner.Next();	// skip delete keyword
+			return new DeleteStatement(ParseExpression());
 		}
 	}
 }
