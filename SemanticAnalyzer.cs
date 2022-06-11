@@ -241,8 +241,8 @@ namespace Compiler
 			// additional checks
 			if(op.Operator == TokenCode.ASSIGN_OP)
 			{
-				// check if assigning to a variable
-				if (!(op.Operand(0) is Variable))
+				// check if can assign
+				if (!op.Operand(0).Type.Assignable)
 					throw new AssignmentError(op.Line);
 			}
 		}
@@ -278,6 +278,7 @@ namespace Compiler
 					// reduces pointer value by 1
 					op.Type.Set(ptr.Type);
 					op.Type.Pointer--;
+					op.Type.Assignable = true;
 					return true;
 				case TokenCode.BIT_AND_OP:
 					// can only be used on variables
@@ -371,6 +372,7 @@ namespace Compiler
 
 			// get type from current block's symbol table
 			variable.Type = entry.ValueType;
+			variable.Type.Assignable = true;
 
 			// check if already passed declaration
 			if (entry.SymbolType != SymbolType.PARAMETER && !_declaredSymbols.Contains(variable.Identifier))
@@ -531,6 +533,7 @@ namespace Compiler
 			// set type
 			expr.Type.Set(expr.Array().Type);
 			expr.Type.Pointer--;
+			expr.Type.Assignable = true;
 		}
 	}
 }

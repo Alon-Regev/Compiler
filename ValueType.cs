@@ -18,6 +18,7 @@ namespace Compiler
 		public TypeCode TypeCode;
 		public int Pointer = 0;
 		public int Line = 0;
+		public bool Assignable = false;
 
 		public ValueType(Token keyword, int pointer)
 		{

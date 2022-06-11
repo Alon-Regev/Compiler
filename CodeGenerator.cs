@@ -294,11 +294,35 @@ namespace Compiler
 		// rules: value to assign at eax, moves into memory
 		private string AssignmentAssembly(BinaryOperator op)
 		{
-			Tuple<string, string> addressASM = VariableAddress(op.Operand(0) as Variable);
+			switch (op.Operand(0))
+			{
+				case Variable v:
+					Tuple<string, string> addressASM = VariableAddress(v);
 
-			return ToAssembly(op.Operand(1)) +
-				addressASM.Item1 +
-				"mov [" + addressASM.Item2 + "], eax\n";
+					return ToAssembly(op.Operand(1)) +
+						addressASM.Item1 +
+						"mov [" + addressASM.Item2 + "], eax\n";
+
+				case UnaryOperator valueAt when valueAt.Operator == TokenCode.MUL_OP:
+					return ToAssembly(valueAt.Operand()) +  // address
+						"push eax\n" +
+						ToAssembly(op.Operand(1)) + // new value at eax
+						"pop ebx\n" +   // address at ebx
+						"mov [ebx], eax\n";
+
+				case ArrayIndex arrayIndex:
+					return ToAssembly(arrayIndex.Index()) +
+						"push eax\n" + // index in stack
+						ToAssembly(arrayIndex.Array()) +
+						"push eax\n" + // base in stack
+						ToAssembly(op.Operand(1)) + // new value in eax
+						"pop ebx\n" +   // base in ebx
+						"pop ecx\n" +  // index in ecx
+						"mov [ebx + 4 * ecx], eax\n";
+
+				default:
+					throw new ImplementationError("Invalid assignment passed semantic analysis");
+			}
 		}
 
 		// unary operator assembly rules:
