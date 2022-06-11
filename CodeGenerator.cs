@@ -89,6 +89,8 @@ namespace Compiler
 					return ToAssembly(c);
 				case FunctionCall call:
 					return ToAssembly(call);
+				case ArrayIndex arrayIndex:
+					return ToAssembly(arrayIndex);
 				// --- Statements
 				case ForLoop stmt:
 					return ToAssembly(stmt);
@@ -431,7 +433,6 @@ namespace Compiler
 		}
 
 		// function call assembly
-		// TODO: params and return values
 		private string ToAssembly(FunctionCall call)
 		{
 			string result = "";
@@ -465,6 +466,20 @@ namespace Compiler
 			if (argCount != 0)
 				result += "add esp, " + argCount * 4 + "\n";
 			return result;
+		}
+
+		// array index assembly
+		private string ToAssembly(ArrayIndex arrayIndex)
+		{
+			return
+				// index expression in stack
+				ToAssembly(arrayIndex.Index()) +
+				"push eax\n" +
+				// array in eax, index in ebx
+				ToAssembly(arrayIndex.Array()) +
+				"pop ebx\n" +
+				// access element
+				"mov eax, [eax + ebx * 4]\n";
 		}
 
 		// generate assembly for variable reference

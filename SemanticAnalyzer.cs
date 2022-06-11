@@ -528,6 +528,9 @@ namespace Compiler
 				throw new TypeError("Array index operator tries to access type " + expr.Array().Type + " which is not a pointer", expr.Line);
 			if (expr.Index().Type != new ValueType(TypeCode.INT))
 				throw new TypeError("Array index is type " + expr.Index().Type + " but " + TypeCode.INT + " was expected", expr.Line);
+			// set type
+			expr.Type.Set(expr.Array().Type);
+			expr.Type.Pointer--;
 		}
 	}
 }
