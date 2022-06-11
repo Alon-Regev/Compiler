@@ -38,6 +38,17 @@ namespace Compiler
 			Pointer = 0;
 		}
 
+		// method returns size of type based on type code
+		// input: none
+		// return: type size
+		public int Size()
+		{
+			if (Pointer == 0 && (TypeCode == TypeCode.BOOL))
+				return 1;
+			else
+				return 4;
+		}
+
 		// converts type token code to type code
 		public static TypeCode ToTypeCode(TokenCode token, int line)
 		{
