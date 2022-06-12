@@ -30,8 +30,12 @@ namespace Compiler
 		{
 			Process nasm = Process.Start("nasm", "-fwin32 -o temp.obj " + filePath);
 			nasm.WaitForExit();
+			if (nasm.ExitCode != 0)
+				throw new ImplementationError("Error in assembly!");
 			Process gcc = Process.Start("gcc", "temp.obj -o " + _outputPath);
 			gcc.WaitForExit();
+			if (gcc.ExitCode != 0)
+				throw new ImplementationError("Error in linker!");
 		}
 
 		// Method runs resulting executable
@@ -41,6 +45,8 @@ namespace Compiler
 		{
 			Process program = Process.Start(_outputPath);
 			program.WaitForExit();
+			if (program.ExitCode != 0)
+				throw new ImplementationError("Error in executable!");
 		}
 	}
 }

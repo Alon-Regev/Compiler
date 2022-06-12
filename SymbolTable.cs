@@ -161,5 +161,21 @@ namespace Compiler
 					return Tuple.Create(GetEntry(var), (SymbolTable)null);
 			}
 		}
+
+		// To String overload to print content of symbol table
+		public override string ToString()
+		{
+			string result = "___SymbolTable___\n" +
+				Helper.StringFormat("Name", 20) + " | " + Helper.StringFormat("Type", 15) + " | " + Helper.StringFormat(
+				"Value", 12) + " | " + Helper.StringFormat("Address", 12) + "\n";
+			
+			foreach((string name, SymbolTableEntry entry) in _table)
+			{
+				result += Helper.StringFormat(name, 20) + " | " + Helper.StringFormat(entry.SymbolType.ToString(), 15) + " | " +
+					Helper.StringFormat(entry.ValueType.ToString(), 12) + " | " + Helper.StringFormat(entry.Address.ToString(), 12) + "\n";
+			}
+
+			return result;
+		}
 	}
 }
