@@ -11,6 +11,7 @@ namespace Compiler
 		INTEGER,
 		DECIMAL,
 		BOOLEAN,
+		CHAR,
 
 		// --- Operators
 		// arithmetic
@@ -59,6 +60,7 @@ namespace Compiler
 		INT_KEYWORD,
 		FLOAT_KEYWORD,
 		BOOL_KEYWORD,
+		CHAR_KEYWORD,
 		// function declaration
 		VOID,
 		RETURN,

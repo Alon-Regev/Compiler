@@ -38,6 +38,7 @@ namespace Compiler
 				case TokenCode.INT_KEYWORD:
 				case TokenCode.FLOAT_KEYWORD:
 				case TokenCode.BOOL_KEYWORD:
+				case TokenCode.CHAR_KEYWORD:
 				case TokenCode.VOID:
 					ValueType type = ParseType();
 					Token identifier = scanner.Require(TokenCode.IDENTIFIER);
@@ -501,6 +502,9 @@ namespace Compiler
 					break;
 				case TokenCode.BOOLEAN:
 					result = new Primitive<bool>(token);
+					break;
+				case TokenCode.CHAR:
+					result = new Primitive<char>(token.Line, token.Value[1]);
 					break;
 
 				// --- Parentheses Expression
