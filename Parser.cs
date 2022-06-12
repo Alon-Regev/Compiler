@@ -644,6 +644,7 @@ namespace Compiler
 			{
 				elements.Add(new Primitive<char>(token.Line, c));
 			}
+			elements.Add(new Primitive<char>(token.Line, (char)0));
 
 			return new LocalArray(elements, token.Line);
 		}
