@@ -7,6 +7,8 @@ namespace Compiler
 {
 	class Scanner
 	{
+		static private readonly string KEYWORD_REGEX = "(?=[^_a-zA-Z0-9])";
+
 		// defines regexes for different tokens
 		static private readonly KeyValuePair<TokenCode, string>[] TokenRegexExpressions =
 		{
@@ -43,6 +45,8 @@ namespace Compiler
 			// other
 			new KeyValuePair<TokenCode, string>(TokenCode.EXCLAMATION_MARK, "!" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.COMMA, "," ),
+			new KeyValuePair<TokenCode, string>(TokenCode.TRIPLE_DOT, @"\.{3}" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.DOT, @"\." ),
 
 			// --- Expression symbols
 			new KeyValuePair<TokenCode, string>(TokenCode.LEFT_PARENTHESIS, @"\(" ),
@@ -54,40 +58,40 @@ namespace Compiler
 			// --- Values
 			new KeyValuePair<TokenCode, string>(TokenCode.DECIMAL, @"\d+\.\d+" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.INTEGER, @"\d+" ),
-			new KeyValuePair<TokenCode, string>(TokenCode.BOOLEAN, @"true|false" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.BOOLEAN, @"(true|false)" + KEYWORD_REGEX ),
 			new KeyValuePair<TokenCode, string>(TokenCode.CHAR, @"'(.|\\.)'" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.STRING_LITERAL, "\".*?[^\\\\]\"" ),
 
 			// --- Statements
 			new KeyValuePair<TokenCode, string>(TokenCode.SEMI_COLON, ";" ),
 			// variable declaration
-			new KeyValuePair<TokenCode, string>(TokenCode.INT_KEYWORD, "int" ),
-			new KeyValuePair<TokenCode, string>(TokenCode.FLOAT_KEYWORD, "float" ),
-			new KeyValuePair<TokenCode, string>(TokenCode.BOOL_KEYWORD, "bool" ),
-			new KeyValuePair<TokenCode, string>(TokenCode.CHAR_KEYWORD, "char" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.INT_KEYWORD, "int" + KEYWORD_REGEX ),
+			new KeyValuePair<TokenCode, string>(TokenCode.FLOAT_KEYWORD, "float" + KEYWORD_REGEX ),
+			new KeyValuePair<TokenCode, string>(TokenCode.BOOL_KEYWORD, "bool" + KEYWORD_REGEX ),
+			new KeyValuePair<TokenCode, string>(TokenCode.CHAR_KEYWORD, "char" + KEYWORD_REGEX ),
 			// function declaration
-			new KeyValuePair<TokenCode, string>(TokenCode.VOID, "void" ),
-			new KeyValuePair<TokenCode, string>(TokenCode.RETURN, "return" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.VOID, "void" + KEYWORD_REGEX ),
+			new KeyValuePair<TokenCode, string>(TokenCode.RETURN, "return" + KEYWORD_REGEX ),
 			// blocks
 			new KeyValuePair<TokenCode, string>(TokenCode.OPEN_BRACE, "{" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.CLOSE_BRACE, "}" ),
 			// if else
-			new KeyValuePair<TokenCode, string>(TokenCode.IF, "if" ),
-			new KeyValuePair<TokenCode, string>(TokenCode.ELSE, "else" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.IF, "if" + KEYWORD_REGEX ),
+			new KeyValuePair<TokenCode, string>(TokenCode.ELSE, "else" + KEYWORD_REGEX ),
 			// loops
-			new KeyValuePair<TokenCode, string>(TokenCode.WHILE, "while" ),
-			new KeyValuePair<TokenCode, string>(TokenCode.DO, "do" ),
-			new KeyValuePair<TokenCode, string>(TokenCode.FOR, "for" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.WHILE, "while" + KEYWORD_REGEX ),
+			new KeyValuePair<TokenCode, string>(TokenCode.DO, "do" + KEYWORD_REGEX ),
+			new KeyValuePair<TokenCode, string>(TokenCode.FOR, "for" + KEYWORD_REGEX ),
 			// switch case
-			new KeyValuePair<TokenCode, string>(TokenCode.SWITCH, "switch" ),
-			new KeyValuePair<TokenCode, string>(TokenCode.CASE, "case" ),
-			new KeyValuePair<TokenCode, string>(TokenCode.DEFAULT, "default" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.SWITCH, "switch" + KEYWORD_REGEX ),
+			new KeyValuePair<TokenCode, string>(TokenCode.CASE, "case" + KEYWORD_REGEX ),
+			new KeyValuePair<TokenCode, string>(TokenCode.DEFAULT, "default" + KEYWORD_REGEX ),
 			// memory allocation
-			new KeyValuePair<TokenCode, string>(TokenCode.NEW, "new" ),
-			new KeyValuePair<TokenCode, string>(TokenCode.DELETE, "delete" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.NEW, "new" + KEYWORD_REGEX ),
+			new KeyValuePair<TokenCode, string>(TokenCode.DELETE, "delete" + KEYWORD_REGEX ),
 			// other
-			new KeyValuePair<TokenCode, string>(TokenCode.PRINT_KEYWORD, "print" ),
-			new KeyValuePair<TokenCode, string>(TokenCode.EXTERN, "extern" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.PRINT_KEYWORD, "print" + KEYWORD_REGEX ),
+			new KeyValuePair<TokenCode, string>(TokenCode.EXTERN, "extern" + KEYWORD_REGEX ),
 
 			// --- Other
 			new KeyValuePair<TokenCode, string>(TokenCode.IDENTIFIER, @"[_a-zA-Z][_a-zA-Z0-9]*" ),

@@ -47,6 +47,8 @@ namespace Compiler
 		// other
 		EXCLAMATION_MARK,
 		COMMA,
+		DOT,
+		TRIPLE_DOT,
 
 		// --- Expressions
 		LEFT_PARENTHESIS,

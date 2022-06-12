@@ -67,6 +67,47 @@ skip_false:
 	ret
 
 ;FUNCTION;
+print_char:
+; prints char from eax
+	mov ebx, format
+	mov byte [ebx + 1], 'c'
+
+	push eax
+	push format
+	call _printf
+	add esp, 8
+	ret
+	
+;FUNCTION;
+print_ptr:
+; prints pointer from eax
+	push eax
+
+	mov ebx, format
+	mov byte [ebx + 1], 'x'
+	
+	push hex_str
+	call _printf
+	add esp, 4
+
+	push format
+	call _printf
+	add esp, 8
+	ret
+	
+;FUNCTION;
+print_str:
+; prints string from eax
+	mov ebx, format
+	mov byte [ebx + 1], 's'
+
+	push eax
+	push format
+	call _printf
+	add esp, 8
+	ret
+
+;FUNCTION;
 pow:
 ; calculates eax = eax ** ebx
 	fxch st1

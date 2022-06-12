@@ -518,6 +518,14 @@ namespace Compiler
 			if (entry.SymbolType != SymbolType.FUNCTION && entry.SymbolType != SymbolType.BUILTIN_FUNCTION)
 				throw new TypeError("Calling variable \"" + call.Function().Identifier + "\" which is not a function", call.Line);
 			call.Type = entry.ValueType;
+			// check general builtin
+			if (entry.SymbolType == SymbolType.BUILTIN_FUNCTION && (entry.Declaration as FunctionDeclaration).AnyParams())
+			{
+				// analyze arguments
+				for (int i = 0; i < call.ArgumentCount(); i++)
+					AnalyzeSubtree(call.GetArgument(i));
+				return;
+			}
 			// check arguments
 			FunctionDeclaration decl = entry.Declaration as FunctionDeclaration;
 			if (decl.Parameters.Count != call.ArgumentCount())

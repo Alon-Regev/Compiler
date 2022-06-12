@@ -17,6 +17,7 @@ namespace Compiler
 		{
 			new DataSectionVar("__temp", DataSize.DWORD, "0"),
 			DataSectionVar.StringConstant("format", "%?", true),
+			DataSectionVar.StringConstant("hex_str", "0x", false),
 			DataSectionVar.StringConstant("formatin", "%?", false),
 			DataSectionVar.StringConstant("true_string", "true", false),
 			DataSectionVar.StringConstant("false_string", "false", false),
@@ -621,12 +622,24 @@ namespace Compiler
 		// Method generates assembly for a print statement
 		private string ToAssembly(PrintStatement statement)
 		{
+			ValueType type = statement.GetExpression().Type;
+			if (type.Pointer != 0)
+			{
+				if(type.TypeCode == TypeCode.CHAR && type.Pointer == 1)
+					return ToAssembly(statement.GetExpression()) +
+					HelperCall("print_str");
+
+				return ToAssembly(statement.GetExpression()) +
+					HelperCall("print_ptr");
+			}
+
 			return ToAssembly(statement.GetExpression()) +
 				statement.GetExpression().Type.TypeCode switch
 				{
 					TypeCode.INT => HelperCall("print_int"),
 					TypeCode.FLOAT => HelperCall("print_float"),
 					TypeCode.BOOL => HelperCall("print_bool"),
+					TypeCode.CHAR => HelperCall("print_char"),
 					_ => ""
 				};
 		}
