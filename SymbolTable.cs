@@ -32,7 +32,14 @@ namespace Compiler
 		// return: size on the stack
 		private int RoundByFours(int original)
 		{
-			return original + (4 - original) % 4;
+			return original + Mod(4 - original, 4);
+		}
+		// mov implementation which works with negative numbers
+		// input: a, b
+		// return: a mod b
+		private int Mod(int a, int b)
+		{
+			return a - b * (int)Math.Floor((double)a / b);
 		}
 
 		// Method adds an entry to the symbol table

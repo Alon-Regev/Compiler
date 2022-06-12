@@ -669,6 +669,7 @@ namespace Compiler
 						'b' => '\b',
 						_ => "\\" + input[i]
 					};
+					escaped = false;
 				}
 				else if(input[i] == '\\')
 				{
