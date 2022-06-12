@@ -64,7 +64,7 @@ namespace Compiler
 		// ToString override shows block and it's content
 		public override string ToString(int indent)
 		{
-			return "Block" + base.ToString(indent) + "\n" + SymbolTable;
+			return "Block" + base.ToString(indent) + "\n" + SymbolTable.ToString(indent - 1);
 		}
 	}
 }
