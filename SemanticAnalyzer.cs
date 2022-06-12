@@ -190,6 +190,9 @@ namespace Compiler
 					if (stmt.GetExpression().Type.Pointer == 0)
 						throw new TypeError("Type " + stmt.GetExpression().Type + " in a delete statement which is not a pointer", stmt.Line);
 					break;
+				case LocalArray expr:
+					AnalyzeLocalArray(expr);
+					break;
 				default:
 					break;
 			}
@@ -544,6 +547,41 @@ namespace Compiler
 			expr.Type.Set(expr.Array().Type);
 			expr.Type.Pointer--;
 			expr.Type.Assignable = true;
+		}
+
+		// analyzes local array node
+		private void AnalyzeLocalArray(LocalArray expr)
+		{
+			if (expr.Children.Count == 0)
+			{
+				expr.Type.Pointer = 1;
+				return;
+			}
+
+			// analyze all elements
+			foreach(Expression element in expr.Children)
+			{
+				AnalyzeSubtree(element);
+			}
+
+			// check types
+			ValueType elementType = (expr.Children[0] as Expression).Type;
+			expr.Type.Set(elementType);
+			expr.Type.Pointer++;
+
+			foreach(Expression element in expr.Children)
+			{
+				if (element.Type != elementType)
+					throw new TypeError("Local array initiated with different types: " + elementType + " and " + element.Type, expr.Line);
+			}
+
+			// add to symbol table
+			_currentBlock.SymbolTable.AddEntry(expr.GetIdentifier(), expr.Line,
+				new SymbolTableEntry(SymbolType.LOCAL_VAR, expr.Type, null),
+				0,
+				// total element size
+				elementType.Size() * expr.Children.Count
+			);
 		}
 	}
 }
