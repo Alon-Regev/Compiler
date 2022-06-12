@@ -107,7 +107,7 @@ namespace Compiler
 		{
 			// varDecl := <type> { <identifier> [ = <value>], }
 
-			if (type == null)
+			if (type is null)
 				type = ParseType();
 
 			VariableDeclaration declaration = new VariableDeclaration(type);
@@ -342,7 +342,7 @@ namespace Compiler
 					else
 					{
 						// block is parent, same outer table
-						(node as Block).SymbolTable.ParentTable = block.SymbolTable;
+						(node as Block).SymbolTable.ParentTable = stmt is Block ? (stmt as Block).SymbolTable : block.SymbolTable;
 						(node as Block).OffsetAddresses(block.SymbolTable.VariableBytes());
 					}
 				}
