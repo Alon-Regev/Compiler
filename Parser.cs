@@ -574,7 +574,8 @@ namespace Compiler
 		// method checks if a token is a type (int, bool, float...)
 		public bool IsType(Token t)
 		{
-			return t.Code == TokenCode.INT_KEYWORD || t.Code == TokenCode.BOOL_KEYWORD || t.Code == TokenCode.FLOAT_KEYWORD;
+			return t.Code == TokenCode.INT_KEYWORD || t.Code == TokenCode.BOOL_KEYWORD ||
+				t.Code == TokenCode.FLOAT_KEYWORD || t.Code == TokenCode.CHAR_KEYWORD;
 		}
 
 		private FunctionCall ParseFunctionCall(Variable function)
