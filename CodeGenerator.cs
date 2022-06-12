@@ -121,6 +121,8 @@ namespace Compiler
 					return ToAssembly(expr);
 				case DeleteStatement stmt:
 					return ToAssembly(stmt);
+				case LocalArray expr:
+					return ToAssembly(expr);
 				default:
 					return "";
 			}
@@ -522,7 +524,9 @@ namespace Compiler
 				ToAssembly(arrayIndex.Array()) +
 				"pop ebx\n" +
 				// access element
-				"movzx eax, " + OperationSize(size) + " [eax + ebx * " + size + "]\n";
+				(size == 4 ?
+				"mov eax, [eax + ebx * " + size + "]\n" :
+				"movzx eax, " + OperationSize(size) + " [eax + ebx * " + size + "]\n");
 		}
 
 		// returns name of operation size based on size in bytes (bytes, word, dword...)
@@ -556,7 +560,7 @@ namespace Compiler
 			Tuple<SymbolTableEntry, SymbolTable> entry = _currentBlock.SymbolTable.GetOuterEntry(variable);
 
 			if (entry.Item2 == _currentBlock.SymbolTable)
-				return Tuple.Create("", "ebp" + (-entry.Item1.Address).ToString(" + #; - #;"));
+				return Tuple.Create("", "ebp" + AddressOffsetFormat(-entry.Item1.Address));
 			else
 			{
 				string asm = "";
@@ -569,11 +573,19 @@ namespace Compiler
 					SymbolTableEntry pebp = _currentBlock.SymbolTable.GetEntry("pebp", variable.Line);
 					// get address from outer table
 					entry = outer.GetOuterEntry(variable);
-					asm += "mov ebx, [" + baseRegister + (-pebp.Address).ToString(" + #; - #;") + "]\n";
+					asm += "mov ebx, [" + baseRegister + AddressOffsetFormat(-pebp.Address) + "]\n";
 					baseRegister = "ebx";
 				}
-				return Tuple.Create(asm, "ebx" + (-entry.Item1.Address).ToString(" + #; - #;"));
+				return Tuple.Create(asm, "ebx" + AddressOffsetFormat(-entry.Item1.Address));
 			}
+		}
+
+		// method returns address offset in correct format
+		// input: offset value
+		// return: offset string
+		private string AddressOffsetFormat(int offset)
+		{
+			return offset.ToString(" + #; - #;");
 		}
 
 		// generate assembly for variable declaration
@@ -868,6 +880,25 @@ namespace Compiler
 				"push eax\n" +
 				"call _free\n" +
 				"add esp, 4\n";
+		}
+
+		private string ToAssembly(LocalArray expr)
+		{
+			string ASM = "";
+			// get address of local array
+			int address = _currentBlock.SymbolTable.GetEntry(expr.GetIdentifier(), expr.Line).Address;
+			// initialize elements
+			for(int i = 0; i < expr.Children.Count; i++)
+			{
+				int elementSize = (expr.Children[i] as Expression).Type.Size();
+				int elementAddress = address - i * elementSize;
+				ASM +=
+					ToAssembly(expr.Children[i]) +
+					"mov [ebp" + AddressOffsetFormat(-elementAddress) + "], " + RegisterName('a', elementSize) + "\n";
+			}
+			// mov address to eax
+			return ASM +
+				"lea eax, [ebp" + AddressOffsetFormat(-address) + "]\n";
 		}
 	}
 }
