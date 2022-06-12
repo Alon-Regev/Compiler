@@ -565,15 +565,23 @@ namespace Compiler
 			}
 
 			// check types
-			ValueType type = (expr.Children[0] as Expression).Type;
-			expr.Type.Set(type);
+			ValueType elementType = (expr.Children[0] as Expression).Type;
+			expr.Type.Set(elementType);
 			expr.Type.Pointer++;
 
 			foreach(Expression element in expr.Children)
 			{
-				if (element.Type != type)
-					throw new TypeError("Local array initiated with different types: " + type + " and " + element.Type, expr.Line);
+				if (element.Type != elementType)
+					throw new TypeError("Local array initiated with different types: " + elementType + " and " + element.Type, expr.Line);
 			}
+
+			// add to symbol table
+			_currentBlock.SymbolTable.AddEntry(expr.GetIdentifier(), expr.Line,
+				new SymbolTableEntry(SymbolType.LOCAL_VAR, expr.Type, null),
+				0,
+				// total element size
+				elementType.Size() * expr.Children.Count
+			);
 		}
 	}
 }

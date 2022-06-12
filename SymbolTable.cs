@@ -27,22 +27,30 @@ namespace Compiler
 			_table = new Dictionary<string, SymbolTableEntry>();
 		}
 
+		// Method rounds type sizes to multiples of four to put in the stack.
+		// input: original size
+		// return: size on the stack
+		private int RoundByFours(int original)
+		{
+			return original + (4 - original) % 4;
+		}
+
 		// Method adds an entry to the symbol table
-		// input: declaration object, data (entry)
+		// input: declaration object, data (entry), address and size
 		// return: none
-		public void AddEntry(string identifier, int line, SymbolTableEntry entry, int address = 0)
+		public void AddEntry(string identifier, int line, SymbolTableEntry entry, int address = 0, int size = 4)
 		{
 			// check if insertion is possible
 			if (EntryExists(identifier))
 				throw new MultipleDefinedNamesError(identifier, line);
 			if (entry.SymbolType == SymbolType.LOCAL_VAR)
 			{
-				_addressCounter += 4;
+				_addressCounter += RoundByFours(size);
 				entry.Address = _addressCounter;
 			}
 			else if(entry.SymbolType == SymbolType.PARAMETER)
 			{
-				_paramAddressCounter -= 4;
+				_paramAddressCounter -= RoundByFours(size);
 				entry.Address = _paramAddressCounter;
 			}	
 			else
