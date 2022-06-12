@@ -525,6 +525,11 @@ namespace Compiler
 					}
 					break;
 
+				// --- array literals
+				case TokenCode.LEFT_SQUARE_BRACKET:
+					result = ParseLocalArray();
+					break;
+
 				// --- Unary Prefix Operators
 				case TokenCode.BIT_NOT_OP:
 				case TokenCode.SUB_OP:          // negation
@@ -568,7 +573,7 @@ namespace Compiler
 			return t.Code == TokenCode.INT_KEYWORD || t.Code == TokenCode.BOOL_KEYWORD || t.Code == TokenCode.FLOAT_KEYWORD;
 		}
 
-		FunctionCall ParseFunctionCall(Variable function)
+		private FunctionCall ParseFunctionCall(Variable function)
 		{
 			scanner.Require(TokenCode.LEFT_PARENTHESIS);
 			List<Expression> arguments = new List<Expression>();
@@ -580,7 +585,7 @@ namespace Compiler
 			return new FunctionCall(function, arguments);
 		}
 
-		ArrayIndex ParseArrayIndex(Expression array)
+		private ArrayIndex ParseArrayIndex(Expression array)
 		{
 			scanner.Require(TokenCode.LEFT_SQUARE_BRACKET);
 			Expression index = ParseExpression();
@@ -589,7 +594,7 @@ namespace Compiler
 			return new ArrayIndex(array, index);
 		}
 
-		NewExpression ParseNew()
+		private NewExpression ParseNew()
 		{
 			ValueType type = ParseType();
 			scanner.Require(TokenCode.LEFT_SQUARE_BRACKET);
@@ -598,10 +603,26 @@ namespace Compiler
 			return new NewExpression(type, size);
 		}
 
-		DeleteStatement ParseDelete()
+		private DeleteStatement ParseDelete()
 		{
 			scanner.Next();	// skip delete keyword
 			return new DeleteStatement(ParseExpression());
+		}
+
+		private LocalArray ParseLocalArray()
+		{
+			List<Expression> elements = new List<Expression>();
+			if (scanner.NextIf(TokenCode.RIGHT_SQUARE_BRACKET))
+				return new LocalArray(elements, scanner.Last.Line);
+
+			// parse elements
+			do
+			{
+				elements.Add(ParseExpression());
+			} while (scanner.NextIf(TokenCode.COMMA));
+			scanner.Require(TokenCode.RIGHT_SQUARE_BRACKET);
+
+			return new LocalArray(elements, scanner.Last.Line);
 		}
 	}
 }
