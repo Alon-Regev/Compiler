@@ -154,10 +154,11 @@ namespace Compiler
 		// Method parses function parameters
 		// input: none
 		// return: list of (param name, param type)
-		public List<KeyValuePair<string, ValueType>> ParseParameters()
+		public List<KeyValuePair<string, ValueType>> ParseParameters(bool checkParentheses = true)
 		{
 			List<KeyValuePair<string, ValueType>> parameters = new List<KeyValuePair<string, ValueType>>();
-			scanner.Require(TokenCode.LEFT_PARENTHESIS);
+			if(checkParentheses)
+				scanner.Require(TokenCode.LEFT_PARENTHESIS);
 			if (scanner.Peek().Code != TokenCode.RIGHT_PARENTHESIS)
 			{
 				do
@@ -170,7 +171,8 @@ namespace Compiler
 					);
 				} while (scanner.NextIf(TokenCode.COMMA));
 			}
-			scanner.Require(TokenCode.RIGHT_PARENTHESIS);
+			if(checkParentheses)
+				scanner.Require(TokenCode.RIGHT_PARENTHESIS);
 			return parameters;
 		}
 
@@ -184,9 +186,16 @@ namespace Compiler
 			ValueType returnType = ParseType();
 			Token identifier = scanner.Require(TokenCode.IDENTIFIER);
 			// parse parameters
-			List<KeyValuePair<string, ValueType>> parameters = ParseParameters();
+			scanner.Require(TokenCode.LEFT_PARENTHESIS);
+			if(scanner.NextIf(TokenCode.TRIPLE_DOT))
+			{
+				// any params
+				scanner.Require(TokenCode.RIGHT_PARENTHESIS);
+				return new ExternStatement(identifier, returnType, null);
+			}
 
-
+			List<KeyValuePair<string, ValueType>> parameters = ParseParameters(false);
+			scanner.Require(TokenCode.RIGHT_PARENTHESIS);
 			return new ExternStatement(identifier, returnType, parameters);
 		}
 

@@ -45,6 +45,8 @@ namespace Compiler
 			// other
 			new KeyValuePair<TokenCode, string>(TokenCode.EXCLAMATION_MARK, "!" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.COMMA, "," ),
+			new KeyValuePair<TokenCode, string>(TokenCode.TRIPLE_DOT, @"\.{3}" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.DOT, @"\." ),
 
 			// --- Expression symbols
 			new KeyValuePair<TokenCode, string>(TokenCode.LEFT_PARENTHESIS, @"\(" ),

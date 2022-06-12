@@ -15,7 +15,7 @@ namespace Compiler
 		public FunctionDeclaration(ValueType retType, string identifier, Block block, List<KeyValuePair<string, ValueType>> parameters, bool builtin = false) : base(retType.Line)
 		{
 			// add parameters to symbol table
-			foreach (KeyValuePair<string, ValueType> param in parameters)
+			foreach (KeyValuePair<string, ValueType> param in parameters ?? new List<KeyValuePair<string, ValueType>>())
 			{
 				block?.SymbolTable?.AddEntry(param.Key, Line,
 					new SymbolTableEntry(SymbolType.PARAMETER, param.Value, null)
@@ -30,6 +30,11 @@ namespace Compiler
 			Identifier = identifier;
 			AddChild(block);
 			Parameters = parameters;
+		}
+
+		public bool AnyParams()
+		{
+			return Parameters == null;
 		}
 
 		// Method returns function's implementation block
