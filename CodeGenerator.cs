@@ -441,6 +441,8 @@ namespace Compiler
 					return "mov eax, [" + floatConst.Name + "]\n";
 				case Primitive<bool> p:
 					return "mov eax, " + (p.Value ? 1 : 0) + "\n";
+				case Primitive<char> p:
+					return "mov eax, " + (int)p.Value + "\n";
 				default:
 					return "";
 			}

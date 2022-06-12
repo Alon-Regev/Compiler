@@ -55,6 +55,8 @@ namespace Compiler
 			new KeyValuePair<TokenCode, string>(TokenCode.DECIMAL, @"\d+\.\d+" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.INTEGER, @"\d+" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.BOOLEAN, @"true|false" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.CHAR, @"'(.|\\.)'" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.STRING_LITERAL, "\".*?[^\\\\]\"" ),
 
 			// --- Statements
 			new KeyValuePair<TokenCode, string>(TokenCode.SEMI_COLON, ";" ),
@@ -62,6 +64,7 @@ namespace Compiler
 			new KeyValuePair<TokenCode, string>(TokenCode.INT_KEYWORD, "int" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.FLOAT_KEYWORD, "float" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.BOOL_KEYWORD, "bool" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.CHAR_KEYWORD, "char" ),
 			// function declaration
 			new KeyValuePair<TokenCode, string>(TokenCode.VOID, "void" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.RETURN, "return" ),
@@ -88,7 +91,7 @@ namespace Compiler
 
 			// --- Other
 			new KeyValuePair<TokenCode, string>(TokenCode.IDENTIFIER, @"[_a-zA-Z][_a-zA-Z0-9]*" ),
-			new KeyValuePair<TokenCode, string>(TokenCode.UNKNOWN, @".+" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.UNKNOWN, @".+?" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.EOF, @""),
 		};
 

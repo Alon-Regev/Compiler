@@ -41,7 +41,7 @@ namespace Compiler
 			{ TokenCode.NOT_EQUAL_OP, new HashSet<ValueType>{ new ValueType(TypeCode.INT), new ValueType(TypeCode.FLOAT) } },
 
 			// --- Assignment
-			{ TokenCode.ASSIGN_OP, new HashSet<ValueType>{ new ValueType(TypeCode.INT), new ValueType(TypeCode.FLOAT), new ValueType(TypeCode.BOOL) } },
+			{ TokenCode.ASSIGN_OP, new HashSet<ValueType>{ new ValueType(TypeCode.INT), new ValueType(TypeCode.FLOAT), new ValueType(TypeCode.BOOL), new ValueType(TypeCode.CHAR) } },
 		};
 
 		private static Dictionary<TokenCode, HashSet<ValueType>> _unaryPrefixOpAllowedTypes = new Dictionary<TokenCode, HashSet<ValueType>>
@@ -365,6 +365,9 @@ namespace Compiler
 					break;
 				case Primitive<bool> p:
 					p.Type.Set(TypeCode.BOOL);
+					break;
+				case Primitive<char> p:
+					p.Type.Set(TypeCode.CHAR);
 					break;
 				default:
 					break;

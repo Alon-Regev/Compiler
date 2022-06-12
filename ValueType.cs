@@ -10,6 +10,7 @@ namespace Compiler
 		INT,
 		FLOAT,
 		BOOL,
+		CHAR,
 		VOID,
 	}
 
@@ -43,7 +44,7 @@ namespace Compiler
 		// return: type size
 		public int Size()
 		{
-			if (Pointer == 0 && (TypeCode == TypeCode.BOOL))
+			if (Pointer == 0 && (TypeCode == TypeCode.BOOL || TypeCode == TypeCode.CHAR))
 				return 1;
 			else
 				return 4;
@@ -57,6 +58,7 @@ namespace Compiler
 				TokenCode.INT_KEYWORD => TypeCode.INT,
 				TokenCode.FLOAT_KEYWORD => TypeCode.FLOAT,
 				TokenCode.BOOL_KEYWORD => TypeCode.BOOL,
+				TokenCode.CHAR_KEYWORD => TypeCode.CHAR,
 				TokenCode.VOID => TypeCode.VOID,
 				_ => throw new UnexpectedToken("type", token, line)
 			};

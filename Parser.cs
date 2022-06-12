@@ -38,6 +38,7 @@ namespace Compiler
 				case TokenCode.INT_KEYWORD:
 				case TokenCode.FLOAT_KEYWORD:
 				case TokenCode.BOOL_KEYWORD:
+				case TokenCode.CHAR_KEYWORD:
 				case TokenCode.VOID:
 					ValueType type = ParseType();
 					Token identifier = scanner.Require(TokenCode.IDENTIFIER);
@@ -502,6 +503,12 @@ namespace Compiler
 				case TokenCode.BOOLEAN:
 					result = new Primitive<bool>(token);
 					break;
+				case TokenCode.CHAR:
+					result = new Primitive<char>(token.Line, UnescapeString(token.Value)[1]);
+					break;
+				case TokenCode.STRING_LITERAL:
+					result = ParseStringLiteral(token);
+					break;
 
 				// --- Parentheses Expression
 				case TokenCode.LEFT_PARENTHESIS:
@@ -570,7 +577,8 @@ namespace Compiler
 		// method checks if a token is a type (int, bool, float...)
 		public bool IsType(Token t)
 		{
-			return t.Code == TokenCode.INT_KEYWORD || t.Code == TokenCode.BOOL_KEYWORD || t.Code == TokenCode.FLOAT_KEYWORD;
+			return t.Code == TokenCode.INT_KEYWORD || t.Code == TokenCode.BOOL_KEYWORD ||
+				t.Code == TokenCode.FLOAT_KEYWORD || t.Code == TokenCode.CHAR_KEYWORD;
 		}
 
 		private FunctionCall ParseFunctionCall(Variable function)
@@ -623,6 +631,56 @@ namespace Compiler
 			scanner.Require(TokenCode.RIGHT_SQUARE_BRACKET);
 
 			return new LocalArray(elements, scanner.Last.Line);
+		}
+
+		private LocalArray ParseStringLiteral(Token token)
+		{
+			List<Expression> elements = new List<Expression>();
+			// remove quotation marks
+			string str = token.Value.Substring(1, token.Value.Length - 2);
+			str = UnescapeString(str);
+
+			foreach(char c in str)
+			{
+				elements.Add(new Primitive<char>(token.Line, c));
+			}
+			elements.Add(new Primitive<char>(token.Line, (char)0));
+
+			return new LocalArray(elements, token.Line);
+		}
+
+		// method unescaped string (turns "\\n" to newline char, for example)
+		// input: escaped string
+		// return: unescaped string
+		private string UnescapeString(string input)
+		{
+			string result = "";
+			bool escaped = false;
+			for(int i = 0; i < input.Length; i++)
+			{
+				if(escaped)
+				{
+					result += input[i] switch
+					{
+						'n' => '\n',
+						't' => '\t',
+						'\\' => '\\',
+						'r' => '\r',
+						'b' => '\b',
+						_ => "\\" + input[i]
+					};
+					escaped = false;
+				}
+				else if(input[i] == '\\')
+				{
+					escaped = true;
+				}
+				else
+				{
+					result += input[i];
+				}
+			}
+			return result;
 		}
 	}
 }
