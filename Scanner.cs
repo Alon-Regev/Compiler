@@ -55,7 +55,8 @@ namespace Compiler
 			new KeyValuePair<TokenCode, string>(TokenCode.DECIMAL, @"\d+\.\d+" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.INTEGER, @"\d+" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.BOOLEAN, @"true|false" ),
-			new KeyValuePair<TokenCode, string>(TokenCode.CHAR, @"'.'" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.CHAR, @"'(.|\\.)'" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.STRING_LITERAL, "\".*?[^\\\\]\"" ),
 
 			// --- Statements
 			new KeyValuePair<TokenCode, string>(TokenCode.SEMI_COLON, ";" ),

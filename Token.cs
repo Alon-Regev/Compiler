@@ -12,6 +12,7 @@ namespace Compiler
 		DECIMAL,
 		BOOLEAN,
 		CHAR,
+		STRING_LITERAL,
 
 		// --- Operators
 		// arithmetic
