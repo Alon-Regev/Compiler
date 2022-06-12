@@ -44,7 +44,7 @@ namespace Compiler
 		// return: type size
 		public int Size()
 		{
-			if (Pointer == 0 && (TypeCode == TypeCode.BOOL))
+			if (Pointer == 0 && (TypeCode == TypeCode.BOOL || TypeCode == TypeCode.CHAR))
 				return 1;
 			else
 				return 4;

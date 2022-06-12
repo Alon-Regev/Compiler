@@ -90,7 +90,7 @@ namespace Compiler
 
 			// --- Other
 			new KeyValuePair<TokenCode, string>(TokenCode.IDENTIFIER, @"[_a-zA-Z][_a-zA-Z0-9]*" ),
-			new KeyValuePair<TokenCode, string>(TokenCode.UNKNOWN, @".+" ),
+			new KeyValuePair<TokenCode, string>(TokenCode.UNKNOWN, @".+?" ),
 			new KeyValuePair<TokenCode, string>(TokenCode.EOF, @""),
 		};
 
