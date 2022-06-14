@@ -82,6 +82,7 @@ namespace Compiler
 			_tree = tree;
 			_currentBlock = tree as Block;
 			AddBuiltInFunctions();
+			_currentBlock = null;
 		}
 
 		// Method adds built in functions to base symbol table.
@@ -493,6 +494,8 @@ namespace Compiler
 			AnalyzeSubtree(decl.GetChild(0));
 			// return to prev
 			_currentFunction = prev;
+
+			decl.GetBlock().SymbolTable.ParentTable = null;
 		}
 
 		// analyzes extern statement and adds it to declared symbols

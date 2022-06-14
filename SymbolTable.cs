@@ -14,6 +14,9 @@ namespace Compiler
 
 	class SymbolTable
 	{
+		private static int GlobalTableNumber = 0;
+		private int TableNumber;
+
 		public SymbolTable ParentTable { get; set; }
 		public SymbolTable OuterTable { get; set; }
 		private Dictionary<string, SymbolTableEntry> _table;
@@ -25,6 +28,7 @@ namespace Compiler
 		public SymbolTable()
 		{
 			_table = new Dictionary<string, SymbolTableEntry>();
+			TableNumber = GlobalTableNumber++;
 		}
 
 		// Method rounds type sizes to multiples of four to put in the stack.
@@ -74,7 +78,12 @@ namespace Compiler
 		{
 			// check if entry exists
 			if (EntryExists(identifier))
+			{
+				SymbolTableEntry entry = _table[identifier].Copy();
+				if(entry.SymbolType == SymbolType.LOCAL_VAR)
+					entry.Address += GetOffset();
 				return _table[identifier];
+			}
 			// try to find entry in parent
 			if(ParentTable == null)
 				throw new UnknownNameError(identifier, line);
@@ -87,14 +96,7 @@ namespace Compiler
 		// return: symbol's entry
 		public SymbolTableEntry GetEntry(Variable variable)
 		{
-			// check if entry exists
-			if (EntryExists(variable.Identifier))
-				return _table[variable.Identifier];
-			// try to find entry in parent
-			if (ParentTable == null)
-				throw new UnknownNameError(variable);
-
-			return ParentTable.GetEntry(variable);
+			return GetEntry(variable.Identifier, variable.Line);
 		}
 
 		// Method checks if a symbol is already defined
@@ -116,6 +118,17 @@ namespace Compiler
 		public int VariableBytes()
 		{
 			return _addressCounter;
+		}
+
+		// Method returns offset in stack frame.
+		// input: none
+		// return: offset of variables in stack frame.
+		public int GetOffset()
+		{
+			if (ParentTable is null)
+				return _addressCounter;
+			else
+				return _addressCounter + ParentTable.GetOffset();
 		}
 
 		// Method offsets addresses of all local variables
@@ -169,7 +182,7 @@ namespace Compiler
 			for (; indent > 0; indent--)
 				indentStr += '\t';
 
-			string result = indentStr + "___SymbolTable___\n" +
+			string result = indentStr + "___SymbolTable" + TableNumber + "___\n" +
 				indentStr + Helper.StringFormat("Name", 20) + " | " + Helper.StringFormat("Type", 15) + " | " + Helper.StringFormat(
 				"Value", 12) + " | " + Helper.StringFormat("Address", 12) + "\n";
 			
@@ -178,6 +191,9 @@ namespace Compiler
 				result += indentStr + Helper.StringFormat(name, 20) + " | " + Helper.StringFormat(entry.SymbolType.ToString(), 15) + " | " +
 					Helper.StringFormat(entry.ValueType.ToString(), 12) + " | " + Helper.StringFormat(entry.Address.ToString(), 12) + "\n";
 			}
+
+			// add relations
+			result += indentStr + "Parent: " + ParentTable?.TableNumber + ", Outer: " + OuterTable?.TableNumber + "\n";
 
 			return result;
 		}

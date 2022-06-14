@@ -26,13 +26,6 @@ namespace Compiler
 					new SymbolTableEntry(SymbolType.LOCAL_VAR, initialization.Type, initialization)
 				);
 			}
-			// setup body symbol table
-			if (body is Block)
-			{
-				Block blockBody = body as Block;
-				blockBody.SymbolTable.ParentTable = SymbolTable;
-				blockBody.OffsetAddresses(SymbolTable.VariableBytes());
-			}
 		}
 
 		// ToString override specifies this is an expression
