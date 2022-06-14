@@ -131,22 +131,6 @@ namespace Compiler
 				return _addressCounter + ParentTable.GetOffset();
 		}
 
-		// Method offsets addresses of all local variables
-		// input: amount of bytes to offset by
-		// return: none
-		public void OffsetAddresses(int offset)
-		{
-			foreach(string key in _table.Keys)
-			{
-				// if local var
-				if (_table[key].SymbolType == SymbolType.LOCAL_VAR)
-				{
-					// offset address
-					_table[key].Address += offset;
-				}
-			}
-		}
-
 		// Method finds closest outer table
 		// input: none
 		// return: outer table
