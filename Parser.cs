@@ -268,7 +268,9 @@ namespace Compiler
 			scanner.Require(TokenCode.RIGHT_PARENTHESIS);
 			Statement body = ParseStatement();
 
-			return new ForLoop(initialization, condition, action, body);
+			ForLoop loop = new ForLoop(initialization, condition, action, body);
+
+			return loop;
 		}
 
 		// Method parses a switch case statement
@@ -325,28 +327,6 @@ namespace Compiler
 			// check close brace
 			if(checkBraces)
 				scanner.Require(TokenCode.CLOSE_BRACE);
-
-			// handle sub-blocks
-			foreach (Statement stmt in block.Children)
-			{
-				foreach (AST_Node node in stmt.Children)
-				{
-					if (!(node is Block))
-						continue;
-					else if (stmt is FunctionDeclaration)
-					{
-						// no parent, new outer table
-						(node as Block).SymbolTable.OuterTable = block.SymbolTable;
-						(node as Block).SymbolTable.OuterTable.ParentTable = block.SymbolTable.OuterTable;
-					}
-					else
-					{
-						// block is parent, same outer table
-						(node as Block).SymbolTable.ParentTable = stmt is Block ? (stmt as Block).SymbolTable : block.SymbolTable;
-						(node as Block).OffsetAddresses(block.SymbolTable.VariableBytes());
-					}
-				}
-			}
 
 			return block;
 		}

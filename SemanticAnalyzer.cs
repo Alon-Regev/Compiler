@@ -203,6 +203,8 @@ namespace Compiler
 		// return: none
 		private void AnalyzeBlock(Block block)
 		{
+			block.SymbolTable.ParentTable = _currentBlock?.SymbolTable;
+
 			// set current block
 			Block prevBlock = _currentBlock;
 			_currentBlock = block;
@@ -422,6 +424,8 @@ namespace Compiler
 		// for loop analysis
 		private void AnalyzeForLoop(ForLoop stmt)
 		{
+			stmt.SymbolTable.ParentTable = _currentBlock.SymbolTable;
+
 			Block previousBlock = _currentBlock;
 			_currentBlock = stmt;
 			// analyze condition
@@ -479,6 +483,9 @@ namespace Compiler
 		// analayzes function declaration node
 		private void AnalyzeFunctionDeclaration(FunctionDeclaration decl)
 		{
+			// set symbol table relations
+			decl.GetBlock().SymbolTable.OuterTable = _currentBlock.SymbolTable;
+
 			FunctionDeclaration prev = _currentFunction;
 			_currentFunction = decl;
 			// analyze
