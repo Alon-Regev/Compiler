@@ -82,7 +82,7 @@ namespace Compiler
 				SymbolTableEntry entry = _table[identifier].Copy();
 				if(entry.SymbolType == SymbolType.LOCAL_VAR)
 					entry.Address += GetOffset();
-				return _table[identifier];
+				return entry;
 			}
 			// try to find entry in parent
 			if(ParentTable == null)
@@ -109,7 +109,7 @@ namespace Compiler
 		public bool EntryExistsRecursive(string symbol)
 		{
 			return EntryExists(symbol) ||
-				ParentTable != null && ParentTable.EntryExists(symbol);
+				ParentTable != null && ParentTable.EntryExistsRecursive(symbol);
 		}
 
 		// Method returns the amount of bytes needed for the local variables of this block
@@ -120,15 +120,20 @@ namespace Compiler
 			return _addressCounter;
 		}
 
-		// Method returns offset in stack frame.
+		// Method returns offset in stack frame
 		// input: none
 		// return: offset of variables in stack frame.
 		public int GetOffset()
 		{
+			return GetOffsetTotal() - _addressCounter;
+		}
+		// Method returns offset including this table.
+		private int GetOffsetTotal()
+		{
 			if (ParentTable is null)
 				return _addressCounter;
 			else
-				return _addressCounter + ParentTable.GetOffset();
+				return _addressCounter + ParentTable.GetOffsetTotal();
 		}
 
 		// Method finds closest outer table

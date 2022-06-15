@@ -727,7 +727,7 @@ namespace Compiler
 				loopStartLabel + ":\n" +
 				// check condition
 				ToAssembly(stmt.GetChild(ForLoop.CONDITION_INDEX)) +
-				"cmp eax, 0\n" +
+				"cmp al, 0\n" +
 				"je " + loopEndLabel + "\n" +
 				// body
 				ToAssembly(stmt.GetChild(ForLoop.BODY_INDEX)) +
