@@ -571,14 +571,16 @@ namespace Compiler
 				SymbolTable outer = _currentBlock.SymbolTable;
 				while (entry.Item2 != outer)
 				{
-					outer = outer.GetOuterTable();
 					// get address of last parameter (pebp)
-					SymbolTableEntry pebp = _currentBlock.SymbolTable.GetEntry("pebp", variable.Line);
-					// get address from outer table
-					entry = outer.GetOuterEntry(variable);
+					SymbolTableEntry pebp = outer.GetEntry("pebp", variable.Line);
+
 					asm += "mov ebx, [" + baseRegister + AddressOffsetFormat(-pebp.Address) + "]\n";
 					baseRegister = "ebx";
+
+					// get outer table
+					outer = outer.GetOuterTable();
 				}
+				entry = outer.GetOuterEntry(variable);
 				return Tuple.Create(asm, "ebx" + AddressOffsetFormat(-entry.Item1.Address));
 			}
 		}
@@ -725,7 +727,7 @@ namespace Compiler
 				loopStartLabel + ":\n" +
 				// check condition
 				ToAssembly(stmt.GetChild(ForLoop.CONDITION_INDEX)) +
-				"cmp eax, 0\n" +
+				"cmp al, 0\n" +
 				"je " + loopEndLabel + "\n" +
 				// body
 				ToAssembly(stmt.GetChild(ForLoop.BODY_INDEX)) +

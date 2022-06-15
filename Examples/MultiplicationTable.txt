@@ -1,0 +1,26 @@
+extern void _printf(...);
+extern void _scanf(...);
+
+void main()
+{
+	int size1, size2;
+	// get valid input
+	do
+	{
+		_printf("Enter size of table (2 positive integers): ");
+		_scanf("%d %d", &size1, &size2);
+		_printf("\n");
+	} while(size1 <= 0 || size2 <= 0);
+
+	// print table
+	for(int i = 1; i <= size2; i = i + 1)
+	{
+		for(int j = 1; j <= size1; j = j + 1)
+		{
+			_printf("%d\t", i * j);
+		}
+		_printf("\n\n");
+	}
+}
+
+main();

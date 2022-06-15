@@ -50,21 +50,10 @@ namespace Compiler
 			return (Statement)GetChild(i);
 		}
 
-		// Method offsets addresses of variables in this block and in nested blocks
-		// input: number of bytes to offset
-		// return: none
-		public void OffsetAddresses(int offset)
-		{
-			SymbolTable.OffsetAddresses(offset);
-			foreach (AST_Node stmt in Children)
-				if (stmt is Block)
-					(stmt as Block).OffsetAddresses(offset);
-		}
-
 		// ToString override shows block and it's content
 		public override string ToString(int indent)
 		{
-			return "Block" + base.ToString(indent);
+			return "Block" + base.ToString(indent) + "\n" + SymbolTable.ToString(indent - 1);
 		}
 	}
 }

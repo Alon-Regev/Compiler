@@ -14,6 +14,9 @@ namespace Compiler
 
 	class SymbolTable
 	{
+		private static int GlobalTableNumber = 0;
+		private int TableNumber;
+
 		public SymbolTable ParentTable { get; set; }
 		public SymbolTable OuterTable { get; set; }
 		private Dictionary<string, SymbolTableEntry> _table;
@@ -25,6 +28,7 @@ namespace Compiler
 		public SymbolTable()
 		{
 			_table = new Dictionary<string, SymbolTableEntry>();
+			TableNumber = GlobalTableNumber++;
 		}
 
 		// Method rounds type sizes to multiples of four to put in the stack.
@@ -74,7 +78,12 @@ namespace Compiler
 		{
 			// check if entry exists
 			if (EntryExists(identifier))
-				return _table[identifier];
+			{
+				SymbolTableEntry entry = _table[identifier].Copy();
+				if(entry.SymbolType == SymbolType.LOCAL_VAR)
+					entry.Address += GetOffset();
+				return entry;
+			}
 			// try to find entry in parent
 			if(ParentTable == null)
 				throw new UnknownNameError(identifier, line);
@@ -87,14 +96,7 @@ namespace Compiler
 		// return: symbol's entry
 		public SymbolTableEntry GetEntry(Variable variable)
 		{
-			// check if entry exists
-			if (EntryExists(variable.Identifier))
-				return _table[variable.Identifier];
-			// try to find entry in parent
-			if (ParentTable == null)
-				throw new UnknownNameError(variable);
-
-			return ParentTable.GetEntry(variable);
+			return GetEntry(variable.Identifier, variable.Line);
 		}
 
 		// Method checks if a symbol is already defined
@@ -107,7 +109,7 @@ namespace Compiler
 		public bool EntryExistsRecursive(string symbol)
 		{
 			return EntryExists(symbol) ||
-				ParentTable != null && ParentTable.EntryExists(symbol);
+				ParentTable != null && ParentTable.EntryExistsRecursive(symbol);
 		}
 
 		// Method returns the amount of bytes needed for the local variables of this block
@@ -118,20 +120,20 @@ namespace Compiler
 			return _addressCounter;
 		}
 
-		// Method offsets addresses of all local variables
-		// input: amount of bytes to offset by
-		// return: none
-		public void OffsetAddresses(int offset)
+		// Method returns offset in stack frame
+		// input: none
+		// return: offset of variables in stack frame.
+		public int GetOffset()
 		{
-			foreach(string key in _table.Keys)
-			{
-				// if local var
-				if (_table[key].SymbolType == SymbolType.LOCAL_VAR)
-				{
-					// offset address
-					_table[key].Address += offset;
-				}
-			}
+			return GetOffsetTotal() - _addressCounter;
+		}
+		// Method returns offset including this table.
+		private int GetOffsetTotal()
+		{
+			if (ParentTable is null)
+				return _addressCounter;
+			else
+				return _addressCounter + ParentTable.GetOffsetTotal();
 		}
 
 		// Method finds closest outer table
@@ -160,6 +162,29 @@ namespace Compiler
 				else
 					return Tuple.Create(GetEntry(var), (SymbolTable)null);
 			}
+		}
+
+		// To String overload to print content of symbol table
+		public string ToString(int indent)
+		{
+			string indentStr = "";
+			for (; indent > 0; indent--)
+				indentStr += '\t';
+
+			string result = indentStr + "___SymbolTable" + TableNumber + "___\n" +
+				indentStr + Helper.StringFormat("Name", 20) + " | " + Helper.StringFormat("Type", 15) + " | " + Helper.StringFormat(
+				"Value", 12) + " | " + Helper.StringFormat("Address", 12) + "\n";
+			
+			foreach((string name, SymbolTableEntry entry) in _table)
+			{
+				result += indentStr + Helper.StringFormat(name, 20) + " | " + Helper.StringFormat(entry.SymbolType.ToString(), 15) + " | " +
+					Helper.StringFormat(entry.ValueType.ToString(), 12) + " | " + Helper.StringFormat(entry.Address.ToString(), 12) + "\n";
+			}
+
+			// add relations
+			result += indentStr + "Parent: " + ParentTable?.TableNumber + ", Outer: " + OuterTable?.TableNumber + "\n";
+
+			return result;
 		}
 	}
 }

@@ -82,6 +82,7 @@ namespace Compiler
 			_tree = tree;
 			_currentBlock = tree as Block;
 			AddBuiltInFunctions();
+			_currentBlock = null;
 		}
 
 		// Method adds built in functions to base symbol table.
@@ -203,6 +204,8 @@ namespace Compiler
 		// return: none
 		private void AnalyzeBlock(Block block)
 		{
+			block.SymbolTable.ParentTable = _currentBlock?.SymbolTable;
+
 			// set current block
 			Block prevBlock = _currentBlock;
 			_currentBlock = block;
@@ -422,6 +425,8 @@ namespace Compiler
 		// for loop analysis
 		private void AnalyzeForLoop(ForLoop stmt)
 		{
+			stmt.SymbolTable.ParentTable = _currentBlock.SymbolTable;
+
 			Block previousBlock = _currentBlock;
 			_currentBlock = stmt;
 			// analyze condition
@@ -479,6 +484,9 @@ namespace Compiler
 		// analayzes function declaration node
 		private void AnalyzeFunctionDeclaration(FunctionDeclaration decl)
 		{
+			// set symbol table relations
+			decl.GetBlock().SymbolTable.OuterTable = _currentBlock.SymbolTable;
+
 			FunctionDeclaration prev = _currentFunction;
 			_currentFunction = decl;
 			// analyze
@@ -486,6 +494,8 @@ namespace Compiler
 			AnalyzeSubtree(decl.GetChild(0));
 			// return to prev
 			_currentFunction = prev;
+
+			decl.GetBlock().SymbolTable.ParentTable = null;
 		}
 
 		// analyzes extern statement and adds it to declared symbols

@@ -18,5 +18,15 @@ namespace Compiler
 			ValueType = valueType;
 			Declaration = declaration;
 		}
+
+		// method returns a copy of this
+		// input: none
+		// return: SymbolTableEntry copy
+		public SymbolTableEntry Copy()
+		{
+			SymbolTableEntry copy = new SymbolTableEntry(SymbolType, ValueType, Declaration);
+			copy.Address = Address;
+			return copy;
+		}
 	}
 }
