@@ -8,6 +8,8 @@ namespace Compiler
 	{
 		private AST_Node _tree;
 		private Block _currentBlock;
+		private string _functionDefinitions = "";
+		private List<string> _externFunctions = new List<string> { "_printf", "_malloc", "_free" };
 
 		private int _labelCounter = 0;
 
@@ -15,6 +17,8 @@ namespace Compiler
 		{
 			new DataSectionVar("__temp", DataSize.DWORD, "0"),
 			DataSectionVar.StringConstant("format", "%?", true),
+			DataSectionVar.StringConstant("hex_str", "0x", false),
+			DataSectionVar.StringConstant("formatin", "%?", false),
 			DataSectionVar.StringConstant("true_string", "true", false),
 			DataSectionVar.StringConstant("false_string", "false", false),
 		};
@@ -38,7 +42,7 @@ namespace Compiler
 			string data = DataSectionAssembly();
 			return
 				"global _main\n" +
-				"extern _printf\n" +
+				ExternFunctions() + 
 				"\n" +
 				MacrosAssembly() +
 				"\n" +
@@ -58,6 +62,7 @@ namespace Compiler
 					"mov eax, 0\n" +
 					"ret"
 				) + "\n\n" +
+				_functionDefinitions +
 				HelperFunctionsAssembly();
 		}
 
@@ -66,7 +71,7 @@ namespace Compiler
 		// return: assembly as string
 		private string ToAssembly(AST_Node tree)
 		{
-			switch(tree)
+			switch (tree)
 			{
 				// --- Expressions
 				case BinaryOperator op when op.Operator == TokenCode.ASSIGN_OP:
@@ -83,6 +88,10 @@ namespace Compiler
 					return ToAssembly(v);
 				case Cast c:
 					return ToAssembly(c);
+				case FunctionCall call:
+					return ToAssembly(call);
+				case ArrayIndex arrayIndex:
+					return ToAssembly(arrayIndex);
 				// --- Statements
 				case ForLoop stmt:
 					return ToAssembly(stmt);
@@ -92,14 +101,29 @@ namespace Compiler
 					return ToAssembly(stmt.GetExpression());
 				case PrintStatement stmt:
 					return ToAssembly(stmt);
+				case ReturnStatement stmt:
+					return ToAssembly(stmt);
 				case VariableDeclaration decl:
 					return ToAssembly(decl);
+				case FunctionDeclaration decl:
+					string toAdd = ToAssembly(decl);
+					_functionDefinitions += toAdd;
+					return "";
+				case ExternStatement stmt:
+					_externFunctions.Add(stmt.Identifier);
+					return "";
 				case IfStatement stmt:
 					return ToAssembly(stmt);
 				case WhileLoop stmt:
 					return ToAssembly(stmt);
 				case SwitchCase stmt:
 					return ToAssembly(stmt);
+				case NewExpression expr:
+					return ToAssembly(expr);
+				case DeleteStatement stmt:
+					return ToAssembly(stmt);
+				case LocalArray expr:
+					return ToAssembly(expr);
 				default:
 					return "";
 			}
@@ -117,7 +141,7 @@ namespace Compiler
 			string result = "";
 			// allocate memory for local variables
 			int stackOffset = block.SymbolTable.VariableBytes();
-			if(stackOffset != 0)
+			if (stackOffset != 0)
 				result += "sub esp, " + stackOffset + "\n";
 			// add assembly code for all statements
 			foreach (Statement stmt in block.Children)
@@ -142,7 +166,7 @@ namespace Compiler
 		private string ToAssembly(BinaryOperator op)
 		{
 			string operandsASM = "";
-			if (op.Operand(0).Type != TypeCode.BOOL)	// bool logical operators use operands differently (short-circuit)
+			if (op.Operand(0).Type != TypeCode.BOOL)    // bool logical operators use operands differently (short-circuit)
 			{
 				// get operand2 on stack
 				operandsASM += ToAssembly(op.Operand(1));
@@ -153,10 +177,16 @@ namespace Compiler
 				operandsASM += "pop ebx\n";
 			}
 
+			// check ptr operations
+			if (op.Operand(0).Type.Pointer != 0)
+				return operandsASM + PointerOperatorAssembly(op.Operand(0), "eax", op.Operand(1), "ebx", op);
+			else if (op.Operand(1).Type.Pointer != 0)
+				return operandsASM + PointerOperatorAssembly(op.Operand(1), "ebx", op.Operand(0), "eax", op);
+
 			// calculate based on input type
 			switch (op.Operand(0).Type)
 			{
-				case TypeCode.INT:
+				case ValueType t when t == new ValueType(TypeCode.INT):
 					return operandsASM +
 						op.Operator switch
 						{
@@ -168,12 +198,12 @@ namespace Compiler
 							TokenCode.MOD_OP => "xor edx, edx\ndiv ebx\n" +
 												"mov eax, edx\n",
 							// --- Bitwise
-							TokenCode.BIT_OR_OP =>  "or eax, ebx\n",
+							TokenCode.BIT_OR_OP => "or eax, ebx\n",
 							TokenCode.BIT_XOR_OP => "xor eax, ebx\n",
 							TokenCode.BIT_AND_OP => "and eax, ebx\n",
 							TokenCode.LEFT_SHIFT => "mov cl, bl\n" +
 													"shl eax, cl\n",
-							TokenCode.RIGHT_SHIFT =>"mov cl, bl\n" +
+							TokenCode.RIGHT_SHIFT => "mov cl, bl\n" +
 													"shr eax, cl\n",
 							// --- Relational
 							TokenCode.LESS_OP => "cmp eax, ebx\nmov eax, 0\nsetl al\n",
@@ -185,7 +215,7 @@ namespace Compiler
 							_ => throw new ImplementationError(DEFAULT_OPERATOR_BINARY)
 						};
 
-				case TypeCode.FLOAT:
+				case ValueType t when t == new ValueType(TypeCode.FLOAT):
 					return operandsASM +
 						// load eax and ebx to fpu
 						"mov [__temp], eax\n" +
@@ -202,12 +232,12 @@ namespace Compiler
 							TokenCode.DIV_OP => "fdivp\n",
 							TokenCode.POW_OP => HelperCall("pow"),
 							// --- Relational
-							TokenCode.LESS_OP => Macro("float_comparison", "0000000000000000b"),	// not condition flags
+							TokenCode.LESS_OP => Macro("float_comparison", "0000000000000000b"),    // not condition flags
 							TokenCode.LESS_EQUAL_OP => Macro("float_comparison_inverse", "0000000100000000b"),  // not greater,
-							TokenCode.GREATER_OP => Macro("float_comparison", "0000000100000000b"),	// carry flag
-							TokenCode.GREATER_EQUAL_OP => Macro("float_comparison_inverse", "0000000000000000b"),	// not less
-							TokenCode.EQUAL_OP => Macro("float_comparison", "0100000000000000b"),	// zero flag
-							TokenCode.NOT_EQUAL_OP => Macro("float_comparison_inverse", "0100000000000000b"),	// not equal
+							TokenCode.GREATER_OP => Macro("float_comparison", "0000000100000000b"), // carry flag
+							TokenCode.GREATER_EQUAL_OP => Macro("float_comparison_inverse", "0000000000000000b"),   // not less
+							TokenCode.EQUAL_OP => Macro("float_comparison", "0100000000000000b"),   // zero flag
+							TokenCode.NOT_EQUAL_OP => Macro("float_comparison_inverse", "0100000000000000b"),   // not equal
 							_ => throw new ImplementationError(DEFAULT_OPERATOR_BINARY)
 						} +
 						// mov result from fpu to eax if type is float
@@ -215,18 +245,18 @@ namespace Compiler
 						"fstp dword [__temp]\n" +
 						"mov eax, [__temp]\n" : "");
 
-				case TypeCode.BOOL:
+				case ValueType t when t == new ValueType(TypeCode.BOOL):
 					string label = GetLabel();
 					return operandsASM +
 						op.Operator switch
 						{
-							TokenCode.LOGIC_AND_OP =>	ToAssembly(op.Operand(0)) + 
+							TokenCode.LOGIC_AND_OP => ToAssembly(op.Operand(0)) +
 														"cmp eax, 0\n" +
 														"je " + label + "\n" +
 														ToAssembly(op.Operand(1)) +
 														label + ":\n",
 
-							TokenCode.LOGIC_OR_OP =>	ToAssembly(op.Operand(0)) +
+							TokenCode.LOGIC_OR_OP => ToAssembly(op.Operand(0)) +
 														"cmp eax, 1\n" +
 														"je " + label + "\n" +
 														ToAssembly(op.Operand(1)) +
@@ -239,16 +269,81 @@ namespace Compiler
 					throw new ImplementationError(DEFAULT_TYPE_BINARY);
 			}
 		}
+		public string PointerOperatorAssembly(Expression ptr, string ptrReg, Expression other, string otherReg, BinaryOperator op)
+		{
+			switch (op.Operator)
+			{
+				case TokenCode.ADD_OP:
+					// add integer
+					return "lea eax, [" + ptrReg + " + " + other.Type.Size() + " * " + otherReg + "]\n";
+				case TokenCode.SUB_OP:
+					if(other.Type.Pointer != 0)
+					{
+						// pointer subtraction
+						return "sub " + ptrReg + ", " + otherReg + "\n" +
+							(ptrReg == "eax" ? "" : "mov " + ptrReg + ", eax\n") +
+							"xor edx, edx\n" +
+							"mov ebx, " + other.Type.Size() + "\n" +
+							"div ebx\n";
+					}
+					else
+					{
+						// sub integer
+						return "neg " + otherReg + "\n" +  
+							"lea eax, [" + ptrReg + " + " + other.Type.Size() + " * " + otherReg + "]\n";
+					}
+				default:
+					return "";
+			}
+		}
 
 		// generates assembly for assignment
 		// rules: value to assign at eax, moves into memory
 		private string AssignmentAssembly(BinaryOperator op)
 		{
-			Variable variable = op.Operand(0) as Variable;
-			SymbolTableEntry entry = _currentBlock.SymbolTable.GetEntry(variable);
+			switch (op.Operand(0))
+			{
+				case Variable v:
+					Tuple<string, string> addressASM = VariableAddress(v);
 
-			return ToAssembly(op.Operand(1)) +
-				"mov [ebp - " + entry.Address + "], eax\n";
+					return ToAssembly(op.Operand(1)) +
+						addressASM.Item1 +
+						"mov [" + addressASM.Item2 + "], eax\n";
+
+				case UnaryOperator valueAt when valueAt.Operator == TokenCode.MUL_OP:
+					return ToAssembly(valueAt.Operand()) +  // address
+						"push eax\n" +
+						ToAssembly(op.Operand(1)) + // new value at eax
+						"pop ebx\n" +   // address at ebx
+						"mov [ebx], eax\n";
+
+				case ArrayIndex arrayIndex:
+					return ToAssembly(arrayIndex.Index()) +
+						"push eax\n" + // index in stack
+						ToAssembly(arrayIndex.Array()) +
+						"push eax\n" + // base in stack
+						ToAssembly(op.Operand(1)) + // new value in eax
+						"pop ebx\n" +   // base in ebx
+						"pop ecx\n" +  // index in ecx
+						"mov [ebx + " + arrayIndex.Type.Size() + " * ecx], " + RegisterName('a', arrayIndex.Type.Size()) + "\n";
+
+				default:
+					throw new ImplementationError("Invalid assignment passed semantic analysis");
+			}
+		}
+
+		// returns register name based on size
+		// input: base register letter (a, b, c, d), size in bytes
+		// return: register name
+		private string RegisterName(char letter, int size)
+		{
+			return size switch
+			{
+				1 => letter + "l",
+				2 => letter + "x",
+				4 => "e" + letter + "x",
+				_ => ""
+			};
 		}
 
 		// unary operator assembly rules:
@@ -259,19 +354,28 @@ namespace Compiler
 		{
 			string operandASM = ToAssembly(op.Operand());
 			// calculate result of op
-			switch(op.Type)
+			switch (op.Type)
 			{
-				case TypeCode.INT:
+				case ValueType t when op.Operator == TokenCode.BIT_AND_OP:
+					Tuple<string, string> addressASM = VariableAddress(op.Operand() as Variable);
+					return addressASM.Item1 +
+						"lea eax, [" + addressASM.Item2 + "]\n";
+
+				case ValueType t when op.Operator == TokenCode.MUL_OP:
+					return operandASM + 
+						"mov eax, [eax]\n";
+
+				case ValueType t when t == new ValueType(TypeCode.INT):
 					return operandASM +
 						(op.Operator, op.Prefix) switch
 						{
 							(TokenCode.BIT_NOT_OP, true) => "not eax\n",
-							(TokenCode.SUB_OP, true) => "neg eax\n",	// negation
+							(TokenCode.SUB_OP, true) => "neg eax\n",    // negation
 							(TokenCode.EXCLAMATION_MARK, false) => HelperCall("factorial"),
 							_ => throw new ImplementationError(DEFAULT_OPERATOR_UNARY)
 						};
 
-				case TypeCode.FLOAT:
+				case ValueType t when t == new ValueType(TypeCode.FLOAT):
 					return operandASM +
 						// load operand to fpu
 						"mov [__temp], eax\n" +
@@ -285,11 +389,11 @@ namespace Compiler
 						"fstp dword [__temp]\n" +
 						"mov eax, [__temp]\n";
 
-				case TypeCode.BOOL:
+				case ValueType t when t == new ValueType(TypeCode.BOOL):
 					return operandASM +
 						(op.Operator, op.Prefix) switch
 						{
-							(TokenCode.EXCLAMATION_MARK, true) =>	"cmp eax, 0\n" +
+							(TokenCode.EXCLAMATION_MARK, true) => "cmp eax, 0\n" +
 																	"mov eax, 0\n" +
 																	"sete al\n",    // logical not
 							_ => throw new ImplementationError(DEFAULT_OPERATOR_UNARY)
@@ -328,7 +432,7 @@ namespace Compiler
 		// place at eax
 		private string ToAssembly(IPrimitive primitive)
 		{
-			switch(primitive)
+			switch (primitive)
 			{
 				case Primitive<int> p:
 					return "mov eax, " + p.Value + "\n";
@@ -338,6 +442,8 @@ namespace Compiler
 					return "mov eax, [" + floatConst.Name + "]\n";
 				case Primitive<bool> p:
 					return "mov eax, " + (p.Value ? 1 : 0) + "\n";
+				case Primitive<char> p:
+					return "mov eax, " + (int)p.Value + "\n";
 				default:
 					return "";
 			}
@@ -348,36 +454,143 @@ namespace Compiler
 		// result at eax
 		private string ToAssembly(Cast cast)
 		{
-			switch(cast.FromType, cast.Type)
+			string result = ToAssembly(cast.Child());
+			// only float cast changes data
+			ValueType floatType = new ValueType(TypeCode.FLOAT);
+			if (cast.FromType == floatType && cast.Type != floatType)
 			{
-				case (TypeCode.INT, TypeCode.FLOAT):
-					return	// eax -> __temp -(cast)> fpu -> __temp -> eax
-						ToAssembly(cast.Child()) + 
-						"mov [__temp], eax\n" +
-						"fild dword [__temp]\n" +
-						"fstp dword [__temp]\n" +
-						"mov eax, [__temp]\n";
-				case (TypeCode.FLOAT, TypeCode.INT):
-					return  // eax -> __temp -> fpu -(cast)> __temp -> eax
-						ToAssembly(cast.Child()) +
-						"mov [__temp], eax\n" +
-						"fld dword [__temp]\n" +
-						"fistp dword [__temp]\n" +
-						"mov eax, [__temp]\n";
-				case (TypeCode.INT, TypeCode.BOOL):
-				case (TypeCode.BOOL, TypeCode.INT):
-					return ToAssembly(cast.Child());	// no need to change data
-				default:
-					throw new TypeError(cast);
+				// load eax to fpu
+				result += "mov [__temp], eax\n" +
+					"fld dword [__temp]\n";
+				// store in eax as integer
+				result += "fistp dword [__temp]\n" +
+					"mov eax, [__temp]\n";
 			}
+			if(cast.Type == floatType && cast.FromType != floatType)
+			{
+				// load eax to fpu as integer
+				// load eax to fpu
+				result += "mov [__temp], eax\n" +
+					"fild dword [__temp]\n";
+				// store in eax
+				result += "fstp dword [__temp]\n" +
+					"mov eax, [__temp]\n";
+			}
+			return result;
+		}
+
+		// function call assembly
+		private string ToAssembly(FunctionCall call)
+		{
+			string result = "";
+			// push pebp
+			// find function call entry
+			Tuple<string, string> functionScopeInfo = VariableAddress(call.Function());
+			SymbolTableEntry entry = _currentBlock.SymbolTable.GetOuterEntry(call.Function()).Item1;
+			if (entry.SymbolType != SymbolType.BUILTIN_FUNCTION)
+			{
+				if (functionScopeInfo.Item1 != "")
+				{
+					// push pebp
+					result += functionScopeInfo.Item1;
+					result += "push ebx\n";
+				}
+				else
+					result += "push ebp\n";
+			}
+			// push arguments
+			for(int i = call.ArgumentCount() - 1; i >= 0 ; i--)
+			{
+				result += ToAssembly(call.GetArgument(i)) +
+					"push eax\n";
+			}
+			if (entry.SymbolType == SymbolType.BUILTIN_FUNCTION)
+				result += HelperCall(call.Function().Identifier);
+			else
+				result += "call " + call.Function().Identifier + "\n";
+			// pop arguments
+			int argCount = call.ArgumentCount();
+			if (argCount != 0)
+				result += "add esp, " + argCount * 4 + "\n";
+			return result;
+		}
+
+		// array index assembly
+		private string ToAssembly(ArrayIndex arrayIndex)
+		{
+			int size = arrayIndex.Type.Size();
+			return
+				// index expression in stack
+				ToAssembly(arrayIndex.Index()) +
+				"push eax\n" +
+				// array in eax, index in ebx
+				ToAssembly(arrayIndex.Array()) +
+				"pop ebx\n" +
+				// access element
+				(size == 4 ?
+				"mov eax, [eax + ebx * " + size + "]\n" :
+				"movzx eax, " + OperationSize(size) + " [eax + ebx * " + size + "]\n");
+		}
+
+		// returns name of operation size based on size in bytes (bytes, word, dword...)
+		// input: size in bytes
+		// return: size name
+		private string OperationSize(int size)
+		{
+			return size switch
+			{
+				1 => "byte",
+				2 => "word",
+				4 => "dword",
+				_ => ""
+			};
 		}
 
 		// generate assembly for variable reference
 		// load local var from memory to eax
 		private string ToAssembly(Variable variable)
 		{
-			int address = _currentBlock.SymbolTable.GetEntry(variable).Address;
-			return "mov eax, [ebp - " + address + "]\n";
+			Tuple<string, string> addressASM = VariableAddress(variable);
+			return addressASM.Item1 +
+				"mov eax, [" + addressASM.Item2 + "]\n";
+		}
+
+		// method gets assembly address of variable
+		// input: variable
+		// return: assembly for address, tuple (code before, address)
+		private Tuple<string, string> VariableAddress(Variable variable)
+		{
+			Tuple<SymbolTableEntry, SymbolTable> entry = _currentBlock.SymbolTable.GetOuterEntry(variable);
+
+			if (entry.Item2 == _currentBlock.SymbolTable)
+				return Tuple.Create("", "ebp" + AddressOffsetFormat(-entry.Item1.Address));
+			else
+			{
+				string asm = "";
+				string baseRegister = "ebp";
+				SymbolTable outer = _currentBlock.SymbolTable;
+				while (entry.Item2 != outer)
+				{
+					// get address of last parameter (pebp)
+					SymbolTableEntry pebp = outer.GetEntry("pebp", variable.Line);
+
+					asm += "mov ebx, [" + baseRegister + AddressOffsetFormat(-pebp.Address) + "]\n";
+					baseRegister = "ebx";
+
+					// get outer table
+					outer = outer.GetOuterTable();
+				}
+				entry = outer.GetOuterEntry(variable);
+				return Tuple.Create(asm, "ebx" + AddressOffsetFormat(-entry.Item1.Address));
+			}
+		}
+
+		// method returns address offset in correct format
+		// input: offset value
+		// return: offset string
+		private string AddressOffsetFormat(int offset)
+		{
+			return offset.ToString(" + #; - #;");
 		}
 
 		// generate assembly for variable declaration
@@ -386,24 +599,63 @@ namespace Compiler
 		{
 			string result = "";
 			// add assignments ASM
-			foreach(AST_Node child in variableDeclaration.Children)
+			foreach (AST_Node child in variableDeclaration.Children)
 			{
 				result += ToAssembly(child);
 			}
 			return result;
 		}
 
+		// generate assembly for function definition
+		private string ToAssembly(FunctionDeclaration function)
+		{
+			return function.Identifier + ":\n" +
+				Indent(
+					"push ebp\n" +
+					"mov ebp, esp\n\n" +
+					ToAssembly(function.GetChild(0)) +
+					"\nmov esp, ebp\n" +
+					"pop ebp\n" +
+					"ret"
+				) +
+				"\n\n";
+		}
+
 		// Method generates assembly for a print statement
 		private string ToAssembly(PrintStatement statement)
 		{
+			ValueType type = statement.GetExpression().Type;
+			if (type.Pointer != 0)
+			{
+				if(type.TypeCode == TypeCode.CHAR && type.Pointer == 1)
+					return ToAssembly(statement.GetExpression()) +
+					HelperCall("print_str");
+
+				return ToAssembly(statement.GetExpression()) +
+					HelperCall("print_ptr");
+			}
+
 			return ToAssembly(statement.GetExpression()) +
-				statement.GetExpression().Type switch
+				statement.GetExpression().Type.TypeCode switch
 				{
 					TypeCode.INT => HelperCall("print_int"),
 					TypeCode.FLOAT => HelperCall("print_float"),
 					TypeCode.BOOL => HelperCall("print_bool"),
+					TypeCode.CHAR => HelperCall("print_char"),
 					_ => ""
 				};
+		}
+
+		// Method generates assembly for a return statement
+		// return value in eax
+		private string ToAssembly(ReturnStatement stmt)
+		{
+			return
+				// calculate return value in eax
+				ToAssembly(stmt.GetExpression()) +
+				"mov esp, ebp\n" +
+				"pop ebp\n" +
+				"ret\n";
 		}
 
 		// Method generates assembly for an if statement
@@ -475,7 +727,7 @@ namespace Compiler
 				loopStartLabel + ":\n" +
 				// check condition
 				ToAssembly(stmt.GetChild(ForLoop.CONDITION_INDEX)) +
-				"cmp eax, 0\n" +
+				"cmp al, 0\n" +
 				"je " + loopEndLabel + "\n" +
 				// body
 				ToAssembly(stmt.GetChild(ForLoop.BODY_INDEX)) +
@@ -614,6 +866,56 @@ namespace Compiler
 		private string GetLabel()
 		{
 			return "__" + _labelCounter++;
+		}
+
+		// Method reuturns asm for defining extern functions
+		private string ExternFunctions()
+		{
+			string result = "";
+			foreach(string func in _externFunctions)
+			{
+				result += "extern " + func + "\n";
+			}
+			return result;
+		}
+
+		private string ToAssembly(NewExpression expr)
+		{
+			ValueType type = expr.Type;
+			type.Pointer--;
+			return ToAssembly(expr.Size()) +
+				"mov ebx, " + new ValueType(expr.Type.TypeCode, expr.Type.Pointer - 1, expr.Line).Size() + "\n" +
+				"mul ebx\n" +
+				"push eax\n" +
+				"call _malloc\n" +
+				"add esp, 4\n";
+		}
+
+		private string ToAssembly(DeleteStatement stmt)
+		{
+			return ToAssembly(stmt.GetExpression()) +
+				"push eax\n" +
+				"call _free\n" +
+				"add esp, 4\n";
+		}
+
+		private string ToAssembly(LocalArray expr)
+		{
+			string ASM = "";
+			// get address of local array
+			int address = _currentBlock.SymbolTable.GetEntry(expr.GetIdentifier(), expr.Line).Address;
+			// initialize elements
+			for(int i = 0; i < expr.Children.Count; i++)
+			{
+				int elementSize = (expr.Children[i] as Expression).Type.Size();
+				int elementAddress = address - i * elementSize;
+				ASM +=
+					ToAssembly(expr.Children[i]) +
+					"mov [ebp" + AddressOffsetFormat(-elementAddress) + "], " + RegisterName('a', elementSize) + "\n";
+			}
+			// mov address to eax
+			return ASM +
+				"lea eax, [ebp" + AddressOffsetFormat(-address) + "]\n";
 		}
 	}
 }

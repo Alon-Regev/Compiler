@@ -23,7 +23,7 @@ namespace Compiler
 		public AST_Node Parse()
 		{
 			// return a block of statements
-			return ParseBlock();
+			return ParseBlock(false);
 		}
 
 		// Method parses a statement
@@ -38,13 +38,28 @@ namespace Compiler
 				case TokenCode.INT_KEYWORD:
 				case TokenCode.FLOAT_KEYWORD:
 				case TokenCode.BOOL_KEYWORD:
-					statement = ParseVariableDeclaration();
+				case TokenCode.CHAR_KEYWORD:
+				case TokenCode.VOID:
+					ValueType type = ParseType();
+					Token identifier = scanner.Require(TokenCode.IDENTIFIER);
+					// check if variable or function declaration
+					if (scanner.Peek().Code == TokenCode.LEFT_PARENTHESIS)
+						return ParseFunctionDeclaration(type, identifier);
+					else
+						statement = ParseVariableDeclaration(type, identifier);
 					break;
 				case TokenCode.OPEN_BRACE:
 					return ParseBlock();
 				case TokenCode.PRINT_KEYWORD:
 					scanner.Next();
 					statement = new PrintStatement(ParseExpression());
+					break;
+				case TokenCode.EXTERN:
+					statement = ParseExtern();
+					break;
+				case TokenCode.RETURN:
+					scanner.Next();
+					statement = new ReturnStatement(ParseExpression());
 					break;
 				case TokenCode.IF:  // return (don't check semicolon)
 					return ParseIfStatement();
@@ -55,6 +70,9 @@ namespace Compiler
 					return ParseForLoop();
 				case TokenCode.SWITCH:
 					return ParseSwitchCase();
+				case TokenCode.DELETE:
+					statement = ParseDelete();
+					break;
 				default:	// expression
 					statement = new ExpressionStatement(ParseExpression());
 					break;
@@ -66,29 +84,49 @@ namespace Compiler
 			return statement;
 		}
 
+		// Method parses a value type
+		// input: none
+		// return: Value type
+		public ValueType ParseType()
+		{
+			Token baseType = scanner.Next();
+			// get pointer count
+			int pointer = 0;
+			while (scanner.NextIf(TokenCode.POW_OP))
+				pointer += 2;
+			while (scanner.NextIf(TokenCode.MUL_OP))
+				pointer++;
+
+			return new ValueType(baseType, pointer);
+		}
+
 		// Method parses a local variable declaration
 		// input: none
 		// return: VariableDeclaration Node
-		public VariableDeclaration ParseVariableDeclaration()
+		public VariableDeclaration ParseVariableDeclaration(ValueType type=null, Token identifier=null)
 		{
 			// varDecl := <type> { <identifier> [ = <value>], }
 
-			Token type = scanner.Next();
+			if (type is null)
+				type = ParseType();
+
 			VariableDeclaration declaration = new VariableDeclaration(type);
 
+			bool first = identifier != null;
 			// add identifiers
 			do
 			{
-				Token identifier = scanner.Next();
-				if (identifier.Code != TokenCode.IDENTIFIER)
-					throw new UnexpectedToken("identifier", identifier);
+				// get identifier (first was already taken)
+				if (!first)
+					identifier = scanner.Require(TokenCode.IDENTIFIER);
+				else
+					first = false;
 				// add to declaration
 				declaration.Identifiers.Add(identifier.Value);
 
 				// check optional assignment
-				if (scanner.Peek().Code == TokenCode.ASSIGN_OP)
+				if (scanner.NextIf(TokenCode.ASSIGN_OP))
 				{
-					scanner.Next();
 					declaration.AddChild(
 						new BinaryOperator(TokenCode.ASSIGN_OP,
 							new Variable(identifier),
@@ -97,9 +135,68 @@ namespace Compiler
 					);
 				}
 				// check if comma (and eat it)
-			} while (scanner.Peek().Code == TokenCode.COMMA && scanner.Next().Code == TokenCode.COMMA);
+			} while (scanner.NextIf(TokenCode.COMMA));
 
 			return declaration;
+		}
+
+		// Method parses a function declaration
+		// input: none
+		// return: VariableDeclaration Node
+		public FunctionDeclaration ParseFunctionDeclaration(ValueType retType, Token identifier)
+		{
+			List<KeyValuePair<string, ValueType>> parameters = ParseParameters();
+			Block implementation = ParseBlock();
+
+			return new FunctionDeclaration(retType, identifier.Value, implementation, parameters);
+		}
+
+		// Method parses function parameters
+		// input: none
+		// return: list of (param name, param type)
+		public List<KeyValuePair<string, ValueType>> ParseParameters(bool checkParentheses = true)
+		{
+			List<KeyValuePair<string, ValueType>> parameters = new List<KeyValuePair<string, ValueType>>();
+			if(checkParentheses)
+				scanner.Require(TokenCode.LEFT_PARENTHESIS);
+			if (scanner.Peek().Code != TokenCode.RIGHT_PARENTHESIS)
+			{
+				do
+				{
+					// parse parameter declarations
+					ValueType type = ParseType();
+					Token name = scanner.Require(TokenCode.IDENTIFIER);
+					parameters.Add(
+						new KeyValuePair<string, ValueType>(name.Value, type)
+					);
+				} while (scanner.NextIf(TokenCode.COMMA));
+			}
+			if(checkParentheses)
+				scanner.Require(TokenCode.RIGHT_PARENTHESIS);
+			return parameters;
+		}
+
+		// Method parses an extern function declaration
+		// input: none
+		// return: ExternStatement
+		public ExternStatement ParseExtern()
+		{
+			scanner.Next();
+			// get return type
+			ValueType returnType = ParseType();
+			Token identifier = scanner.Require(TokenCode.IDENTIFIER);
+			// parse parameters
+			scanner.Require(TokenCode.LEFT_PARENTHESIS);
+			if(scanner.NextIf(TokenCode.TRIPLE_DOT))
+			{
+				// any params
+				scanner.Require(TokenCode.RIGHT_PARENTHESIS);
+				return new ExternStatement(identifier, returnType, null);
+			}
+
+			List<KeyValuePair<string, ValueType>> parameters = ParseParameters(false);
+			scanner.Require(TokenCode.RIGHT_PARENTHESIS);
+			return new ExternStatement(identifier, returnType, parameters);
 		}
 
 		// Method parses an if-else statement
@@ -171,7 +268,9 @@ namespace Compiler
 			scanner.Require(TokenCode.RIGHT_PARENTHESIS);
 			Statement body = ParseStatement();
 
-			return new ForLoop(initialization, condition, action, body);
+			ForLoop loop = new ForLoop(initialization, condition, action, body);
+
+			return loop;
 		}
 
 		// Method parses a switch case statement
@@ -207,74 +306,27 @@ namespace Compiler
 		}
 
 		// Method parses a block of statements
-		// input: none
+		// input: whether to check brackets or not (default check)
 		// return: Block node
-		private Block ParseBlock()
+		private Block ParseBlock(bool checkBraces=true)
 		{
 			// block: {<statements>}
 			// check open brace
-			if (scanner.Next().Code != TokenCode.OPEN_BRACE)
-				throw new UnexpectedToken("block open brace {", scanner.Last);
+			if(checkBraces)
+				scanner.Require(TokenCode.OPEN_BRACE);
 
-			Block block = new Block(scanner.Last.Line);
+			Block block = new Block(scanner.Peek().Line);
 			// gather statements
 			while(scanner.Peek().Code != TokenCode.CLOSE_BRACE && scanner.Peek().Code != TokenCode.EOF)
 			{
-				// add statement
+				// add statement and add to symbol table if needed
 				Statement newStatement = ParseStatement();
 				block.AddStatement(newStatement);
-				// add symbols to symbol table
-				if (newStatement is VariableDeclaration)
-				{
-					VariableDeclaration declaration = newStatement as VariableDeclaration;
-					foreach (string identifier in declaration.Identifiers)
-					{
-						block.SymbolTable.AddEntry(
-							identifier,
-							declaration.Line,
-							new SymbolTableEntry(SymbolType.LOCAL_VAR, declaration.GetTypeCode())
-						);
-					}
-				}
 			}
 
 			// check close brace
-			if (scanner.Next().Code != TokenCode.CLOSE_BRACE)
-				throw new UnexpectedToken("block open brace }", scanner.Last);
-
-			// offset addresses of sub-blocks
-			foreach (Statement stmt in block.Children)
-			{
-				switch(stmt)
-				{
-					case IfStatement ifStatement:
-						Statement?[] statements = new Statement?[] { ifStatement.GetTrueBlock(), ifStatement.GetFalseBlock() };
-						foreach (Statement? statement in statements)
-						{
-							if (statement != null && statement is Block)
-							{
-								(statement as Block).SymbolTable.ParentTable = block.SymbolTable;
-								(statement as Block).OffsetAddresses(block.SymbolTable.VariableBytes());
-							}
-						}
-						break;
-					case WhileLoop whileLoop:
-						if (whileLoop.GetBlock() is Block)
-						{
-							(whileLoop.GetBlock() as Block).SymbolTable.ParentTable = block.SymbolTable;
-							(whileLoop.GetBlock() as Block).OffsetAddresses(block.SymbolTable.VariableBytes());
-						}
-						break;
-					case Block subBlock:
-						// set parent and address offset
-						subBlock.SymbolTable.ParentTable = block.SymbolTable;
-						subBlock.OffsetAddresses(block.SymbolTable.VariableBytes());
-						break;
-					default:
-						break;
-
-				}
-			}
+			if(checkBraces)
+				scanner.Require(TokenCode.CLOSE_BRACE);
 
 			return block;
 		}
@@ -398,6 +450,7 @@ namespace Compiler
 				// end of expression
 				case TokenCode.EOF:
 				case TokenCode.RIGHT_PARENTHESIS:
+				case TokenCode.RIGHT_SQUARE_BRACKET:
 				case TokenCode.OPEN_BRACE:
 				case TokenCode.COLON:
 				case TokenCode.SEMI_COLON:
@@ -439,37 +492,57 @@ namespace Compiler
 				case TokenCode.BOOLEAN:
 					result = new Primitive<bool>(token);
 					break;
+				case TokenCode.CHAR:
+					result = new Primitive<char>(token.Line, UnescapeString(token.Value)[1]);
+					break;
+				case TokenCode.STRING_LITERAL:
+					result = ParseStringLiteral(token);
+					break;
 
 				// --- Parentheses Expression
 				case TokenCode.LEFT_PARENTHESIS:
-					Expression node = ParseExpression();
-					// check closing parenthesis
-					if (scanner.Next().Code != TokenCode.RIGHT_PARENTHESIS)
-						throw new MissingParenthesis(token);
-					result = node;
+					Token next = scanner.Peek();
+					// check casting
+					if (IsType(next))
+					{
+						ValueType type = ParseType();
+						// check closing parenthesis
+						if (scanner.Next().Code != TokenCode.RIGHT_PARENTHESIS)
+							throw new MissingParenthesis(token);
+
+						result = new Cast(ParseFactor(), type);
+					}
+					else
+					{
+						result = ParseExpression();
+						// check closing parenthesis
+						if (scanner.Next().Code != TokenCode.RIGHT_PARENTHESIS)
+							throw new MissingParenthesis(token);
+					}
 					break;
 
-				// --- Castings
-				case TokenCode.INT_CAST:
-					result = new Cast(ParseFactor(), TypeCode.INT);
-					break;
-				case TokenCode.FLOAT_CAST:
-					result = new Cast(ParseFactor(), TypeCode.FLOAT);
-					break;
-				case TokenCode.BOOL_CAST:
-					result = new Cast(ParseFactor(), TypeCode.BOOL);
+				// --- array literals
+				case TokenCode.LEFT_SQUARE_BRACKET:
+					result = ParseLocalArray();
 					break;
 
 				// --- Unary Prefix Operators
 				case TokenCode.BIT_NOT_OP:
 				case TokenCode.SUB_OP:          // negation
 				case TokenCode.EXCLAMATION_MARK:    // logical not
+				case TokenCode.BIT_AND_OP:      // value of ptr
+				case TokenCode.MUL_OP:			// address of
 					result = new UnaryOperator(token.Code, ParseFactor(), true);
 					break;
 
 				// --- Identifier
 				case TokenCode.IDENTIFIER:
 					result = new Variable(token);
+					break;
+
+				// --- New Expression
+				case TokenCode.NEW:
+					result = ParseNew();
 					break;
 
 				// --- Unexpected
@@ -480,8 +553,126 @@ namespace Compiler
 			// check postfix unary operator
 			if (IsUnaryPostfixOperator(scanner.Peek()))
 				return new UnaryOperator(scanner.Next().Code, result, false);
+			// check function call
+			else if (result is Variable && scanner.Peek().Code == TokenCode.LEFT_PARENTHESIS)
+				return ParseFunctionCall(result as Variable);
+			// check index operator
+			else if (scanner.Peek().Code == TokenCode.LEFT_SQUARE_BRACKET)
+				return ParseArrayIndex(result);
 			else
 				return result;
+		}
+
+		// method checks if a token is a type (int, bool, float...)
+		public bool IsType(Token t)
+		{
+			return t.Code == TokenCode.INT_KEYWORD || t.Code == TokenCode.BOOL_KEYWORD ||
+				t.Code == TokenCode.FLOAT_KEYWORD || t.Code == TokenCode.CHAR_KEYWORD;
+		}
+
+		private FunctionCall ParseFunctionCall(Variable function)
+		{
+			scanner.Require(TokenCode.LEFT_PARENTHESIS);
+			List<Expression> arguments = new List<Expression>();
+			// parse arguments
+			while(scanner.NextIf(TokenCode.COMMA) || !scanner.NextIf(TokenCode.RIGHT_PARENTHESIS))
+			{
+				arguments.Add(ParseExpression());
+			}
+			return new FunctionCall(function, arguments);
+		}
+
+		private ArrayIndex ParseArrayIndex(Expression array)
+		{
+			scanner.Require(TokenCode.LEFT_SQUARE_BRACKET);
+			Expression index = ParseExpression();
+			scanner.Require(TokenCode.RIGHT_SQUARE_BRACKET);
+
+			ArrayIndex node = new ArrayIndex(array, index);
+			if (scanner.Peek().Code == TokenCode.LEFT_SQUARE_BRACKET)
+				return ParseArrayIndex(node);
+			return node;
+		}
+
+		private NewExpression ParseNew()
+		{
+			ValueType type = ParseType();
+			scanner.Require(TokenCode.LEFT_SQUARE_BRACKET);
+			Expression size = ParseExpression();
+			scanner.Require(TokenCode.RIGHT_SQUARE_BRACKET);
+			return new NewExpression(type, size);
+		}
+
+		private DeleteStatement ParseDelete()
+		{
+			scanner.Next();	// skip delete keyword
+			return new DeleteStatement(ParseExpression());
+		}
+
+		private LocalArray ParseLocalArray()
+		{
+			List<Expression> elements = new List<Expression>();
+			if (scanner.NextIf(TokenCode.RIGHT_SQUARE_BRACKET))
+				return new LocalArray(elements, scanner.Last.Line);
+
+			// parse elements
+			do
+			{
+				elements.Add(ParseExpression());
+			} while (scanner.NextIf(TokenCode.COMMA));
+			scanner.Require(TokenCode.RIGHT_SQUARE_BRACKET);
+
+			return new LocalArray(elements, scanner.Last.Line);
+		}
+
+		private LocalArray ParseStringLiteral(Token token)
+		{
+			List<Expression> elements = new List<Expression>();
+			// remove quotation marks
+			string str = token.Value.Substring(1, token.Value.Length - 2);
+			str = UnescapeString(str);
+
+			foreach(char c in str)
+			{
+				elements.Add(new Primitive<char>(token.Line, c));
+			}
+			elements.Add(new Primitive<char>(token.Line, (char)0));
+
+			return new LocalArray(elements, token.Line);
+		}
+
+		// method unescaped string (turns "\\n" to newline char, for example)
+		// input: escaped string
+		// return: unescaped string
+		private string UnescapeString(string input)
+		{
+			string result = "";
+			bool escaped = false;
+			for(int i = 0; i < input.Length; i++)
+			{
+				if(escaped)
+				{
+					result += input[i] switch
+					{
+						'n' => '\n',
+						't' => '\t',
+						'\\' => '\\',
+						'r' => '\r',
+						'b' => '\b',
+						_ => "\\" + input[i]
+					};
+					escaped = false;
+				}
+				else if(input[i] == '\\')
+				{
+					escaped = true;
+				}
+				else
+				{
+					result += input[i];
+				}
+			}
+			return result;
 		}
 	}
 }

@@ -6,12 +6,12 @@ namespace Compiler
 {
 	class Cast : Expression
 	{
-		public TypeCode FromType { get; set; }
+		public ValueType FromType { get; set; }
 
 		// Constructor
 		// from: which Expression to cast
 		// to: what type to cast into
-		public Cast(Expression from, TypeCode toType) : base(from.Line)
+		public Cast(Expression from, ValueType toType) : base(from.Line)
 		{
 			FromType = from.Type;
 			Type = toType;

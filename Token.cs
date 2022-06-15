@@ -11,11 +11,8 @@ namespace Compiler
 		INTEGER,
 		DECIMAL,
 		BOOLEAN,
-
-		// --- Castings
-		INT_CAST,
-		FLOAT_CAST,
-		BOOL_CAST,
+		CHAR,
+		STRING_LITERAL,
 
 		// --- Operators
 		// arithmetic
@@ -50,10 +47,15 @@ namespace Compiler
 		// other
 		EXCLAMATION_MARK,
 		COMMA,
+		DOT,
+		TRIPLE_DOT,
 
 		// --- Expressions
 		LEFT_PARENTHESIS,
 		RIGHT_PARENTHESIS,
+
+		LEFT_SQUARE_BRACKET,
+		RIGHT_SQUARE_BRACKET,
 
 		// --- Statements
 		SEMI_COLON,
@@ -61,6 +63,10 @@ namespace Compiler
 		INT_KEYWORD,
 		FLOAT_KEYWORD,
 		BOOL_KEYWORD,
+		CHAR_KEYWORD,
+		// function declaration
+		VOID,
+		RETURN,
 		// blocks
 		OPEN_BRACE,
 		CLOSE_BRACE,
@@ -75,7 +81,11 @@ namespace Compiler
 		SWITCH,
 		CASE,
 		DEFAULT,
+		// memory allocation
+		NEW,
+		DELETE,
 		// other
+		EXTERN,
 		PRINT_KEYWORD,
 
 		// --- Other
@@ -112,27 +122,11 @@ namespace Compiler
 			string res = "";
 
 			// add fields
-			res += StringFormat(Code.ToString(), PRINT_WIDTH - 1, PRINT_WIDTH);
-			res += StringFormat(Value.ToString(), PRINT_WIDTH - 1, PRINT_WIDTH);
-			res += StringFormat(Line + ":" + Pos, PRINT_WIDTH - 1, PRINT_WIDTH);
+			res += Helper.StringFormat(Code.ToString(), PRINT_WIDTH, PRINT_WIDTH - 1);
+			res += Helper.StringFormat(Value.ToString(), PRINT_WIDTH, PRINT_WIDTH - 1);
+			res += Helper.StringFormat(Line + ":" + Pos, PRINT_WIDTH, PRINT_WIDTH - 1);
 
 			return res;
-		}
-
-		// Method changes a string to a constant width.
-		// baseString: string to change
-		// charLimit: max amount of characters to include
-		// width: constant number of chars in the result. Padding with spaces.
-		// return: formatted string
-		private static string StringFormat(string baseString, int charLimit, int width)
-		{
-			string result = baseString;
-			// limit chars
-			if (baseString.Length > charLimit - 3)
-				result = baseString.Substring(0, charLimit - 3) + "...";
-
-			// return padded string
-			return result.PadRight(width);
 		}
 	}
 }

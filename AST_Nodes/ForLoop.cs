@@ -23,15 +23,8 @@ namespace Compiler
 				SymbolTable.AddEntry(
 					identifier,
 					initialization.Line,
-					new SymbolTableEntry(SymbolType.LOCAL_VAR, initialization.GetTypeCode())
+					new SymbolTableEntry(SymbolType.LOCAL_VAR, initialization.Type, initialization)
 				);
-			}
-			// setup body symbol table
-			if (body is Block)
-			{
-				Block blockBody = body as Block;
-				blockBody.SymbolTable.ParentTable = SymbolTable;
-				blockBody.OffsetAddresses(SymbolTable.VariableBytes());
 			}
 		}
 

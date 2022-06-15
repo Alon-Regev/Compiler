@@ -10,5 +10,10 @@ namespace Compiler
 			: base("UnexpectedToken", received.Line, "Expected " + expected + ", instead got " + received.Value + " at position " + received.Pos)
 		{
 		}
+
+		public UnexpectedToken(string expected, TokenCode received, int line)
+			: base("UnexpectedToken", line, "Expected " + expected + ", instead got " + received)
+		{
+		}
 	}
 }

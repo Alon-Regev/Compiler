@@ -244,9 +244,21 @@ namespace Compiler
 				}
 				else
 				{
-					// compiler regularly
-					Parser parser = new Parser(program);
-					Console.WriteLine(parser.Parse());
+					// compile regularly
+					Console.WriteLine("Parsing and analyzing code");
+					AST_Node AST = new Parser(program).Parse();
+					new SemanticAnalyzer(AST).Analyze();
+
+					Console.WriteLine("Creating assembly");
+					string assembly = new CodeGenerator(AST).GenerateAssembly();
+
+					Console.WriteLine("Generating Executable");
+					string executablePath = ap.HasOption("output") ?
+						ap.GetParameters("output")[0] : "temp.exe";
+					ExecutableCreator ec = new ExecutableCreator(executablePath);
+					ec.FromString(assembly);
+
+					Console.WriteLine("Finished! Saved at " + executablePath);
 				}
 			}
 			catch(CompilerError e)
