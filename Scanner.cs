@@ -165,6 +165,7 @@ namespace Compiler
 		public Token Peek()
 		{
 			SkipWhitespace();
+			SkipComments();
 
 			Token result = null;
 			// try each token to check if it fits
@@ -218,6 +219,33 @@ namespace Compiler
 				}
 				else
 					break;
+			}
+		}
+
+		// Method skips comments in the program.
+		// input: none
+		// return: none
+		private void SkipComments()
+		{
+			if (_programLeft.StartsWith("//"))
+			{
+				// skip until newline
+				do
+				{
+					_programLeft = _programLeft.Substring(1);
+				} while (_programLeft[0] != '\n');
+				_programLeft = _programLeft.Substring(1);
+				SkipWhitespace();
+			}
+			else if(_programLeft.StartsWith("/*"))
+			{
+				// skip until newline
+				do
+				{
+					_programLeft = _programLeft.Substring(1);
+				} while (_programLeft.Substring(0, 2) != "*/");
+				_programLeft = _programLeft.Substring(2);
+				SkipWhitespace();
 			}
 		}
 
