@@ -588,7 +588,10 @@ namespace Compiler
 			Expression index = ParseExpression();
 			scanner.Require(TokenCode.RIGHT_SQUARE_BRACKET);
 
-			return new ArrayIndex(array, index);
+			ArrayIndex node = new ArrayIndex(array, index);
+			if (scanner.Peek().Code == TokenCode.LEFT_SQUARE_BRACKET)
+				return ParseArrayIndex(node);
+			return node;
 		}
 
 		private NewExpression ParseNew()
